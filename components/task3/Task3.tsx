@@ -1,6 +1,7 @@
 "use client";
 
 import { BUDGET, FIXED_COST } from "@/data/program";
+import { Gloss } from "@/lib/glossify";
 import { fmtEuroPlain } from "@/data/segments";
 import { AnswerBlock } from "@/components/ui/AnswerBlock";
 import { ExportBar } from "@/components/ui/ExportBar";
@@ -23,7 +24,7 @@ import { useHydrated, useStore } from "@/store/useStore";
 export function Task3() {
   const snapshot = usePersisted();
   const missing = l3Missing(snapshot);
-  const fname = exportName(snapshot.participant.no, snapshot.participant.name, "l3-memo");
+  const fname = exportName(snapshot.participant.name, "l3-memo");
 
   return (
     <section id="task-3" className="space-y-5 pb-16 lg:pb-0">
@@ -38,12 +39,12 @@ export function Task3() {
           <h3>The case</h3>
           <span className="pill border-line bg-mist text-ash">Case assumption</span>
         </div>
-        <p className="text-body">
+        <p className="text-body"><Gloss>
           You are the <strong>Chief Customer Officer / Sales Manager</strong> of <strong>{COURSE.company}</strong>. The CEO wants a retention system in place within four months and has set a budget of{" "}
           <strong>{fmtEuroPlain(BUDGET)}</strong>. Time pressure is high, and the data is incomplete: <strong>no baseline KPI tracking exists yet</strong>. Four line items are on the table. The lever is the one you chose in
           Route 2 (Option A costs €57,000, Option B nothing upfront, Option C €41,800); the funnel-leak fix costs {fmtEuroPlain(FIXED_COST.fix)}, the KPI dashboard {fmtEuroPlain(FIXED_COST.dash)} and the sales training{" "}
           {fmtEuroPlain(FIXED_COST.train)}. Costs and effects are printed on the grid and do not change.
-        </p>
+        </Gloss></p>
       </div>
 
       <div className="card space-y-2 border-accent/30 bg-accentSoft p-4 md:p-5">

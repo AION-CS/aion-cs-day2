@@ -15,9 +15,9 @@ replaced. The Day 1 history is kept; nothing of the Kessler case remains in the 
 
 | Route | Content | Export |
 |---|---|---|
-| `/route-1/` | Level 1 · Materi A (A1–A4, 30 min) → Task 1 Diagnostic Note (15 min): sort the six funnel stages into journey phases (1.1), transcribe the funnel's figures (1.2), name the stage with the largest negative gap (1.3), one judged sentence on what the leak costs (1.4) | `{no}-{name}-day2-l1-diagnostic.html` |
-| `/route-2/` | Level 2 · Materi B (B1–B4, 30 min) → Task 2 Calculation Note (15 min): net-impact grid 3 options × 2 segments (2.1), which cells are a loss (2.2), one option per segment defended with a € figure (2.3), one option for both segments and what it gives up (2.4) | `{no}-{name}-day2-l2-calculation.html` |
-| `/route-3/` | Level 3 · Materi C (C1–C4, 30 min) → Task 3 Decision Memo (15 min): allocation grid under a €150,000 budget with a live budget bar (3.1), rollout order and the KPI-blind-spot warning (3.2), what was cut (3.3), governance per funded KPI (3.4), the measure you postponed (3.5), with the memo assembling itself beside the questions | `{no}-{name}-day2-l3-memo.html` |
+| `/route-1/` | Level 1 · Materi A (A1–A4, 30 min) → Task 1 Diagnostic Note (15 min): sort the six funnel stages into journey phases (1.1), transcribe the funnel's figures (1.2), name the stage with the largest negative gap (1.3), one judged sentence on what the leak costs (1.4) | `{route}-{name}-day2-l1-diagnostic.html` |
+| `/route-2/` | Level 2 · Materi B (B1–B4, 30 min) → Task 2 Calculation Note (15 min): net-impact grid 3 options × 2 segments (2.1), which cells are a loss (2.2), one option per segment defended with a € figure (2.3), one option for both segments and what it gives up (2.4) | `{route}-{name}-day2-l2-calculation.html` |
+| `/route-3/` | Level 3 · Materi C (C1–C4, 30 min) → Task 3 Decision Memo (15 min): allocation grid under a €150,000 budget with a live budget bar (3.1), rollout order and the KPI-blind-spot warning (3.2), what was cut (3.3), governance per funded KPI (3.4), the measure you postponed (3.5), with the memo assembling itself beside the questions | `{route}-{name}-day2-l3-memo.html` |
 
 Material minutes: A = 8 + 8 + 8 + 6 = 30, B = 8 + 7 + 7 + 8 = 30, C = 8 + 7 + 7 + 8 = 30. The task minutes (15 each) are split per block on the page.
 
@@ -45,16 +45,24 @@ components/chrome/    MentorBar, TopBar, ParticipantStrip, SectionRail, HashFlas
 components/ui/        MaterialCard, FunnelInstrument, LeverCalculator, AnswerBlock, AnswerKey, ExportBar, MissingList, Field …
 components/materi/    MateriA (A1–A4), MateriB (B1–B4), MateriC (C1–C4), Materi (the three blocks + references)
 components/task1|2|3/ Task 1 (SortBoard, FillTable, WeakestBlock), Task 2 (Blocks: grid, loss marks, recommendations, one option), Task 3 (AllocationGrid, SequenceBlock, MemoFields, MemoPanel)
-data/                 funnel, touchpoints, segments, program, references, materialIndex, mentorKey
+data/                 funnel, touchpoints, segments, program, references, glossary, materialIndex, mentorKey
 lib/                  checks, program, missing, progress, exportDoc, answerKey, parseAmount, slug, flash, svg
 store/                useStore (slices l1, l2, route3), selectors (Route 2 reads Route 1's answers here)
 scripts/              verify-calc.mjs
 ```
 
+## Plain-language glossary
+
+Every technical term, abbreviation and German word in the material and the tasks is an entry in `data/glossary.ts` (the shared
+Day 1 entries plus this day's funnel, sales-strategy, lever and governance terms). In the text it is a dotted-underlined
+button (`lib/glossify.tsx`); a click opens one explanation card (`GlossaryPanel`) written for a non-expert. Cards, bullets,
+tables, callouts, captions and field help are glossified automatically; other prose is wrapped in `<Gloss>`. Rule:
+`../CLAUDE.md` #19.
+
 ## Mentor bar
 
 The first element on every page. Enter `muchson123` once and every model answer of Routes 1, 2 and 3 fills in (plus a
-participant number and name if empty), so each export downloads straight away. The same unlock shows a mentor-only
+participant name if empty), so each export downloads straight away. The same unlock shows a mentor-only
 **answer key** (in rust, never the amber accent) next to each exercise with fixed options: the sort, the largest-gap
 pick, the recommendation per segment, the single-option question and the sequencing answer; Task 3 also shows a rubric-evidence panel (the objective items computed from the learner's own state). Each key gives the expected answer, a reason per
 option including why each rejected option is rejected, and a teaching note. Client-side convenience gate, not security;
@@ -79,8 +87,9 @@ gamification; the rules decide the structure, style and mechanics). Where they d
    Level 3 is Route 3. Route 3's case (€150,000 over four months) is unchanged. If the two-level Route 1
    is wanted for good, the shared rule has to change first.
 2. **Export names follow the CS form.** The prompt asked for `2-{name}-day2-route1-l1` and `3-{name}-day2-route1-l2`.
-   CURRICULUM-GUIDE §7 makes the leading number the Participant No. and the slug the level and deliverable:
-   `1-muchson-day2-l1-diagnostic`, `1-muchson-day2-l2-calculation`.
+   CURRICULUM-GUIDE §7 makes the leading number the route's own number, added automatically (there is no number field, only a
+   name), and the slug the level and deliverable: `1-muchson-day2-l1-diagnostic`, `2-muchson-day2-l2-calculation`,
+   `3-muchson-day2-l3-memo`.
 3. **The discount is charged on every repeat order, not only the extra ones.** The prompt's formula said the discount
    applies only to the additional orders it generates, but its pinned results (B = +€11,328 for project clients, −€8,832
    for retainer clients, +€2,496 uniform) only reproduce when the discount is paid on the baseline orders too:

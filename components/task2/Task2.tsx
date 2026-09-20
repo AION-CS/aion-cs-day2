@@ -1,6 +1,7 @@
 "use client";
 
 import { AnswerBlock } from "@/components/ui/AnswerBlock";
+import { Gloss } from "@/lib/glossify";
 import { ExportBar } from "@/components/ui/ExportBar";
 import { LeverCalculator } from "@/components/ui/LeverCalculator";
 import { MaterialRefs } from "@/components/ui/MaterialRefs";
@@ -16,7 +17,7 @@ import { usePersisted } from "@/store/usePersisted";
 export function Task2() {
   const snapshot = usePersisted();
   const missing = l2Missing(snapshot);
-  const fname = exportName(snapshot.participant.no, snapshot.participant.name, "l2-calculation");
+  const fname = exportName(snapshot.participant.name, "l2-calculation");
 
   return (
     <section id="task-2" className="space-y-5">
@@ -31,12 +32,12 @@ export function Task2() {
           <h3>The case</h3>
           <span className="pill border-line bg-mist text-ash">Case assumption</span>
         </div>
-        <p className="text-body">
+        <p className="text-body"><Gloss>
           Task 1 showed where <strong>{COURSE.company}</strong> loses prospects. The managing director now asks a second question: how to keep the clients it already has. The client base
           has <strong>38 clients</strong> in two segments, <strong>14 project clients</strong> (large one-off implementations) and <strong>24 retainer clients</strong> (ongoing, smaller
           support contracts). Three options are on the table: intensified personal account management (A), an 8% discount on the repeat order (B) and a value-added service (C). Each option
           is judged by what it adds in gross profit, less what it costs.
-        </p>
+        </Gloss></p>
       </div>
 
       <div className="card space-y-2 border-accent/30 bg-accentSoft p-4 md:p-5">

@@ -1,6 +1,7 @@
 "use client";
 
 import { CONTRACT_VALUE } from "@/data/funnel";
+import { Gloss } from "@/lib/glossify";
 import { AnswerBlock } from "@/components/ui/AnswerBlock";
 import { ExportBar } from "@/components/ui/ExportBar";
 import { FunnelInstrument } from "@/components/ui/FunnelInstrument";
@@ -23,7 +24,7 @@ export function Task1() {
   const undo = useStore((s) => s.undoSort);
   const redo = useStore((s) => s.redoSort);
   const missing = l1Missing(snapshot);
-  const fname = exportName(snapshot.participant.no, snapshot.participant.name, "l1-diagnostic");
+  const fname = exportName(snapshot.participant.name, "l1-diagnostic");
 
   return (
     <section id="task-1" className="space-y-5" onKeyDown={undoRedoKeyHandler(undo, redo)}>
@@ -38,12 +39,12 @@ export function Task1() {
           <h3>The case</h3>
           <span className="pill border-line bg-mist text-ash">Case assumption</span>
         </div>
-        <p className="text-body">
+        <p className="text-body"><Gloss>
           <strong>{COURSE.company}</strong> is a mid-size B2B IT services vendor in Germany. It sells project implementations and retainer support contracts.
           The managing director&apos;s brief: <em>many leads, few closings, weak retention.</em> The funnel below is a year of the company&apos;s own data. A signed
           project contract is worth <strong>€{CONTRACT_VALUE.toLocaleString("en-US")}</strong> on average, and every benchmark reference is an industry reference
           for a company of this kind.
-        </p>
+        </Gloss></p>
       </div>
 
       <div className="card space-y-2 border-accent/30 bg-accentSoft p-4 md:p-5">

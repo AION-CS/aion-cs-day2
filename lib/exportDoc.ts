@@ -50,7 +50,7 @@ function header(title: string, level: string, p: Persisted): string {
 <dl class="meta">
   <dt>Course</dt><dd>${esc(COURSE_NAME)} · Day ${COURSE.day}</dd>
   <dt>Position</dt><dd>${esc(level)}</dd>
-  <dt>Participant</dt><dd>No. ${esc(p.participant.no.trim() || "—")} · ${esc(p.participant.name.trim() || "—")}</dd>
+  <dt>Participant</dt><dd>${esc(p.participant.name.trim() || "—")}</dd>
   <dt>Date</dt><dd>${esc(dateLabel())}</dd>
 </dl>`;
 }
@@ -188,7 +188,7 @@ export function memoBody(p: Persisted): string {
   <dt>To</dt><dd>Chief Executive Officer, ${esc(COURSE.company)} <span class="muted">[placeholder]</span></dd>
   <dt>From</dt><dd>${esc(name || "—")}, Chief Customer Officer / Sales Manager</dd>
   <dt>Subject</dt><dd>Retention System Rollout — 4-Month Plan</dd>
-  <dt>Position</dt><dd>Level 3 · Management decision · Participant No. ${esc(p.participant.no.trim() || "—")}</dd>
+  <dt>Position</dt><dd>Level 3 · Management decision</dd>
   <dt>Date</dt><dd>${esc(dateLabel())}</dd>
 </dl>
 
