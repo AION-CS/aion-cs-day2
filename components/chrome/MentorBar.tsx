@@ -8,7 +8,7 @@ import { useStore } from "@/store/useStore";
 
 /**
  * The mentor bar — the very first thing on every page. A mentor enters the
- * passcode once, every model answer is filled in (Routes 1 and 2, plus a
+ * passcode once, every model answer is filled in (Routes 1, 2 and 3, plus a
  * participant number and name if empty), and the notes can be exported at once,
  * so a site can be checked without anyone typing through it.
  *
@@ -35,7 +35,7 @@ export function MentorBar() {
       : pathname.startsWith("/route-3")
         ? 3
         : null;
-  const exportId = route === 1 ? "export-l1" : route === 2 ? "export-l2" : null;
+  const exportId = route === 1 ? "export-l1" : route === 2 ? "export-l2" : route === 3 ? "export-l3" : null;
 
   const submit = () => {
     if (code === MENTOR_PASSCODE) {
@@ -122,7 +122,7 @@ export function MentorBar() {
               className="btn-primary btn-sm"
               onClick={() => {
                 mentorFill();
-                setMsg("Model answers filled in Routes 1 and 2. Nothing is left to type; export the notes.");
+                setMsg("Model answers filled in Routes 1, 2 and 3. Nothing is left to type; export the notes.");
               }}
             >
               Fill all model answers

@@ -35,3 +35,38 @@ export const KEY_L2 = {
   tradeoff:
     "Across both segments C nets +€18,488, against +€14,424 for A and +€2,496 for B, so C is the best single option. Choosing it gives up the local winners: in project clients B would have netted +€11,328 instead of +€3,416 (€7,912 less), and in retainer clients A would have netted +€19,296 instead of +€15,072 (€4,224 less). Together that is €12,136 less than running B for project and A for retainer clients.",
 };
+
+/**
+ * Route 3 model answer: Option C for both segments (€41,800), the funnel fix (€58,000) and the dashboard
+ * (€39,000) are funded for €138,800; the training (€21,000) is cut. The dashboard and the fix start in month 1
+ * and the lever in month 2, so the KPI-blind-spot warning does not appear.
+ */
+export const KEY_L3 = {
+  alloc: { leverOpt: "C" as OptId, leverScope: "both" as "both" | "P" | "R", fix: true, dash: true, train: false },
+  start: { lever: 2, fix: 1, dash: 1, train: null } as Record<"lever" | "fix" | "dash" | "train", number | null>,
+  warned: false,
+  missingKpi: null as "conversion" | "clv" | "repeat" | null,
+  cut:
+    "I cut item 4, the sales training (€21,000). The team gets no workshop or coaching in behaviour-based selling in this window, so the conversion rate from proposal to signature stays dependent on current selling habits, and the funnel fix rests on the new coordinator alone. Nothing else was descoped, so every segment gets the value-added service and the show-up rate is still lifted to 68%.",
+  gov: {
+    lever: {
+      owner: "Key account manager",
+      cadence: "Monthly",
+      trigger: "If the repeat-purchase rate has not risen by at least 2 pp after three months of baseline, escalate to the Chief Customer Officer and review the lever.",
+    },
+    fix: {
+      owner: "CRM coordinator",
+      cadence: "Weekly",
+      trigger: "If the show-up rate is below 55% for two consecutive weeks, escalate to the Head of Sales for a change of reminder workflow.",
+    },
+    dash: {
+      owner: "Controlling",
+      cadence: "Monthly",
+      trigger: "If any of the three KPIs is published more than 5 working days late, escalate to the Chief Customer Officer.",
+    },
+    train: { owner: "", cadence: "", trigger: "" },
+  } as Record<"lever" | "fix" | "dash" | "train", { owner: string; cadence: string; trigger: string }>,
+  postponed:
+    "The behaviour-based selling training (item 4) and the last 7 pp of the show-up gap (68% against the 75% benchmark) are not pursued in these four months. Both wait until the dashboard has three months of baseline, so we can see whether the funnel fix and the lever already move the conversion rate before spending on them.",
+  pickup: "After three months of dashboard baseline",
+};

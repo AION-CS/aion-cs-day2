@@ -3,6 +3,7 @@ import { MATERIALS } from "@/data/materialIndex";
 import type { RefKey } from "@/data/references";
 import { CardA1, CardA2, CardA3, CardA4 } from "@/components/materi/MateriA";
 import { CardB1, CardB2, CardB3, CardB4 } from "@/components/materi/MateriB";
+import { CardC1, CardC2, CardC3, CardC4 } from "@/components/materi/MateriC";
 
 // What each block's cards cite, for its References accordion.
 const REFS_A: RefKey[] = [
@@ -14,7 +15,9 @@ const REFS_B: RefKey[] = [
   "kahneman1979", "samuelson1988", "kahneman1991", "gustafsson2005",
 ];
 
-const minutes = (b: "A" | "B") => MATERIALS.filter((m) => m.block === b).reduce((s, m) => s + m.minutes, 0);
+const REFS_C: RefKey[] = ["kaplan1992", "doran1981", "deming1986", "nagle2018", "brealey2020", "gupta2003", "betrvg87"];
+
+const minutes = (b: "A" | "B" | "C") => MATERIALS.filter((m) => m.block === b).reduce((s, m) => s + m.minutes, 0);
 
 export function MateriA() {
   return (
@@ -52,6 +55,26 @@ export function MateriB() {
       <CardB3 />
       <CardB4 />
       <ReferencesAccordion block="B" keys={REFS_B} />
+    </section>
+  );
+}
+
+export function MateriC() {
+  return (
+    <section id="materi-c" className="space-y-4">
+      <header className="space-y-1">
+        <p className="smallcaps text-accent">Materi C · Level 3 · Management decision · {minutes("C")} min</p>
+        <h2 className="text-h1">Deciding under a budget that does not cover everything</h2>
+        <p className="max-w-prose text-body text-ash">
+          Four short cards ({minutes("C")} min, facilitator-led). They give you the tests you need for Task 3: how to write an action as goal, action and KPI, why a governed system beats a one-off fix,
+          which actions scale and which only move one deal, and what a governance plan and a postponed measure must contain.
+        </p>
+      </header>
+      <CardC1 />
+      <CardC2 />
+      <CardC3 />
+      <CardC4 />
+      <ReferencesAccordion block="C" keys={REFS_C} note="Frameworks from Levels 1 and 2 are listed in the references of Routes 1 and 2." />
     </section>
   );
 }

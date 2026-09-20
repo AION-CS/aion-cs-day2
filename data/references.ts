@@ -25,7 +25,12 @@ export type RefKey =
   | "gdpr"
   | "tdddg25"
   | "edpb2020"
-  | "uwg7";
+  | "uwg7"
+  | "kaplan1992"
+  | "doran1981"
+  | "deming1986"
+  | "betrvg87"
+  | "brealey2020";
 
 export type Reference = { key: RefKey; chip: string; full: string };
 
@@ -144,6 +149,31 @@ export const REFERENCES: Record<RefKey, Reference> = {
     key: "uwg7",
     chip: "§ 7 UWG",
     full: "§ 7 UWG (Gesetz gegen den unlauteren Wettbewerb): unreasonable harassment. Advertising by e-mail needs prior consent, and by telephone at least the presumed consent of a business contact.",
+  },
+  kaplan1992: {
+    key: "kaplan1992",
+    chip: "Kaplan & Norton 1992",
+    full: "Kaplan, R. S., & Norton, D. P. (1992). The balanced scorecard: Measures that drive performance. Harvard Business Review, 70(1), 71–79. (Objectives, measures, targets and initiatives kept in one line of sight.)",
+  },
+  doran1981: {
+    key: "doran1981",
+    chip: "Doran 1981",
+    full: "Doran, G. T. (1981). There's a S.M.A.R.T. way to write management's goals and objectives. Management Review, 70(11), 35–36. (Specific, measurable, assignable, realistic, time-related.)",
+  },
+  deming1986: {
+    key: "deming1986",
+    chip: "Deming 1986",
+    full: "Deming, W. E. (1986). Out of the Crisis. MIT Center for Advanced Engineering Study. (Plan, do, study, act: a measured cycle instead of a one-off fix.)",
+  },
+  brealey2020: {
+    key: "brealey2020",
+    chip: "Brealey, Myers & Allen 2020",
+    full: "Brealey, R. A., Myers, S. C., & Allen, F. (2020). Principles of Corporate Finance (13th ed.). McGraw-Hill Education. (Opportunity cost and capital rationing.)",
+  },
+  betrvg87: {
+    key: "betrvg87",
+    chip: "§ 87 BetrVG",
+    full: "§ 87(1) no. 6 BetrVG (Betriebsverfassungsgesetz): the works council co-determines the introduction of technical devices designed to monitor the behaviour or performance of employees.",
   },
 };
 

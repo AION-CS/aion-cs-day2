@@ -4,6 +4,9 @@ import { TOUCHPOINTS } from "@/data/touchpoints";
 import { COURSE } from "@/lib/routes";
 import { esc } from "@/lib/svg";
 import { parsePct } from "@/lib/parseAmount";
+import { BUDGET, ITEMS, ITEM_IDS, ITEM_KPI, KPI_LABEL, OPT_NAME, SCOPES } from "@/data/program";
+import { fundedItems, itemCost, leverNet, leftOpen, remaining, sequenceTruth, totalSpent } from "@/lib/program";
+import { parseAmount } from "@/lib/parseAmount";
 import type { Persisted } from "@/store/useStore";
 
 /**
@@ -26,7 +29,8 @@ export const DOC_CSS = `
 .doc th{text-align:left;font-weight:600;color:#59606A;border-bottom:1px solid #59606A;padding:4px 8px 4px 0;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
 .doc td{border-bottom:1px solid #ECE6D6;padding:6px 8px 6px 0;vertical-align:top}
 .doc td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-.doc td.id{font-weight:700;white-space:nowrap}
+.doc td.id{font-weight:700}
+.doc table{table-layout:auto}.doc td,.doc th{overflow-wrap:anywhere}
 .doc blockquote{margin:6px 0;padding:6px 12px;border-left:3px solid #D99A2B;background:#FBF0D6}
 .doc .box{border:1px solid #D8D1BF;padding:8px 12px;margin:8px 0;background:#fff}
 .doc .muted{color:#59606A}
@@ -131,6 +135,86 @@ ${recRows}
 <p><strong>${l2.uniform ? esc(OPTIONS[l2.uniform].name) : "—"}</strong></p>${para(l2.tradeoff)}
 
 <div class="foot">Checks requested: ${l2.checks}<br/>Generated ${esc(dateLabel())}.</div>`;
+}
+
+/** The Level 3 memo. The on-screen live preview and the exported file are both built by this function. */
+export function memoBody(p: Persisted): string {
+  const { l1, l2, route3: r } = p;
+  const name = p.participant.name.trim();
+  const a = r.alloc;
+  const funded = fundedItems(a);
+  const money = (n: number) => `€${Math.round(n).toLocaleString("en-US")}`;
+
+  // 1 · Diagnosis: the learner's own answers from Routes 1 and 2, quoted and never re-asked.
+  const uni = l2.uniform;
+  const cells = uni ? [parseAmount(l2.grid[cellKey(uni, "P")] ?? ""), parseAmount(l2.grid[cellKey(uni, "R")] ?? "")] : [];
+  const uniNet = cells.length === 2 && cells.every((c) => c !== null) ? (cells[0]! + cells[1]!) : null;
+  const diagnosis =
+    l1.weakest || l1.sentence.trim() || uni
+      ? `<blockquote><strong>Where prospects leak (Route 1).</strong> Largest negative gap: ${l1.weakest ? esc(STEP_BY_ID[l1.weakest].label) : "—"}.<br/>${esc(l1.sentence.trim()) || "—"}</blockquote>
+<blockquote><strong>The lever chosen for both segments (Route 2).</strong> ${uni ? esc(OPT_NAME[uni]) : "—"}${uniNet !== null ? `, net impact ${esc(money(uniNet).replace("€-", "−€"))} a year per your grid` : ""}.<br/>${esc(l2.tradeoff.trim()) || "—"}</blockquote>`
+      : `<p class="muted">Route 1 and Route 2 are not finished, so there is nothing to quote yet. Finish them first; nothing is blocked.</p>`;
+
+  // 2 · Allocation
+  const scopeLabel = (id: string) => (id === "lever" ? `${a.leverOpt ? esc(OPT_NAME[a.leverOpt]) : ""} · ${esc(SCOPES.find((s) => s.id === a.leverScope)!.short)}` : "");
+  const allocRows = ITEM_IDS.map((id) => {
+    const on = funded.includes(id);
+    const detail = id === "lever" ? (on ? scopeLabel(id) : "not funded") : on ? "funded in full" : "not funded";
+    return `<tr><td class="id">${ITEMS[id].n} · ${esc(ITEMS[id].short)}</td><td>${detail}</td><td class="num">${on ? esc(money(itemCost(a, id))) : "—"}</td><td class="num">${on && r.start[id] !== null ? "month " + r.start[id] : "—"}</td></tr>`;
+  }).join("");
+  const spent = totalSpent(a);
+  const rest = remaining(a);
+  const leverLine = a.leverOpt ? ` The lever nets about ${esc(money(leverNet(a.leverOpt, a.leverScope)).replace("€-", "−€"))} a year (Route 2 figures).` : "";
+
+  // 4 · Governance, one row per funded item
+  const govRows = funded
+    .map((id) => {
+      const g = r.gov[id];
+      return `<tr><td class="id">${esc(ITEM_KPI[id])}</td><td>${esc(g.owner) || "—"}</td><td>${esc(g.cadence) || "—"}</td><td>${esc(g.trigger.trim()) || "—"}</td></tr>`;
+    })
+    .join("");
+
+  // 5 · Sequence
+  const order = [...funded].filter((i) => r.start[i] !== null).sort((x, y) => r.start[x]! - r.start[y]!);
+  const orderText = order.length ? order.map((i) => `${ITEMS[i].short} (month ${r.start[i]})`).join(" → ") : "—";
+  const seq = sequenceTruth(a, r.start);
+  const warnedText = r.warned === null ? "not recorded" : r.warned ? "yes, it appeared" : "no, it did not appear";
+  const seqLine = seq.text ? `<blockquote>${esc(seq.text)}</blockquote>` : "";
+
+  const open = leftOpen(a);
+  return `<div class="kicker">${esc(COURSE_NAME)} · ${esc(COURSE.company)}</div>
+<h1>Decision Memo</h1>
+<dl class="meta">
+  <dt>To</dt><dd>Chief Executive Officer, ${esc(COURSE.company)} <span class="muted">[placeholder]</span></dd>
+  <dt>From</dt><dd>${esc(name || "—")}, Chief Customer Officer / Sales Manager</dd>
+  <dt>Subject</dt><dd>Retention System Rollout — 4-Month Plan</dd>
+  <dt>Position</dt><dd>Level 3 · Management decision · Participant No. ${esc(p.participant.no.trim() || "—")}</dd>
+  <dt>Date</dt><dd>${esc(dateLabel())}</dd>
+</dl>
+
+<h2>1 · Diagnosis</h2>
+${diagnosis}
+
+<h2>2 · Allocation of the ${esc(money(BUDGET))} budget</h2>
+<table><thead><tr><th>Line item</th><th>Scope</th><th class="num">Cost</th><th class="num">Starts</th></tr></thead><tbody>${allocRows}</tbody></table>
+<p><strong>Spent ${esc(money(spent))}</strong> of ${esc(money(BUDGET))}; ${rest >= 0 ? esc(money(rest)) + " remaining" : esc(money(-rest)) + " over budget"}.${leverLine}</p>
+
+<h2>3 · What was cut</h2>
+${para(r.cut)}
+
+<h2>4 · Governance</h2>
+${funded.length ? `<table><thead><tr><th>KPI</th><th>Owner</th><th>Review cadence</th><th>Escalation trigger</th></tr></thead><tbody>${govRows}</tbody></table>` : "<p>—</p>"}
+
+<h2>5 · Sequence</h2>
+<p><strong>Rollout order:</strong> ${esc(orderText)}.</p>
+<p><strong>KPI blind-spot warning:</strong> ${esc(warnedText)}${r.warned && r.missingKpi ? "; the KPI that loses its baseline: " + esc(KPI_LABEL[r.missingKpi]) : ""}.</p>${seqLine}
+
+<h2>6 · The measure I postponed</h2>
+${para(r.postponed)}
+<p><strong>Picked up:</strong> ${esc(r.pickup) || "—"}</p>
+<p class="legend">Left open by this allocation: ${open.map((o) => esc(o)).join(" ")}</p>
+
+<div class="foot">Checks requested: ${r.checks}<br/>Generated ${esc(dateLabel())}.</div>`;
 }
 
 export function wrapDocument(title: string, body: string): string {

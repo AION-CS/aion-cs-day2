@@ -5,9 +5,11 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { STAGE_IDS, ROW_IDS, COLS, cellId } from "@/data/funnel";
 import type { Phase, StageId, StepId } from "@/data/funnel";
-import { CELL_KEYS, SEG_IDS } from "@/data/segments";
+import { CELL_KEYS } from "@/data/segments";
 import type { OptId, SegId } from "@/data/segments";
-import { KEY_L1, KEY_L2 } from "@/data/mentorKey";
+import { KEY_L1, KEY_L2, KEY_L3 } from "@/data/mentorKey";
+import { ITEM_IDS } from "@/data/program";
+import type { ItemId, KpiId, Scope } from "@/data/program";
 
 export const STORAGE_KEY = "cs-d2-v1";
 const HISTORY_CAP = 100;
@@ -66,8 +68,28 @@ export type L2State = {
   checks: number;
 };
 
-/** Route 3 is not built yet: an empty slice keeps the persisted shape stable when it is filled in. */
-export type Route3State = Record<string, never>;
+export type GovRow = { owner: string; cadence: string; trigger: string };
+
+/** Route 3 · Level 3 — the Decision Memo. */
+export type Route3State = {
+  /** Block 3.1 — what is funded, and the lever's option and scope. */
+  alloc: { leverOpt: OptId | null; leverScope: Scope; fix: boolean; dash: boolean; train: boolean };
+  /** Block 3.2 — the month (1–4) each funded item starts. */
+  start: Record<ItemId, number | null>;
+  /** The learner's recorded answers about the KPI-blind-spot warning. */
+  warned: boolean | null;
+  missingKpi: KpiId | null;
+  seqResult: { holds: number } | null;
+  seqClue: boolean;
+  /** Block 3.3 */
+  cut: string;
+  /** Block 3.4 — one row per funded item. */
+  gov: Record<ItemId, GovRow>;
+  /** Block 3.5 */
+  postponed: string;
+  pickup: string;
+  checks: number;
+};
 
 export type Persisted = {
   participant: { no: string; name: string };
@@ -121,6 +143,18 @@ type Actions = {
   showUniformClue: () => void;
   setTradeoff: (t: string) => void;
 
+  // Route 3
+  setAlloc: (patch: Partial<Route3State["alloc"]>) => void;
+  setStart: (item: ItemId, month: number | null) => void;
+  setWarned: (v: boolean) => void;
+  setMissingKpi: (k: KpiId) => void;
+  checkSeq: (holds: number) => void;
+  showSeqClue: () => void;
+  setCut: (t: string) => void;
+  setGov: (item: ItemId, patch: Partial<GovRow>) => void;
+  setPostponed: (t: string) => void;
+  setPickup: (v: string) => void;
+
   setMentorUnlocked: (v: boolean) => void;
   mentorFill: () => void;
   resetRoute: (route: 1 | 2 | 3 | null) => void;
@@ -168,7 +202,22 @@ const emptyL2 = (): L2State => ({
   checks: 0,
 });
 
-const emptyRoute3 = (): Route3State => ({});
+const emptyGov = (): Record<ItemId, GovRow> =>
+  Object.fromEntries(ITEM_IDS.map((i) => [i, { owner: "", cadence: "", trigger: "" }])) as Record<ItemId, GovRow>;
+
+const emptyRoute3 = (): Route3State => ({
+  alloc: { leverOpt: null, leverScope: "both", fix: false, dash: false, train: false },
+  start: { lever: null, fix: null, dash: null, train: null },
+  warned: null,
+  missingKpi: null,
+  seqResult: null,
+  seqClue: false,
+  cut: "",
+  gov: emptyGov(),
+  postponed: "",
+  pickup: "",
+  checks: 0,
+});
 
 const emptyPersisted = (): Persisted => ({
   participant: { no: "", name: "" },
@@ -274,6 +323,30 @@ export const useStore = create<Persisted & Session & Actions>()(
       showUniformClue: () => set((s) => ({ l2: { ...s.l2, uniformClue: true } })),
       setTradeoff: (t) => set((s) => ({ l2: { ...s.l2, tradeoff: t } })),
 
+      // --- Route 3 · Task 3 --------------------------------------------------
+      setAlloc: (patch) =>
+        set((s) => {
+          const alloc = { ...s.route3.alloc, ...patch };
+          // an item that is no longer funded has no start month
+          const start = { ...s.route3.start };
+          if (alloc.leverOpt === null) start.lever = null;
+          if (!alloc.fix) start.fix = null;
+          if (!alloc.dash) start.dash = null;
+          if (!alloc.train) start.train = null;
+          return { route3: { ...s.route3, alloc, start, seqResult: null } };
+        }),
+      setStart: (item, month) =>
+        set((s) => ({ route3: { ...s.route3, start: { ...s.route3.start, [item]: month }, seqResult: null } })),
+      setWarned: (v) => set((s) => ({ route3: { ...s.route3, warned: v, seqResult: null } })),
+      setMissingKpi: (k) => set((s) => ({ route3: { ...s.route3, missingKpi: k, seqResult: null } })),
+      checkSeq: (holds) => set((s) => ({ route3: { ...s.route3, checks: s.route3.checks + 1, seqResult: { holds } } })),
+      showSeqClue: () => set((s) => ({ route3: { ...s.route3, seqClue: true } })),
+      setCut: (t) => set((s) => ({ route3: { ...s.route3, cut: t } })),
+      setGov: (item, patch) =>
+        set((s) => ({ route3: { ...s.route3, gov: { ...s.route3.gov, [item]: { ...s.route3.gov[item], ...patch } } } })),
+      setPostponed: (t) => set((s) => ({ route3: { ...s.route3, postponed: t } })),
+      setPickup: (v) => set((s) => ({ route3: { ...s.route3, pickup: v } })),
+
       // --- session / mentor / reset ------------------------------------------
       setMentorUnlocked: (v) => set({ mentorUnlocked: v }),
 
@@ -298,7 +371,16 @@ export const useStore = create<Persisted & Session & Actions>()(
             no: s.participant.no.trim() ? s.participant.no : "99",
             name: s.participant.name.trim() ? s.participant.name : "Mentor Check",
           };
-          return { participant, l1, l2, resetCount: s.resetCount + 1 };
+          const route3 = emptyRoute3();
+          route3.alloc = { ...KEY_L3.alloc };
+          route3.start = { ...KEY_L3.start };
+          route3.warned = KEY_L3.warned;
+          route3.missingKpi = KEY_L3.missingKpi;
+          route3.cut = KEY_L3.cut;
+          route3.gov = Object.fromEntries(ITEM_IDS.map((i) => [i, { ...KEY_L3.gov[i] }])) as Record<ItemId, GovRow>;
+          route3.postponed = KEY_L3.postponed;
+          route3.pickup = KEY_L3.pickup;
+          return { participant, l1, l2, route3, resetCount: s.resetCount + 1 };
         }),
 
       // One route's state only (Route 1 = Materi A + Task 1, Route 2 = Materi B + Task 2). The participant strip stays.
@@ -321,13 +403,14 @@ export const useStore = create<Persisted & Session & Actions>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       // Session-only flags (mentor unlock, reset counter) never persist.
       partialize: (s) => ({ participant: s.participant, ui: s.ui, l1: s.l1, l2: s.l2, route3: s.route3 }),
       // Any change to the persisted shape bumps `version` and adds a step here; `merge` below then fills
-      // every field an older blob lacks from the defaults.
+      // every field an older blob lacks from the defaults. v1 -> v2: Route 3 (the Decision Memo) gained its
+      // state; a v1 blob carries an empty route3, which merge fills from the defaults.
       migrate: (persisted) => (persisted ?? {}) as Persisted,
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<Persisted>;
@@ -361,7 +444,15 @@ export const useStore = create<Persisted & Session & Actions>()(
             gridFlagged: Array.isArray(p.l2?.gridFlagged) ? p.l2.gridFlagged : [],
             gridClue: { ...p.l2?.gridClue },
           },
-          route3: { ...base.route3, ...p.route3 },
+          route3: {
+            ...base.route3,
+            ...p.route3,
+            alloc: { ...base.route3.alloc, ...p.route3?.alloc },
+            start: { ...base.route3.start, ...p.route3?.start },
+            gov: Object.fromEntries(
+              ITEM_IDS.map((i) => [i, { ...base.route3.gov[i], ...p.route3?.gov?.[i] }]),
+            ) as Record<ItemId, GovRow>,
+          },
         };
       },
     },
@@ -387,5 +478,3 @@ export function rehydrateStore() {
   return useStore.persist.rehydrate();
 }
 
-// Kept so a future Route 3 slice can be seeded without touching the persisted shape.
-export const SEG_LIST = SEG_IDS;

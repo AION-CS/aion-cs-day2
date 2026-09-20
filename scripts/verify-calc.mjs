@@ -27,4 +27,15 @@ for (const [o, v] of Object.entries(expectedUniform)) {
   if (!ok) bad++;
   console.log(`${ok ? "ok  " : "FAIL"} all-${o} got ${got.toFixed(2)}  expected ${v}`);
 }
+// Route 3: the four line items and the budget. The lever's costs are 38 clients x the per-client cost of Task 2.
+const clients = seg.P.clients + seg.R.clients;
+const lever = { A: clients * opt.A.cost, B: 0, C: clients * opt.C.cost };
+const fixedItems = 58000 + 39000 + 21000;
+const totals = { A: 175000, C: 159800, B: 118000 };
+for (const [o, v] of Object.entries(totals)) {
+  const got = lever[o] + fixedItems;
+  const ok = got === v;
+  if (!ok) bad++;
+  console.log(`${ok ? "ok  " : "FAIL"} programme total with option ${o}: ${got} (expected ${v}); against the 150000 budget: ${got - 150000}`);
+}
 process.exit(bad ? 1 : 0);

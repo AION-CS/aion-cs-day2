@@ -3,6 +3,10 @@ import { PHASE_LABEL } from "@/data/funnel";
 import { TOUCHPOINTS } from "@/data/touchpoints";
 import { LOCAL_BEST, LOCAL_BEST_TOTAL, NET, OPTIONS, OPT_IDS, SEGMENTS, UNIFORM, UNIFORM_BEST, cellKey, fmtEuro, fmtEuroPlain } from "@/data/segments";
 import type { SegId } from "@/data/segments";
+import { KPI_LABEL } from "@/data/program";
+import { fundedItems, overBy, sequenceTruth, totalSpent, TRUE_KPI } from "@/lib/program";
+import { ITEMS } from "@/data/program";
+import type { Route3State } from "@/store/useStore";
 
 /**
  * Mentor-only answer keys for the exercises where the learner picks from fixed options. Each key gives the
@@ -95,3 +99,47 @@ export function uniformKey(): AnswerKeyBlock {
     teachingNote: `The trap is picking each segment's local winner (B for project, A for retainer). That is not one strategy: it is two, and it totals ${fmtEuroPlain(LOCAL_BEST_TOTAL)}. Running C everywhere totals ${fmtEuroPlain(UNIFORM[UNIFORM_BEST])}, so the price of one strategy is ${fmtEuroPlain(LOCAL_BEST_TOTAL - UNIFORM[UNIFORM_BEST])}: ${fmtEuroPlain(NET[cellKey("B", "P")] - NET[cellKey("C", "P")])} left in project clients and ${fmtEuroPlain(NET[cellKey("A", "R")] - NET[cellKey("C", "R")])} in retainer clients. Check that the learner names both amounts, not only the letter.`,
   };
 }
+
+/** The sequencing key is computed from the learner's own allocation: the rule is applied to what they chose. */
+export function sequenceKey(r: Route3State): AnswerKeyBlock {
+  const t = sequenceTruth(r.alloc, r.start);
+  return {
+    title: "Block 3.2 · Did the KPI-blind-spot warning appear",
+    expected: t.pending
+      ? "Not decidable yet: the start months of the lever and the dashboard are not both set."
+      : t.applies
+        ? `Yes. The warning reads: “${t.text}” The KPI that loses its baseline: ${KPI_LABEL[TRUE_KPI]}.`
+        : "No. The dashboard starts before the lever, so a baseline exists when the lever launches.",
+    options: [
+      { label: "Yes, the warning appeared", expected: t.applies, why: t.applies ? "The lever launches before, with or without the dashboard, so its early months have no baseline." : "The dashboard is in place first, so there is no blind spot to warn about." },
+      { label: "No, it did not appear", expected: !t.applies && !t.pending, why: t.applies ? "The rule is met: the lever is running with no baseline behind it." : "The lever starts after the dashboard, so the rule is not met." },
+      ...(["conversion", "clv", "repeat"] as const).map((k) => ({
+        label: `KPI: ${KPI_LABEL[k]}`,
+        expected: t.applies && k === TRUE_KPI,
+        why:
+          k === TRUE_KPI
+            ? "The lever acts on repeat purchase (goal → action → KPI in C1), so this is the KPI whose early movement cannot be read without a baseline."
+            : k === "clv"
+              ? "CLV is derived from retention and moves slowly; the lever’s first effect shows in the repeat-purchase rate."
+              : "The conversion rate is a funnel measure. A retention lever does not act on it directly.",
+      })),
+    ],
+    teachingNote: "The rule the widget enforces is about order, not about funding alone: an unfunded dashboard means no baseline at all, and a dashboard that starts in the same month leaves that month blind, because its data begins the month after it starts.",
+  };
+}
+
+/** Rubric evidence for the mentor: the two objective items are computed, the three judged items are read. */
+export function rubricRows(r: Route3State): { item: string; status: string; note: string }[] {
+  const funded = fundedItems(r.alloc);
+  const t = sequenceTruth(r.alloc, r.start);
+  const seqOk = !t.pending && r.warned === t.applies && (!t.applies || r.missingKpi === TRUE_KPI);
+  const cutItems = (["lever", "fix", "dash", "train"] as const).filter((i) => !funded.includes(i));
+  return [
+    { item: "Allocation stays within €150,000 (binary)", status: overBy(r.alloc) === 0 && funded.length > 0 ? "Full" : "None", note: `Allocated ${fmtEuroPlain(totalSpent(r.alloc))}${funded.length ? "" : " (nothing funded)"}.` },
+    { item: "What was cut names an item and its consequence", status: "Read it", note: cutItems.length ? `Unfunded: ${cutItems.map((i) => ITEMS[i].short).join(", ")}. Full = the item plus the exact KPI, segment or leak affected; partial = the item only; none = no cut named or the budget ignored.` : "Nothing is unfunded on cost. Look for a descoped lever or an accepted residual gap (the fix stops at 68%). Nothing to cut is not a fault." },
+    { item: "Governance names owner, cadence and trigger for the funded KPIs", status: "Read it", note: `Funded: ${funded.map((i) => ITEMS[i].short).join(", ") || "none"}. Full = all three per funded item, tied to it; partial = one or two; none = a generic “we will monitor it”. A plan that ignores the cut item is partial.` },
+    { item: "Sequence answer matches what the widget showed", status: seqOk ? "Full" : t.pending ? "Not decidable" : "None", note: t.applies ? "The warning applied." : t.pending ? "Start months not both set." : "The warning did not apply." },
+    { item: "The postponed measure is real and testable", status: "Read it", note: "Full = tied to an unfunded or descoped item, or to the residual 7 pp of the show-up gap, with a stated pickup point; partial = vague; none = claims nothing was postponed while the budget was exceeded or an item was cut." },
+  ];
+}
+

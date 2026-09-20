@@ -55,8 +55,11 @@ export const ROUTES: RouteInfo[] = [
     title: "Route 3 · Management decision",
     level: "Level 3 · Management decision",
     blurb:
-      "Decide how a €150,000 budget over four months is spent on retention, and who owns it. Not built yet: the page opens and holds a placeholder.",
-    plan: [],
-    built: false,
+      "Decide how a €150,000 budget over four months is spent on retention, and who owns it. Study material, then a Decision Memo that assembles itself beside your answers.",
+    plan: [
+      { label: "Materi C · Level 3", minutes: 30 },
+      { label: "Task 3 · Decision Memo", minutes: 15 },
+    ],
+    built: true,
   },
 ];

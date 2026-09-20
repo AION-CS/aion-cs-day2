@@ -20,6 +20,7 @@ export function ExportBar({
   filename,
   missing,
   buildBody,
+  showPreview = true,
 }: {
   id: string;
   previewTitle: string;
@@ -28,6 +29,8 @@ export function ExportBar({
   filename: string;
   missing: MissingEntry[];
   buildBody: () => string;
+  /** Off when the page already shows the same document live (the memo builder). */
+  showPreview?: boolean;
 }) {
   const [panel, setPanel] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -55,18 +58,18 @@ export function ExportBar({
 
   return (
     <div id={id} className="space-y-3">
-      <details
+      {showPreview && <details
         className="card p-4"
         onToggle={(e) => setPreviewOpen((e.currentTarget as HTMLDetailsElement).open)}
       >
         <summary className="cursor-pointer font-semibold text-ink">{previewTitle}</summary>
         {previewOpen && (
           <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-paper p-4 md:p-6">
-            <style>{DOC_CSS}</style>
+            <style dangerouslySetInnerHTML={{ __html: DOC_CSS }} />
             <div className="doc" dangerouslySetInnerHTML={{ __html: buildBody() }} />
           </div>
         )}
-      </details>
+      </details>}
 
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" onClick={() => run("download")} className="btn-primary">

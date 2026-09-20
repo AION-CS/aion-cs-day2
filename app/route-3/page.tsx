@@ -1,32 +1,35 @@
 import { HashFlash } from "@/components/chrome/HashFlash";
 import { SectionRail } from "@/components/chrome/SectionRail";
+import { SuggestedOrderBanner } from "@/components/ui/Banner";
+import { MateriC } from "@/components/materi/Materi";
+import { Task3 } from "@/components/task3/Task3";
 import { ResetRoute } from "@/components/ui/ResetRoute";
 
 export const metadata = { title: "Route 3 · Management decision — Retention Lab · Day 2" };
 
-/** Route 3 is not built yet. The page, its nav entry and an empty store slice exist so the shape of the site never changes when it is filled in. */
 export default function Route3() {
   return (
     <div className="space-y-8 pt-4">
       <HashFlash />
-      <header className="space-y-1">
-        <p className="smallcaps text-accent">Route 3 · Level 3 · Management decision</p>
-        <h1>Decide how the retention budget is spent</h1>
-      </header>
-      <SectionRail route={3} />
-      <section id="route-3-status" className="card space-y-3 p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-h2">Not built yet</h2>
-          <span className="pill border-line bg-mist text-ash">Placeholder</span>
+      <header className="space-y-3">
+        <div className="space-y-1">
+          <p className="smallcaps text-accent">Route 3 · Level 3 · Management decision</p>
+          <h1>Spend the budget you have, and own what you left out</h1>
         </div>
-        <p className="max-w-prose text-body">
-          Route 3 will give DigitalIT Solutions GmbH a budget of €150,000 over four months and ask you to decide how it is spent on retention, and who owns the decision. It will quote
-          your Route 1 and Route 2 answers as soft pointers and never require them.
-        </p>
-        <p className="max-w-prose text-caption text-ash">
-          Nothing is locked. Routes 1 and 2 stay open, and their exports do not depend on this route.
-        </p>
-      </section>
+        <blockquote className="max-w-prose space-y-2 border-l-4 border-gold bg-accentSoft px-4 py-3 text-body text-ink">
+          <p>
+            Level 1 showed where prospects go. Level 2 put a euro figure on three levers. Level 3 gives you four line items, a budget of €150,000 and four months, and asks you to decide, in writing,
+            what you fund, in what order, who owns it, and what you postpone.
+          </p>
+        </blockquote>
+      </header>
+      <SuggestedOrderBanner
+        routeKey="r3"
+        text="Routes 1 and 2 first are recommended: Task 3 quotes your leak diagnosis and your lever choice, and its grid opens once you have named the weakest funnel stage (Route 1) and chosen one option for both segments (Route 2). Inside this route: Materi C → Task 3. Every section stays open."
+      />
+      <SectionRail route={3} />
+      <MateriC />
+      <Task3 />
       <ResetRoute route={3} />
     </div>
   );
