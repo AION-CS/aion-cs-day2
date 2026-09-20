@@ -35,7 +35,7 @@ export function MentorBar() {
       : pathname.startsWith("/route-3")
         ? 3
         : null;
-  const exportId = route === 1 ? "export-l1" : route === 2 ? "export-l2" : route === 3 ? "export-l3" : null;
+  const exportId = route === 1 ? "export-l1" : route === 2 ? "export-l2" : null;
 
   const submit = () => {
     if (code === MENTOR_PASSCODE) {
@@ -122,7 +122,7 @@ export function MentorBar() {
               className="btn-primary btn-sm"
               onClick={() => {
                 mentorFill();
-                setMsg("Model answers filled in Routes 1, 2 and 3. Nothing is left to type; export the notes.");
+                setMsg("Model answers filled in Routes 1 and 2. Nothing is left to type; export the notes.");
               }}
             >
               Fill all model answers
@@ -144,7 +144,7 @@ export function MentorBar() {
               className="btn-ghost btn-sm"
               onClick={() => {
                 resetRoute(route);
-                setMsg(route ? `Route ${route} cleared.` : "Routes 1, 2 and 3 cleared.");
+                setMsg(route ? `Route ${route} cleared.` : "All routes cleared.");
               }}
             >
               {route ? "Clear this route" : "Clear all routes"}

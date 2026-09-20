@@ -2,116 +2,99 @@
 
 import { useState } from "react";
 import clsx from "clsx";
-import { BINS, RECORDS, RECORD_BY_ID } from "@/data/kesslerDossier";
-import type { Bin, RecordId } from "@/data/kesslerDossier";
-import { flagsForSort } from "@/lib/checks";
+import { PHASES } from "@/data/funnel";
+import type { Phase, StageId } from "@/data/funnel";
+import { TOUCHPOINTS, TOUCHPOINT_BY_ID } from "@/data/touchpoints";
+import { sortHolds } from "@/lib/checks";
+import { sortKey } from "@/lib/answerKey";
 import { IDS } from "@/lib/missing";
 import { useStore } from "@/store/useStore";
+import { AnswerKey } from "@/components/ui/AnswerKey";
 import { UndoRedoControls } from "@/components/ui/UndoRedoControls";
 
-/** A record token: ID + source + month. The full text lives in the record cards and the "selected record" strip. */
 function Chip({
   id,
   selected,
-  flagged,
+  dragging,
+  clue,
   onSelect,
   onDragStart,
   onDragEnd,
-  dragging,
 }: {
-  id: RecordId;
+  id: StageId;
   selected: boolean;
-  flagged: boolean;
   dragging: boolean;
+  clue: string | null;
   onSelect: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
 }) {
-  const r = RECORD_BY_ID[id];
+  const t = TOUCHPOINT_BY_ID[id];
   return (
-    <button
-      type="button"
-      id={IDS.record(id)}
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onClick={onSelect}
-      aria-pressed={selected}
-      aria-label={`Record ${id}, ${r.source}, ${r.when}${flagged ? ", outlined by your last check" : ""}`}
-      className={clsx(
-        "flex w-full items-center gap-2 rounded-lg border bg-paper px-2.5 py-2 text-left transition-colors",
-        selected ? "border-accent bg-accentSoft ring-2 ring-gold anim-pulse" : "border-line hover:border-ash",
-        flagged && "is-flagged",
-        dragging && "is-dragging",
-      )}
-    >
-      <span className="rounded bg-ink px-1.5 py-0.5 text-micro font-bold text-paper">{id}</span>
-      <span className="min-w-0">
-        <span className="block truncate text-caption font-semibold leading-tight">{r.source}</span>
-        <span className="block truncate text-micro normal-case tracking-normal text-ash">{r.when}</span>
-      </span>
-    </button>
+    <div id={IDS.touchpoint(id)} className="space-y-1">
+      <button
+        type="button"
+        draggable
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onClick={onSelect}
+        aria-pressed={selected}
+        className={clsx(
+          "flex w-full items-center gap-2 rounded-lg border bg-paper px-2.5 py-2 text-left transition-colors",
+          selected ? "border-accent bg-accentSoft ring-2 ring-gold anim-pulse" : "border-line hover:border-ash",
+          dragging && "is-dragging",
+        )}
+      >
+        <span className="text-caption font-semibold leading-tight">{t.label}</span>
+      </button>
+      {clue && <p className="fade-in rounded-md border border-gold bg-accentSoft px-2 py-1 text-micro normal-case tracking-normal text-ink">{clue}</p>}
+    </div>
   );
 }
 
 /**
- * Block 1.1 mechanics: five bins, eight records. Drag and drop with native
- * HTML5 events, or click-to-place (select a record, then a bin) for touch and
- * keyboard. Every placement is undoable.
+ * Block 1.1 mechanics: three phase bins, six touchpoints. Native HTML5 drag and drop, or click-to-place
+ * (select a touchpoint, then a bin) for touch and keyboard. Every placement is undoable. One set-level check
+ * reports only how many placed rows hold, never which ones: with three phases, naming the wrong rows would
+ * name the answer.
  */
-export function SortBoard({ onSelectedChange }: { onSelectedChange?: (id: RecordId | null) => void }) {
+export function SortBoard() {
   const l1 = useStore((s) => s.l1);
-  const placeRecord = useStore((s) => s.placeRecord);
-  const undo = useStore((s) => s.undoPlacement);
-  const redo = useStore((s) => s.redoPlacement);
+  const place = useStore((s) => s.placeTouchpoint);
+  const undo = useStore((s) => s.undoSort);
+  const redo = useStore((s) => s.redoSort);
   const checkSort = useStore((s) => s.checkSort);
-  const showClue = useStore((s) => s.showL1Clue);
+  const showClue = useStore((s) => s.showSortClue);
+  const openReasoning = useStore((s) => s.openReasoning);
 
-  const [selected, setSelectedState] = useState<RecordId | null>(null);
-  const [dragging, setDragging] = useState<RecordId | null>(null);
+  const [selected, setSelected] = useState<StageId | null>(null);
+  const [dragging, setDragging] = useState<StageId | null>(null);
   const [over, setOver] = useState<string | null>(null);
-  const [lastCheck, setLastCheck] = useState<{ flagged: number; unplaced: number } | null>(null);
 
-  const setSelected = (id: RecordId | null) => {
-    setSelectedState(id);
-    onSelectedChange?.(id);
-  };
-
-  const place = (id: RecordId, bin: Bin | null) => {
-    placeRecord(id, bin);
+  const put = (id: StageId, phase: Phase | null) => {
+    place(id, phase);
     setSelected(null);
   };
+  const unplaced = TOUCHPOINTS.filter((t) => l1.sort[t.id] === null);
+  const res = l1.sortResult;
+  const canReveal = l1.sortChecks >= 2;
 
-  const unplaced = RECORDS.filter((r) => l1.placements[r.id] === null);
-  const recFlags = l1.flagged.filter((f) => f in RECORD_BY_ID) as RecordId[];
-  const sel = selected ? RECORD_BY_ID[selected] : null;
-
-  const doCheck = () => {
-    const flags = flagsForSort(l1);
-    checkSort(flags);
-    setLastCheck({
-      flagged: flags.filter((f) => f in RECORD_BY_ID).length,
-      unplaced: RECORDS.filter((r) => l1.placements[r.id] === null).length,
-    });
-  };
-
-  const dropOn = (bin: Bin | null) => (e: React.DragEvent) => {
+  const dropOn = (phase: Phase | null) => (e: React.DragEvent) => {
     e.preventDefault();
-    const id = (e.dataTransfer.getData("text/plain") || dragging) as RecordId | null;
+    const id = (e.dataTransfer.getData("text/plain") || dragging) as StageId | null;
     setOver(null);
     setDragging(null);
-    if (id && id in RECORD_BY_ID) place(id, bin);
+    if (id && id in TOUCHPOINT_BY_ID) put(id, phase);
   };
   const dragOn = (key: string) => (e: React.DragEvent) => {
     e.preventDefault();
     setOver(key);
   };
-
-  const chipProps = (id: RecordId) => ({
+  const chipProps = (id: StageId) => ({
     id,
     selected: selected === id,
-    flagged: recFlags.includes(id),
     dragging: dragging === id,
+    clue: l1.sortClue ? TOUCHPOINT_BY_ID[id].clue : null,
     onSelect: () => setSelected(selected === id ? null : id),
     onDragStart: (e: React.DragEvent) => {
       e.dataTransfer.setData("text/plain", id);
@@ -127,13 +110,10 @@ export function SortBoard({ onSelectedChange }: { onSelectedChange?: (id: Record
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-caption text-ash">
-          Drag a record into a bin, or select it and then select a bin. Select a placed record to move it again.
-        </p>
+        <p className="text-caption text-ash">Drag a touchpoint into a phase, or select it and then select a phase. Select a placed one to move it again.</p>
         <UndoRedoControls onUndo={undo} onRedo={redo} undoCount={l1.history.length} redoCount={l1.future.length} />
       </div>
 
-      {/* tray */}
       <div
         onDragOver={dragOn("tray")}
         onDragLeave={() => setOver(null)}
@@ -141,71 +121,50 @@ export function SortBoard({ onSelectedChange }: { onSelectedChange?: (id: Record
         className={clsx("rounded-lg border border-dashed border-ash/60 bg-mist/60 p-3", over === "tray" && "is-drop-target")}
       >
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="smallcaps">Records not placed ({unplaced.length})</p>
-          {selected && l1.placements[selected] !== null && (
-            <button type="button" onClick={() => place(selected, null)} className="btn-ghost btn-sm">
-              Return {selected} to this tray
+          <p className="smallcaps">Touchpoints not sorted ({unplaced.length})</p>
+          {selected && l1.sort[selected] !== null && (
+            <button type="button" onClick={() => put(selected, null)} className="btn-ghost btn-sm">
+              Return to this tray
             </button>
           )}
         </div>
         {unplaced.length === 0 ? (
-          <p className="text-caption text-ash">Every record is in a bin.</p>
+          <p className="text-caption text-ash">Every touchpoint is in a phase.</p>
         ) : (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {unplaced.map((r) => (
-              <Chip key={r.id} {...chipProps(r.id)} />
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {unplaced.map((t) => (
+              <Chip key={t.id} {...chipProps(t.id)} />
             ))}
           </div>
         )}
       </div>
 
-      {/* selected record — read it without leaving the bins */}
-      <div aria-live="polite" className="min-h-[3rem]">
-        {sel ? (
-          <div className="fade-in rounded-lg border border-accent/50 bg-accentSoft p-3 text-caption">
-            <p className="font-semibold">
-              {sel.id} · {sel.source} · {sel.when}
-            </p>
-            <p className="mt-1 text-ink">{sel.text}</p>
-            <p className="mt-1 text-ash">Record on file: {sel.onFile}</p>
-          </div>
-        ) : (
-          <p className="text-caption text-ash">Select a record to read it here, then select a bin to file it.</p>
-        )}
-      </div>
-
-      {/* bins */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {BINS.map((b) => {
-          const inBin = RECORDS.filter((r) => l1.placements[r.id] === b.id);
+      <div className="grid gap-3 md:grid-cols-3">
+        {PHASES.map((ph) => {
+          const inBin = TOUCHPOINTS.filter((t) => l1.sort[t.id] === ph.id);
           return (
             <div
-              key={b.id}
-              id={IDS.bin(b.id)}
-              onDragOver={dragOn(b.id)}
+              key={ph.id}
+              onDragOver={dragOn(ph.id)}
               onDragLeave={() => setOver(null)}
-              onDrop={dropOn(b.id)}
-              className={clsx(
-                "flex min-h-[9rem] flex-col rounded-lg border bg-paper p-2.5",
-                b.id === "interpretation" ? "border-dashed border-ash" : "border-line",
-                over === b.id && "is-drop-target",
-              )}
+              onDrop={dropOn(ph.id)}
+              className={clsx("flex min-h-[9rem] flex-col rounded-lg border border-line bg-paper p-2.5", over === ph.id && "is-drop-target")}
             >
               <button
                 type="button"
-                onClick={() => selected && place(selected, b.id)}
-                aria-label={selected ? `Place ${selected} in ${b.label}` : `${b.label} bin. Select a record first.`}
+                onClick={() => selected && put(selected, ph.id)}
+                aria-label={selected ? `Place ${TOUCHPOINT_BY_ID[selected].label} in ${ph.label}` : `${ph.label}. Select a touchpoint first.`}
                 className={clsx(
                   "mb-2 rounded-md border px-2 py-1.5 text-left transition-colors",
                   selected ? "border-accent bg-accentSoft hover:bg-gold/30" : "border-transparent bg-mist",
                 )}
               >
-                <span className="block text-caption font-bold leading-tight">{b.label}</span>
-                <span className="mt-0.5 block text-micro normal-case leading-snug tracking-normal text-ash">{b.definition}</span>
+                <span className="block text-caption font-bold leading-tight">{ph.label}</span>
+                <span className="mt-0.5 block text-micro normal-case leading-snug tracking-normal text-ash">{ph.hint}</span>
               </button>
               <div className="space-y-1.5">
-                {inBin.map((r) => (
-                  <Chip key={r.id} {...chipProps(r.id)} />
+                {inBin.map((t) => (
+                  <Chip key={t.id} {...chipProps(t.id)} />
                 ))}
               </div>
               {inBin.length === 0 && <p className="mt-auto pt-2 text-micro normal-case tracking-normal text-ash">Empty</p>}
@@ -214,45 +173,49 @@ export function SortBoard({ onSelectedChange }: { onSelectedChange?: (id: Record
         })}
       </div>
 
-      {/* check */}
       <div className="space-y-3 border-t border-line pt-3">
         <div className="flex flex-wrap items-center gap-3">
-          <button type="button" onClick={doCheck} className="btn-primary">
+          <button type="button" onClick={() => checkSort(sortHolds(l1.sort))} className="btn-primary">
             Check my sort
           </button>
+          {!l1.sortClue && (
+            <button type="button" onClick={showClue} className="btn-ghost btn-sm border-gold">
+              Show clue
+            </button>
+          )}
           <span className="text-caption text-ash">
-            Checks requested: <span className="tnum font-semibold text-ink">{l1.checks}</span>
+            Checks requested: <span className="tnum font-semibold text-ink">{l1.sortChecks}</span>
           </span>
-          <span className="text-caption text-ash">Counted, not punished. It only outlines; it never gives the bin.</span>
         </div>
-        {lastCheck && (
+        <p className="text-micro normal-case tracking-normal text-ash">
+          A check counts how many placed rows hold. It never says which, because with three phases naming the wrong rows would name the answer.
+        </p>
+        {res && (
           <p role="status" className="text-caption text-ink">
-            {lastCheck.flagged === 0
-              ? "No placed record is outlined."
-              : `${lastCheck.flagged} placed ${lastCheck.flagged === 1 ? "record is" : "records are"} outlined in amber.`}
-            {lastCheck.unplaced > 0 && ` ${lastCheck.unplaced} not placed yet, so not checked.`}
+            {res.placed === 0 ? "Nothing is sorted yet." : `${res.holds} of ${res.placed} placed ${res.placed === 1 ? "touchpoint holds" : "touchpoints hold"}.`}
+            {res.placed < TOUCHPOINTS.length && ` ${TOUCHPOINTS.length - res.placed} not placed yet, so not checked.`}
           </p>
         )}
-        {recFlags.length > 0 && (
-          <ul className="space-y-2">
-            {recFlags.map((id) => (
-              <li key={id} className="fade-in flex flex-wrap items-start gap-2 text-caption">
-                <span className="is-flagged rounded bg-ink px-1.5 py-0.5 text-micro font-bold text-paper">{id}</span>
-                {l1.clueShown[id] ? (
-                  <p role="status" className="min-w-0 flex-1 rounded-md border border-gold bg-accentSoft px-3 py-1.5">
-                    <span className="smallcaps mr-1 text-accent">Clue</span>
-                    {RECORD_BY_ID[id].clue}
-                  </p>
-                ) : (
-                  <button type="button" onClick={() => showClue(id)} className="btn-ghost btn-sm border-gold">
-                    Show clue for {id}
-                  </button>
-                )}
+        {l1.sortClue && (
+          <p className="text-micro normal-case tracking-normal text-ash">The clue is a test question under every touchpoint, not only under the ones that are off.</p>
+        )}
+        {canReveal && !l1.reasoningOpened && (
+          <button type="button" onClick={openReasoning} className="btn-ghost btn-sm">
+            Show the reasoning (recorded in your export)
+          </button>
+        )}
+        {l1.reasoningOpened && (
+          <ul className="fade-in space-y-1.5 rounded-lg border border-gold bg-accentSoft p-3 text-caption text-ink">
+            <li className="smallcaps text-accent">The reasoning · opened after {l1.sortChecks} checks</li>
+            {TOUCHPOINTS.map((t) => (
+              <li key={t.id}>
+                <span className="font-semibold">{t.label}:</span> {t.why}
               </li>
             ))}
           </ul>
         )}
       </div>
+      <AnswerKey block={sortKey()} />
     </div>
   );
 }

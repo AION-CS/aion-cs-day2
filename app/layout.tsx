@@ -10,7 +10,7 @@ import { MentorBar } from "@/components/chrome/MentorBar";
 export const metadata: Metadata = {
   title: `${COURSE.site} — ${COURSE.title}`,
   description:
-    "Self-study companion for Customer Retention & Buying Behaviour in B2B IT Sales: study material, two working documents and a live evidence board.",
+    "Self-study companion for Customer Retention & Buying Behaviour in B2B IT Sales, Day 2: behaviour-based sales strategy and systematic retention, with study material, a funnel diagnostic and a lever calculator.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

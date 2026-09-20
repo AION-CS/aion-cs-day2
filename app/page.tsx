@@ -7,7 +7,7 @@ export default function Home() {
       <header className="space-y-2">
         <p className="smallcaps text-accent">{COURSE.module}</p>
         <h1 className="text-display">{COURSE.site}</h1>
-        <p className="max-w-prose text-body text-ash">{COURSE.title}. Three routes, one per level: study on your own, work a document from a real-looking case file, and export it.</p>
+        <p className="max-w-prose text-body text-ash">{COURSE.title}. Case: {COURSE.company}, a mid-size B2B IT services vendor with many leads, few closings and weak retention. Three routes, one per level: study on your own, work a document from the case, and export it.</p>
       </header>
 
       <section aria-labelledby="routes-h" className="space-y-3">

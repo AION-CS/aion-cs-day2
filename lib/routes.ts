@@ -1,10 +1,11 @@
-/** Day 1 route registry — Customer Retention & Buying Behaviour in B2B IT Sales, Module 1. One route per level. */
+/** Day 2 route registry — Customer Retention & Buying Behaviour in B2B IT Sales, Module 1. One route per level. */
 
 export const COURSE = {
-  title: "Customer Retention & Buying Behaviour in B2B IT Sales",
-  site: "Retention Lab · Day 1",
-  module: "Module 1, Day 1 of 2",
-  day: 1,
+  title: "Applying Behaviour-Based Sales Strategy and Systematic Customer Retention",
+  site: "Retention Lab · Day 2",
+  module: "Module 1, Day 2 of 2",
+  day: 2,
+  company: "DigitalIT Solutions GmbH",
 } as const;
 
 export type RouteInfo = {
@@ -26,10 +27,10 @@ export const ROUTES: RouteInfo[] = [
     title: "Route 1 · Knowledge",
     level: "Level 1 · Knowledge",
     blurb:
-      "Read what a customer file actually records, and what it does not. Study material, then a Diagnostic Note on the Kessler case.",
+      "Read where DigitalIT Solutions loses prospects between the website and the signature, and what its repeat-purchase rate says about retention. Study material, then a Diagnostic Note.",
     plan: [
-      { label: "Materi A · Level 1", minutes: 60 },
-      { label: "Task 1 · Diagnostic Note", minutes: 30 },
+      { label: "Materi A · Level 1", minutes: 30 },
+      { label: "Task 1 · Diagnostic Note", minutes: 15 },
     ],
     built: true,
   },
@@ -40,9 +41,9 @@ export const ROUTES: RouteInfo[] = [
     title: "Route 2 · Application",
     level: "Level 2 · Application",
     blurb:
-      "What decides a purchase, and how to put figures and buying motives on it. Study material, then a Calculation Note on the Kessler re-tender.",
+      "Put a euro figure on three retention levers for two client segments, and choose one option per segment. Study material, then a Calculation Note.",
     plan: [
-      { label: "Materi B · Level 2", minutes: 60 },
+      { label: "Materi B · Level 2", minutes: 30 },
       { label: "Task 2 · Calculation Note", minutes: 15 },
     ],
     built: true,
@@ -54,11 +55,8 @@ export const ROUTES: RouteInfo[] = [
     title: "Route 3 · Management decision",
     level: "Level 3 · Management decision",
     blurb:
-      "Decide under a budget that cannot fund everything, and say in writing what you left uncovered. Study material, then a Decision Memo built beside the exercises.",
-    plan: [
-      { label: "Materi C · Level 3", minutes: 60 },
-      { label: "Task 3 · Decision Memo", minutes: 20 },
-    ],
-    built: true,
+      "Decide how a €150,000 budget over four months is spent on retention, and who owns it. Not built yet: the page opens and holds a placeholder.",
+    plan: [],
+    built: false,
   },
 ];

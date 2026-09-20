@@ -1,25 +1,18 @@
-import { BIN_LABEL, RECORDS, RECORD_BY_ID } from "@/data/kesslerDossier";
-import { BUCKETS, CITE_LABEL, MAP_ROWS } from "@/data/mapping";
-import { loyaltyMarker } from "@/lib/mapping";
-import { FIGURES } from "@/data/offers";
-import { KESSLER_ROLES, MOTIVE_LABEL } from "@/data/motives";
-import { RECOMMENDATION_LABEL } from "@/store/selectors";
-import { citedFigures } from "@/lib/checks";
-import { esc, evidenceBoardSvg, loyaltyMapSvg, motiveMapSvg } from "@/lib/svgModels";
-import { CAP, LEVERS, POSITION_LABEL, computeBoard } from "@/data/leverData";
-import { ACTIVITIES, CHIP_NAME, ROLES } from "@/data/raciModel";
-import { formatEuro } from "@/lib/parseAmount";
-import { G_IDS } from "@/data/leverData";
+import { COLS, COL_LABEL, PHASE_LABEL, ROW_IDS, ROW_LABEL, STEP_BY_ID, cellId } from "@/data/funnel";
+import { CONTRACT, OPTIONS, OPT_IDS, SEGMENTS, SEG_IDS, cellKey, fmtEuroPlain } from "@/data/segments";
+import { TOUCHPOINTS } from "@/data/touchpoints";
+import { COURSE } from "@/lib/routes";
+import { esc } from "@/lib/svg";
+import { parsePct } from "@/lib/parseAmount";
 import type { Persisted } from "@/store/useStore";
 
 /**
- * The exported note is built here as a self-contained HTML string (inline CSS +
- * inline SVG). The on-screen "Preview of your note" renders this same body, so
- * what the participant reads is what they download. It never prints answer
- * keys, ticks, crosses or scores.
+ * Each exported note is built here as a self-contained HTML string (inline CSS + inline SVG). The on-screen
+ * "Preview of your note" renders this same body, so what the participant reads is what they download. It never
+ * prints answer keys, ticks, crosses or scores.
  */
 
-const COURSE = "Customer Retention & Buying Behaviour in B2B IT Sales";
+const COURSE_NAME = "Customer Retention & Buying Behaviour in B2B IT Sales";
 
 export const DOC_CSS = `
 .doc{font-family:Georgia,Cambria,"Times New Roman",serif;color:#1F2328;background:#FFFEFA;line-height:1.5;font-size:14px}
@@ -32,165 +25,113 @@ export const DOC_CSS = `
 .doc table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:system-ui,sans-serif}
 .doc th{text-align:left;font-weight:600;color:#59606A;border-bottom:1px solid #59606A;padding:4px 8px 4px 0;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
 .doc td{border-bottom:1px solid #ECE6D6;padding:6px 8px 6px 0;vertical-align:top}
+.doc td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .doc td.id{font-weight:700;white-space:nowrap}
 .doc blockquote{margin:6px 0;padding:6px 12px;border-left:3px solid #D99A2B;background:#FBF0D6}
 .doc .box{border:1px solid #D8D1BF;padding:8px 12px;margin:8px 0;background:#fff}
 .doc .muted{color:#59606A}
-.doc .chips span{display:inline-block;border:1px solid #8A5A0B;background:#FBF0D6;border-radius:99px;padding:1px 9px;margin:2px 4px 2px 0;font-family:system-ui,sans-serif;font-size:12px}
+.doc .tag{display:inline-block;border:1px dashed #A4472A;color:#A4472A;border-radius:99px;padding:0 8px;font-family:system-ui,sans-serif;font-size:11px;margin-left:6px}
 .doc .foot{margin-top:26px;padding-top:8px;border-top:1px solid #59606A;font-family:system-ui,sans-serif;font-size:12px;color:#59606A}
 .doc .legend{font-family:system-ui,sans-serif;font-size:11.5px;color:#59606A;margin:4px 0 0}
 .doc svg{display:block;margin:8px 0}
 @media print{.doc{font-size:12px}.doc h2{break-after:avoid}.doc table,.doc svg,.doc blockquote{break-inside:avoid}}
 `;
 
-const dateLabel = () =>
-  new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const dateLabel = () => new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
 function header(title: string, level: string, p: Persisted): string {
   return `
-<div class="kicker">${esc(COURSE)}</div>
+<div class="kicker">${esc(COURSE_NAME)} · ${esc(COURSE.company)}</div>
 <h1>${esc(title)}</h1>
 <dl class="meta">
-  <dt>Course</dt><dd>${esc(COURSE)}</dd>
+  <dt>Course</dt><dd>${esc(COURSE_NAME)} · Day ${COURSE.day}</dd>
   <dt>Position</dt><dd>${esc(level)}</dd>
   <dt>Participant</dt><dd>No. ${esc(p.participant.no.trim() || "—")} · ${esc(p.participant.name.trim() || "—")}</dd>
   <dt>Date</dt><dd>${esc(dateLabel())}</dd>
 </dl>`;
 }
 
-// --- Task 1 -----------------------------------------------------------------
+const para = (s: string) => `<blockquote>${esc(s.trim()) || "—"}</blockquote>`;
 
-export function diagnosticBody(p: Persisted): string {
-  const { placements, verdict, checks } = p.l1;
-  const rows = RECORDS.map((r) => {
-    const b = placements[r.id];
-    return `<tr><td class="id">${r.id}</td><td>${esc(r.source)}</td><td>${esc(r.when)}</td><td>${esc(r.text)}</td><td>${b ? esc(BIN_LABEL[b]) : '<span class="muted">not placed</span>'}</td></tr>`;
-  }).join("");
-  const cites = [verdict.cite1, verdict.cite2].filter(Boolean);
-  const mapRows = MAP_ROWS.map((r) => {
-    const a = p.l1.mapping.rows[r.id];
-    return `<tr><td class="id">${r.id}</td><td>${esc(r.label)}</td><td>${a.bucket ? `${BUCKETS[a.bucket].glyph} ${esc(BUCKETS[a.bucket].label)}` : '<span class="muted">not read</span>'}</td><td>${a.bucket === "not_recorded" ? '<span class="muted">no record measures it</span>' : esc(CITE_LABEL(a.cite))}</td></tr>`;
-  }).join("");
-  return `
-${header("Diagnostic Note — Kessler Präzisionstechnik GmbH", "Day 1 · Route 1 · Level 1 · Task 1", p)}
-<h2>1. Evidence register</h2>
-<table><thead><tr><th>ID</th><th>Source</th><th>Month</th><th>Record</th><th>Filed under</th></tr></thead><tbody>${rows}</tbody></table>
-<h2>2. Evidence board</h2>
-${evidenceBoardSvg(placements, "note")}
-<p class="legend">Solid: an observed record. Hatched: an interpretation filed as if it were evidence. Outline: an observed record set aside.</p>
-<h2>3. Reading of the file</h2>
-<table><thead><tr><th>#</th><th>Reading</th><th>What the file shows</th><th>Rests on</th></tr></thead><tbody>${mapRows}</tbody></table>
-${loyaltyMapSvg(loyaltyMarker(p.l1.mapping), "note")}
-<blockquote>${p.l1.mapping.sentence.trim() ? esc(p.l1.mapping.sentence.trim()) : "—"}</blockquote>
-<h2>4. Verdict</h2>
-<div class="box">
-  <div><span class="muted">Category holding the most observed evidence of a shortfall on TechSolutions' side:</span> <strong>${verdict.category ? esc(BIN_LABEL[verdict.category]) : "—"}</strong></div>
-  <div style="margin-top:4px"><span class="muted">Cited records:</span> ${cites.length ? cites.map((c) => `<strong>${esc(c)}</strong> (${esc(RECORD_BY_ID[c as keyof typeof RECORD_BY_ID].source)})`).join(", ") : "—"}</div>
-  <blockquote>${verdict.sentence.trim() ? esc(verdict.sentence.trim()) : "—"}</blockquote>
-  ${verdict.filedAt ? `<div class="muted">Filed ${esc(new Date(verdict.filedAt).toLocaleString("en-GB"))}</div>` : `<div class="muted">Not filed yet.</div>`}
-</div>
-<div class="foot">Checks requested: ${checks}</div>`;
+/** A bar per funnel step from the participant's own gap entries, as an inline SVG. */
+function gapBarsSvg(p: Persisted): string {
+  const W = 560;
+  const rowH = 26;
+  const rows = ROW_IDS.map((r, i) => {
+    const v = parsePct(p.l1.fill[cellId(r, "gap")] ?? "");
+    const y = 8 + i * rowH;
+    const w = v === null ? 0 : (Math.abs(v) / 35) * 200;
+    return `<text x="0" y="${y + 13}" font-size="11.5" fill="#1F2328" font-family="system-ui,sans-serif">${esc(ROW_LABEL[r])}</text>
+<rect x="290" y="${y}" width="${Math.max(w, 1.5).toFixed(1)}" height="14" fill="#ECE6D6" stroke="#59606A"/>
+<text x="${(296 + Math.max(w, 1.5)).toFixed(1)}" y="${y + 12}" font-size="11.5" fill="#1F2328" font-family="system-ui,sans-serif">${v === null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(1)} pp`}</text>`;
+  }).join("\n");
+  const H = 8 + ROW_IDS.length * rowH;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Gap to the benchmark reference, as you entered it"><title>Gap to the benchmark reference, as you entered it</title>${rows}</svg>`;
 }
 
-// --- Task 2 -----------------------------------------------------------------
+export function diagnosticBody(p: Persisted): string {
+  const { l1 } = p;
+  const sortRows = TOUCHPOINTS.map(
+    (t) => `<tr><td class="id">${esc(t.label)}</td><td>${l1.sort[t.id] ? esc(PHASE_LABEL[l1.sort[t.id]!]) : "—"}</td></tr>`,
+  ).join("");
+  const fillRows = ROW_IDS.map(
+    (r) =>
+      `<tr><td class="id">${esc(ROW_LABEL[r])}</td>${COLS.map((c) => `<td class="num">${esc((l1.fill[cellId(r, c)] ?? "").trim() || "—")}</td>`).join("")}</tr>`,
+  ).join("");
+  return `${header("Diagnostic Note", "Level 1 · Knowledge", p)}
+<h2>The case</h2>
+<p>${esc(COURSE.company)} is a mid-size B2B IT services vendor in Germany (project implementations and retainer support contracts). The brief: many leads, few closings, weak retention. Annual funnel: ${esc(
+    ["24,000 website visitors", "480 leads", "96 consultations booked", "41 held", "22 proposals", "4 contracts signed"].join(" → "),
+  )}. Average contract value ${esc(fmtEuroPlain(CONTRACT.price))} <span class="muted">(Case assumption; the benchmark references are also a Case assumption)</span>.</p>
+
+<h2>1.1 · The six touchpoints, sorted into journey phases</h2>
+<table><thead><tr><th>Touchpoint</th><th>Phase</th></tr></thead><tbody>${sortRows}</tbody></table>
+
+<h2>1.2 · The funnel figures, as you read them</h2>
+<table><thead><tr><th>Step</th>${COLS.map((c) => `<th class="num">${esc(COL_LABEL[c])}</th>`).join("")}</tr></thead><tbody>${fillRows}</tbody></table>
+${gapBarsSvg(p)}
+<p class="legend">Bar length = size of the gap you entered. pp = percentage points.</p>
+
+<h2>1.3 · The stage with the largest negative gap</h2>
+<p><strong>${l1.weakest ? esc(STEP_BY_ID[l1.weakest].label) : "—"}</strong></p>
+
+<h2>1.4 · What the leak costs</h2>
+${para(l1.sentence)}
+
+<div class="foot">Checks requested: ${l1.checks}${l1.reasoningOpened ? " · The sort reasoning was opened after " + l1.sortChecks + " checks." : ""}<br/>Generated ${esc(dateLabel())}.</div>`;
+}
 
 export function calculationBody(p: Persisted): string {
   const { l1, l2 } = p;
-  const v = l1.verdict;
-  const cites = [v.cite1, v.cite2].filter(Boolean);
-  const premise = v.filedAt
-    ? `<div class="box"><div><span class="muted">You named:</span> <strong>${v.category ? esc(BIN_LABEL[v.category]) : "—"}</strong> · <span class="muted">cited</span> ${cites.map(esc).join(", ") || "—"}</div><blockquote>${esc(v.sentence.trim())}</blockquote></div>`
-    : `<div class="box muted">No verdict was filed in Task 1.</div>`;
-
-  const figRows = FIGURES.map(
-    (f) => `<tr><td class="id">${f.id}</td><td>${esc(f.question)}</td><td><strong>${l2.fillins[f.id].trim() ? esc(l2.fillins[f.id].trim()) : "—"}</strong></td></tr>`,
+  const gridRows = OPT_IDS.map(
+    (o) =>
+      `<tr><td class="id">${esc(OPTIONS[o].name)}</td>${SEG_IDS.map((s) => {
+        const k = cellKey(o, s);
+        return `<td class="num">${esc((l2.grid[k] ?? "").trim() || "—")}${l2.loss[k] ? `<span class="tag">net loss</span>` : ""}</td>`;
+      }).join("")}</tr>`,
   ).join("");
+  const recRows = SEG_IDS.map(
+    (s) => `<h2>2.3 · ${esc(SEGMENTS[s].name)}</h2>
+<p><strong>${l2.rec[s] ? esc(OPTIONS[l2.rec[s]!].name) : "—"}</strong></p>${para(l2.just[s])}`,
+  ).join("\n");
+  const lossLine = l2.lossNone ? "You stated that no cell shows a net loss." : "Cells marked as a net loss are tagged in the grid above.";
+  return `${header("Calculation Note", "Level 2 · Application", p)}
+<h2>Where this starts</h2>
+<p>Task 1 found the largest negative gap at <strong>${l1.weakest ? esc(STEP_BY_ID[l1.weakest].label) : "—"}</strong>.</p>
+${l1.sentence.trim() ? para(l1.sentence) : ""}
+<p class="muted">Inputs as briefed: contract price ${esc(fmtEuroPlain(CONTRACT.price))}, gross margin ${CONTRACT.margin * 100}%, gross profit per order ${esc(fmtEuroPlain(CONTRACT.gp))}. Project clients ${SEGMENTS.P.clients} (baseline repeat orders ${SEGMENTS.P.baseline}), retainer clients ${SEGMENTS.R.clients} (baseline ${SEGMENTS.R.baseline}).</p>
 
-  const motiveRows = KESSLER_ROLES.map(
-    (r) => `<tr><td class="id">${esc(r.name)}</td><td>${esc(r.wind)}</td><td>${esc(r.statement)}</td><td><strong>${l2.motives[r.key] ? esc(MOTIVE_LABEL[l2.motives[r.key]!]) : "—"}</strong></td></tr>`,
-  ).join("");
+<h2>2.1 · Net impact per option and segment (€ per year)</h2>
+<table><thead><tr><th>Option</th>${SEG_IDS.map((s) => `<th class="num">${esc(SEGMENTS[s].name)}</th>`).join("")}</tr></thead><tbody>${gridRows}</tbody></table>
+<p class="legend">2.2 · ${esc(lossLine)}</p>
 
-  const cited = citedFigures(l2.justification, l2);
-  const q6 = l2.q6.trim();
-  const rec = l2.recommendation ? RECOMMENDATION_LABEL[l2.recommendation] : "—";
+${recRows}
 
-  return `
-${header("Calculation Note — the Kessler re-tender", "Day 1 · Route 2 · Level 2 · Task 2", p)}
-<h2>1. Premise</h2>
-${premise}
-<h2>2. Figures</h2>
-<table><thead><tr><th>#</th><th>Question</th><th>Your entry</th></tr></thead><tbody>${figRows}</tbody></table>
-<h2>3. Motive map</h2>
-${motiveMapSvg(l2.motives, "note")}
-<table><thead><tr><th>Role</th><th>Buying-centre position</th><th>Statement</th><th>Motive you chose</th></tr></thead><tbody>${motiveRows}</tbody></table>
-<h2>4. Recommendation</h2>
-<div class="box">
-  <div><span class="muted">Recommendation:</span> <strong>${esc(rec)}</strong></div>
-  <blockquote>${l2.justification.trim() ? esc(l2.justification.trim()) : "—"}</blockquote>
-  <div class="chips"><span class="muted" style="font-family:system-ui,sans-serif;font-size:12px">Figures cited:</span> ${cited.length ? cited.map((c) => `<span>${esc(c.value.toLocaleString("en-US"))} · ${esc(c.from)}</span>`).join("") : '<span class="muted">none</span>'}</div>
-  <div class="muted" style="margin-top:4px">Care after go-live add-on in the cost explorer: ${l2.careOn ? "on" : "off"}.</div>
-</div>
-<h2>5. Limits</h2>
-<div class="box">
-  <div class="muted">What this choice does not fix</div>
-  <blockquote>${l2.limits.trim() ? esc(l2.limits.trim()) : "—"}</blockquote>
-  <div class="muted">Question 6 — a share of one-off customers who would place a follow-on order within 24 months, from Kessler alone</div>
-  <blockquote>${q6 ? esc(q6) : "—"}</blockquote>
-</div>
-<div class="foot">Checks requested: ${l2.checks}</div>`;
+<h2>2.4 · One option across both segments</h2>
+<p><strong>${l2.uniform ? esc(OPTIONS[l2.uniform].name) : "—"}</strong></p>${para(l2.tradeoff)}
+
+<div class="foot">Checks requested: ${l2.checks}<br/>Generated ${esc(dateLabel())}.</div>`;
 }
-
-// --- Task 3 -----------------------------------------------------------------
-
-/** The decision memo. Reading order differs from the order it is written in: the executive summary is authored last and leads. */
-export function memoBody(p: Persisted): string {
-  const r3 = p.route3;
-  const board = computeBoard(r3.levers);
-  const q = (s: string) => (s.trim() ? esc(s.trim()) : "—");
-  const val = (g: (typeof G_IDS)[number]) => (r3.fillins[g].trim() ? esc(r3.fillins[g].trim()) : "—");
-
-  const leverRows = LEVERS.map((l) => {
-    const pos = r3.levers[l.id];
-    return `<tr><td class="id">${esc(l.name)}</td><td>${esc(POSITION_LABEL[pos])}</td><td>${formatEuro(l.cost[pos])}</td><td>${l.produces[pos]} ${esc(l.producesUnit)}</td></tr>`;
-  }).join("");
-  const totalNote = board.over > 0 ? ` <span class="muted">(${formatEuro(board.over)} over the ${formatEuro(CAP)} cap)</span>` : ` <span class="muted">(cap ${formatEuro(CAP)})</span>`;
-
-  const raciHead = ROLES.map((r) => `<th>${esc(r.short)}</th>`).join("");
-  const raciRows = ACTIVITIES.map(
-    (a) => `<tr><td class="id">${esc(a.label)}</td>${ROLES.map((r) => { const c = r3.raci[a.id][r.id]; return `<td>${c ? `<strong>${c}</strong> <span class="muted">${CHIP_NAME[c]}</span>` : ""}</td>`; }).join("")}</tr>`,
-  ).join("");
-  const govRows = r3.governance
-    .map((r, i) => `<tr><td class="id">${i + 1}</td><td>${q(r.decision)}</td><td>${q(r.owner)}</td><td>${q(r.date)}</td></tr>`)
-    .join("");
-
-  return `
-${header("Decision Memo — Customer Retention Investment Program", "Day 1 · Route 3 · Level 3 · Task 3", p)}
-<p class="muted" style="font-family:system-ui,sans-serif;font-size:12.5px">To: Geschäftsführer · From: Head of Sales / Chief Customer Officer</p>
-<h2>Executive summary</h2>
-<blockquote>${q(r3.exec)}</blockquote>
-<h2>1. Situation</h2>
-<p>TechSolutions GmbH serves roughly 60 active customers. At the 70% one-off rate, 42 are one-off: delivered once, with no standing account relationship. The Managing Director has approved a €200,000, six-month pilot program to raise retention across this one-off segment. <span class="muted">Case assumption.</span></p>
-<h2>2. Allocation decision</h2>
-<table><thead><tr><th>Lever</th><th>Position</th><th>6-month cost</th><th>Produces</th></tr></thead><tbody>${leverRows}
-<tr><td class="id">Total</td><td></td><td><strong>${formatEuro(board.cost)}</strong>${totalNote}</td><td></td></tr></tbody></table>
-<h2>3. What it produced</h2>
-<table><thead><tr><th>Reading</th><th>Status Quo</th><th>Price War</th></tr></thead><tbody>
-<tr><td class="id">Total commitment (G1)</td><td colspan="2">€${val("G1")}</td></tr>
-<tr><td class="id">Accounts with a named owner (G2)</td><td colspan="2">${val("G2")}</td></tr>
-<tr><td class="id">Accounts receiving a review (G3)</td><td colspan="2">${val("G3")}</td></tr>
-<tr><td class="id">Framework conversions (G4 · G5)</td><td>${val("G4")}</td><td>${val("G5")}</td></tr>
-<tr><td class="id">Uncovered pool (G6)</td><td colspan="2">${val("G6")}</td></tr></tbody></table>
-<h2>4. Risk and reversibility</h2>
-<blockquote>${q(r3.risk)}</blockquote>
-<h2>5. Governance</h2>
-<table><thead><tr><th>Activity</th>${raciHead}</tr></thead><tbody>${raciRows}</tbody></table>
-<table style="margin-top:10px"><thead><tr><th>#</th><th>Decision</th><th>Owner</th><th>Date</th></tr></thead><tbody>${govRows}</tbody></table>
-<h2>6. What we are not funding this cycle</h2>
-<blockquote>${q(r3.notFunding)}</blockquote>
-<div class="foot">Checks requested: ${r3.checks}</div>`;
-}
-
-// --- Wrapping / delivery ------------------------------------------------------
 
 export function wrapDocument(title: string, body: string): string {
   return `<!doctype html>

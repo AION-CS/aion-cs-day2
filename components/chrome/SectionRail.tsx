@@ -92,7 +92,7 @@ export function SectionRail({ route }: { route: 1 | 2 | 3 }) {
         <div className="flex shrink-0 items-center gap-2" title="Cards marked read + task blocks completed">
           <Ring done={done} total={total} />
           <span className="hidden text-micro leading-tight text-ash lg:block">
-            {route === 3 ? "Portfolio" : "Dossier"}
+            Dossier
             <br />
             {done}/{total}
           </span>

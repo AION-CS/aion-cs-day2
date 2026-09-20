@@ -1,5 +1,5 @@
 {
-  "name": "aion-cs-day1",
+  "name": "aion-cs-day2",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:calc": "node scripts/verify-calc.mjs"
   },
   "dependencies": {
     "clsx": "2.1.1",

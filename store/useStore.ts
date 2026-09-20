@@ -3,98 +3,77 @@
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { RECORD_IDS } from "@/data/kesslerDossier";
-import type { Bin, RecordId, VerdictCategory } from "@/data/kesslerDossier";
-import { FIGURE_IDS } from "@/data/offers";
-import type { FigureId } from "@/data/offers";
-import { ROLE_KEYS } from "@/data/motives";
-import type { MotiveId, RoleKey } from "@/data/motives";
-import { KEY_L1, KEY_L2, KEY_L3 } from "@/data/mentorKey";
-import { G_IDS } from "@/data/leverData";
-import type { GId, LeverId, Levers, Position, Scenario } from "@/data/leverData";
-import { ACTIVITIES, ROLES, emptyRaci } from "@/data/raciModel";
-import type { ActivityId, Chip, RaciGridState, RoleId } from "@/data/raciModel";
-import { MAP_ROW_IDS } from "@/data/mapping";
-import type { Bucket, CiteChoice, MapRowId } from "@/data/mapping";
+import { STAGE_IDS, ROW_IDS, COLS, cellId } from "@/data/funnel";
+import type { Phase, StageId, StepId } from "@/data/funnel";
+import { CELL_KEYS, SEG_IDS } from "@/data/segments";
+import type { OptId, SegId } from "@/data/segments";
+import { KEY_L1, KEY_L2 } from "@/data/mentorKey";
 
-export const STORAGE_KEY = "cs-d1-v1";
+export const STORAGE_KEY = "cs-d2-v1";
 const HISTORY_CAP = 100;
 
-/** Matches a refusal to estimate from one customer. Anything else with a number in it is an overclaim. */
-export const REFUSAL_RE =
-  /cannot|can't|not possible|insufficient|not enough|no way to|impossible|unknown|n\s*=\s*1|one (customer|observation)|single (customer|case)/i;
-export function isOverclaim(text: string): boolean {
-  return /\d/.test(text) && !REFUSAL_RE.test(text);
-}
+export type SortMap = Record<StageId, Phase | null>;
 
-export type Placements = Record<RecordId, Bin | null>;
-export type Verdict = {
-  category: VerdictCategory | null;
-  cite1: RecordId | "";
-  cite2: RecordId | "";
-  sentence: string;
-  filedAt: string | null;
-};
-export type Recommendation = "A" | "B" | "B+care" | null;
-export type ExplorerLayers = { onboarding: boolean; incident: boolean; ale: boolean };
-
-export type MapAnswer = { bucket: Bucket | null; cite: CiteChoice };
-export type MappingState = { rows: Record<MapRowId, MapAnswer>; sentence: string };
-
+/** Route 1 · Level 1 — the Diagnostic Note. */
 export type L1State = {
-  placements: Placements;
-  history: Placements[];
-  future: Placements[];
+  /** Block 1.1 */
+  sort: SortMap;
+  history: SortMap[];
+  future: SortMap[];
+  sortChecks: number;
+  /** Last set-level check: how many placed rows hold. Cleared by the next placement. */
+  sortResult: { holds: number; placed: number } | null;
+  sortClue: boolean;
+  /** Recorded in the export: the reasoning was opened after two genuine checks. */
+  reasoningOpened: boolean;
+  /** Block 1.2 — keyed "held.actual" */
+  fill: Record<string, string>;
+  fillFlagged: string[];
+  fillClue: Record<string, boolean>;
+  /** Block 1.3 */
+  weakest: StepId | null;
+  weakestFlagged: boolean;
+  weakestClue: boolean;
+  /** Block 1.4 */
+  sentence: string;
+  sentenceFlagged: boolean;
+  sentenceClue: boolean;
+  /** Every check requested in Route 1, printed in the export footer. */
   checks: number;
-  /** Record ids (E1–E8) and verdict cite fields ("V2", "V3") flagged by the last check. */
-  flagged: string[];
-  clueShown: Record<string, boolean>;
-  verdict: Verdict;
-  /** Block 1.3 — the file read against three constructs and three ropes. */
-  mapping: MappingState;
 };
 
+/** Route 2 · Level 2 — the Calculation Note. */
 export type L2State = {
-  explorerLayers: ExplorerLayers;
-  careOn: boolean;
-  fillins: Record<FigureId, string>;
-  motives: Record<RoleKey, MotiveId | null>;
-  recommendation: Recommendation;
-  justification: string;
-  limits: string;
-  q6: string;
-  q6Submitted: boolean;
-  q6Overclaim: boolean;
+  /** The calculator's current selection. */
+  calcSel: { opt: OptId | null; seg: SegId | null };
+  /** Block 2.1 — keyed "A-P" */
+  grid: Record<string, string>;
+  gridFlagged: string[];
+  gridClue: Record<string, boolean>;
+  /** Block 2.2 */
+  loss: Record<string, boolean>;
+  lossNone: boolean;
+  lossResult: { holds: number } | null;
+  lossClue: boolean;
+  /** Block 2.3 */
+  rec: Record<SegId, OptId | null>;
+  just: Record<SegId, string>;
+  /** Block 2.4 */
+  uniform: OptId | null;
+  uniformFlagged: boolean;
+  uniformClue: boolean;
+  tradeoff: string;
   checks: number;
-  flagged: FigureId[];
-  clueShown: Record<string, boolean>;
 };
 
-export type GovRow = { decision: string; owner: string; date: string };
-export type Route3State = {
-  levers: Levers;
-  scenario: Scenario;
-  scenariosViewed: Record<Scenario, boolean>;
-  fillins: Record<GId, string>;
-  allocFiledAt: string | null;
-  raci: RaciGridState;
-  raciFiledAt: string | null;
-  risk: string;
-  governance: GovRow[];
-  notFunding: string;
-  exec: string;
-  checks: number;
-  /** G1–G6 flagged by the last check. */
-  flagged: string[];
-  clueShown: Record<string, boolean>;
-};
+/** Route 3 is not built yet: an empty slice keeps the persisted shape stable when it is filled in. */
+export type Route3State = Record<string, never>;
 
 export type Persisted = {
   participant: { no: string; name: string };
   ui: { bannerDismissed: Record<string, boolean>; sectionsRead: Record<string, boolean> };
   l1: L1State;
   l2: L2State;
-  /** Route 3 · Level 3 — the allocation, RACI and memo. */
   route3: Route3State;
 };
 
@@ -102,8 +81,6 @@ type Session = {
   mentorUnlocked: boolean;
   /** Bumped by a reset so components holding local state remount clean. */
   resetCount: number;
-  /** The figure field last focused — where the Calculator copies its result. */
-  focusedFigure: FigureId | null;
 };
 
 type Actions = {
@@ -111,104 +88,87 @@ type Actions = {
   dismissBanner: (routeKey: string) => void;
   toggleRead: (cardId: string, value?: boolean) => void;
 
-  placeRecord: (id: RecordId, bin: Bin | null) => void;
-  undoPlacement: () => void;
-  redoPlacement: () => void;
-  checkSort: (flagged: string[]) => void;
-  showL1Clue: (id: string) => void;
-  setVerdict: (patch: Partial<Omit<Verdict, "filedAt">>) => void;
-  setMapBucket: (row: MapRowId, bucket: Bucket | null) => void;
-  setMapCite: (row: MapRowId, cite: CiteChoice) => void;
-  setMapSentence: (t: string) => void;
-  checkMapping: (flagged: string[]) => void;
-  fileVerdict: () => void;
+  // Route 1
+  placeTouchpoint: (id: StageId, phase: Phase | null) => void;
+  undoSort: () => void;
+  redoSort: () => void;
+  checkSort: (result: { holds: number; placed: number }) => void;
+  showSortClue: () => void;
+  openReasoning: () => void;
+  setFill: (cell: string, value: string) => void;
+  checkFill: (flagged: string[]) => void;
+  showFillClue: (cell: string) => void;
+  setWeakest: (id: StepId | null) => void;
+  checkWeakest: (flagged: boolean) => void;
+  showWeakestClue: () => void;
+  setSentence: (t: string) => void;
+  checkSentence: (flagged: boolean) => void;
+  showSentenceClue: () => void;
 
-  setLayer: (id: keyof ExplorerLayers, value: boolean) => void;
-  setCare: (value: boolean) => void;
-  setFillin: (id: FigureId, value: string) => void;
-  checkFigures: (flagged: FigureId[]) => void;
-  showL2Clue: (id: string) => void;
-  chooseMotive: (role: RoleKey, motive: MotiveId | null) => void;
-  setRecommendation: (r: Recommendation) => void;
-  setJustification: (t: string) => void;
-  setLimits: (t: string) => void;
-  setQ6: (t: string) => void;
-  submitQ6: () => void;
+  // Route 2
+  selectCalc: (patch: Partial<L2State["calcSel"]>) => void;
+  setGrid: (key: string, value: string) => void;
+  checkGrid: (flagged: string[]) => void;
+  showGridClue: (key: string) => void;
+  toggleLoss: (key: string) => void;
+  setLossNone: (v: boolean) => void;
+  checkLoss: (holds: number) => void;
+  showLossClue: () => void;
+  setRec: (seg: SegId, opt: OptId | null) => void;
+  setJust: (seg: SegId, t: string) => void;
+  setUniform: (opt: OptId | null) => void;
+  checkUniform: (flagged: boolean) => void;
+  showUniformClue: () => void;
+  setTradeoff: (t: string) => void;
 
-  setFocusedFigure: (id: FigureId | null) => void;
   setMentorUnlocked: (v: boolean) => void;
   mentorFill: () => void;
   resetRoute: (route: 1 | 2 | 3 | null) => void;
-
-  setLever: (id: LeverId, position: Position) => void;
-  setScenario: (s: Scenario) => void;
-  setG: (id: GId, value: string) => void;
-  checkG: (flagged: string[]) => void;
-  showL3Clue: (id: string) => void;
-  fileAllocation: () => void;
-  setRaciChip: (activity: ActivityId, role: RoleId, chip: Chip | null) => void;
-  fileRaci: () => void;
-  setRisk: (t: string) => void;
-  setGov: (i: number, patch: Partial<GovRow>) => void;
-  setNotFunding: (t: string) => void;
-  setExec: (t: string) => void;
 };
 
-const emptyPlacements = (): Placements =>
-  Object.fromEntries(RECORD_IDS.map((id) => [id, null])) as Placements;
-
-const emptyMapping = (): MappingState => ({
-  rows: Object.fromEntries(MAP_ROW_IDS.map((id) => [id, { bucket: null, cite: "" }])) as Record<MapRowId, MapAnswer>,
-  sentence: "",
-});
-
-const isMapFlag = (f: string) => /^M\d/.test(f);
+const emptySort = (): SortMap => Object.fromEntries(STAGE_IDS.map((id) => [id, null])) as SortMap;
+const emptyFill = (): Record<string, string> =>
+  Object.fromEntries(ROW_IDS.flatMap((r) => COLS.map((c) => [cellId(r, c), ""])));
 
 const emptyL1 = (): L1State => ({
-  placements: emptyPlacements(),
+  sort: emptySort(),
   history: [],
   future: [],
+  sortChecks: 0,
+  sortResult: null,
+  sortClue: false,
+  reasoningOpened: false,
+  fill: emptyFill(),
+  fillFlagged: [],
+  fillClue: {},
+  weakest: null,
+  weakestFlagged: false,
+  weakestClue: false,
+  sentence: "",
+  sentenceFlagged: false,
+  sentenceClue: false,
   checks: 0,
-  flagged: [],
-  clueShown: {},
-  verdict: { category: null, cite1: "", cite2: "", sentence: "", filedAt: null },
-  mapping: emptyMapping(),
 });
 
 const emptyL2 = (): L2State => ({
-  explorerLayers: { onboarding: false, incident: false, ale: false },
-  careOn: false,
-  fillins: Object.fromEntries(FIGURE_IDS.map((id) => [id, ""])) as Record<FigureId, string>,
-  motives: Object.fromEntries(ROLE_KEYS.map((k) => [k, null])) as Record<RoleKey, MotiveId | null>,
-  recommendation: null,
-  justification: "",
-  limits: "",
-  q6: "",
-  q6Submitted: false,
-  q6Overclaim: false,
+  calcSel: { opt: null, seg: null },
+  grid: Object.fromEntries(CELL_KEYS.map((k) => [k, ""])),
+  gridFlagged: [],
+  gridClue: {},
+  loss: Object.fromEntries(CELL_KEYS.map((k) => [k, false])),
+  lossNone: false,
+  lossResult: null,
+  lossClue: false,
+  rec: { P: null, R: null },
+  just: { P: "", R: "" },
+  uniform: null,
+  uniformFlagged: false,
+  uniformClue: false,
+  tradeoff: "",
   checks: 0,
-  flagged: [],
-  clueShown: {},
 });
 
-const emptyGov = (): GovRow[] => Array.from({ length: 4 }, () => ({ decision: "", owner: "", date: "" }));
-
-const emptyRoute3 = (): Route3State => ({
-  levers: { l1: "none", l2: "none", l3: "none" },
-  scenario: "statusQuo",
-  scenariosViewed: { statusQuo: false, priceWar: false },
-  fillins: Object.fromEntries(G_IDS.map((g) => [g, ""])) as Record<GId, string>,
-  allocFiledAt: null,
-  raci: emptyRaci(),
-  raciFiledAt: null,
-  risk: "",
-  governance: emptyGov(),
-  notFunding: "",
-  exec: "",
-  checks: 0,
-  flagged: [],
-  clueShown: {},
-});
+const emptyRoute3 = (): Route3State => ({});
 
 const emptyPersisted = (): Persisted => ({
   participant: { no: "", name: "" },
@@ -218,256 +178,130 @@ const emptyPersisted = (): Persisted => ({
   route3: emptyRoute3(),
 });
 
-/** Flags survive only while the thing they flag is unchanged. */
-const pruneFlags = (flagged: string[], before: Placements, after: Placements) =>
-  flagged.filter((f) => !(f in after) || before[f as RecordId] === after[f as RecordId]);
-
 const pushCapped = <T,>(list: T[], item: T) => [...list, item].slice(-HISTORY_CAP);
-
-function mergeRaci(stored: Partial<RaciGridState> | undefined): RaciGridState {
-  const base = emptyRaci();
-  if (!stored || typeof stored !== "object") return base;
-  for (const a of ACTIVITIES) for (const r of ROLES) base[a.id][r.id] = stored[a.id]?.[r.id] ?? null;
-  return base;
-}
-
-function mergeGov(stored: GovRow[] | undefined): GovRow[] {
-  const base = emptyGov();
-  if (!Array.isArray(stored)) return base;
-  return base.map((row, i) => ({ ...row, ...(stored[i] ?? {}) }));
-}
 
 export const useStore = create<Persisted & Session & Actions>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...emptyPersisted(),
       mentorUnlocked: false,
       resetCount: 0,
-      focusedFigure: null,
 
       setParticipant: (patch) => set((s) => ({ participant: { ...s.participant, ...patch } })),
       dismissBanner: (routeKey) =>
         set((s) => ({ ui: { ...s.ui, bannerDismissed: { ...s.ui.bannerDismissed, [routeKey]: true } } })),
       toggleRead: (cardId, value) =>
         set((s) => ({
-          ui: {
-            ...s.ui,
-            sectionsRead: { ...s.ui.sectionsRead, [cardId]: value ?? !s.ui.sectionsRead[cardId] },
-          },
+          ui: { ...s.ui, sectionsRead: { ...s.ui.sectionsRead, [cardId]: value ?? !s.ui.sectionsRead[cardId] } },
         })),
 
-      // --- Task 1 -----------------------------------------------------------
-      placeRecord: (id, bin) =>
+      // --- Route 1 · Task 1 --------------------------------------------------
+      placeTouchpoint: (id, phase) =>
         set((s) => {
-          const before = s.l1.placements;
-          if (before[id] === bin) return {};
-          const after = { ...before, [id]: bin };
-          const clueShown = { ...s.l1.clueShown };
-          delete clueShown[id];
+          const before = s.l1.sort;
+          if (before[id] === phase) return {};
           return {
             l1: {
               ...s.l1,
-              placements: after,
+              sort: { ...before, [id]: phase },
               history: pushCapped(s.l1.history, before),
               future: [],
-              flagged: pruneFlags(s.l1.flagged, before, after).filter((f) => f !== "V2" && f !== "V3"),
-              clueShown,
+              sortResult: null,
             },
           };
         }),
-      undoPlacement: () =>
+      undoSort: () =>
         set((s) => {
           const prev = s.l1.history[s.l1.history.length - 1];
           if (!prev) return {};
           return {
-            l1: {
-              ...s.l1,
-              placements: prev,
-              history: s.l1.history.slice(0, -1),
-              future: pushCapped(s.l1.future, s.l1.placements),
-              flagged: pruneFlags(s.l1.flagged, s.l1.placements, prev).filter((f) => f !== "V2" && f !== "V3"),
-            },
+            l1: { ...s.l1, sort: prev, history: s.l1.history.slice(0, -1), future: pushCapped(s.l1.future, s.l1.sort), sortResult: null },
           };
         }),
-      redoPlacement: () =>
+      redoSort: () =>
         set((s) => {
           const next = s.l1.future[s.l1.future.length - 1];
           if (!next) return {};
           return {
-            l1: {
-              ...s.l1,
-              placements: next,
-              history: pushCapped(s.l1.history, s.l1.placements),
-              future: s.l1.future.slice(0, -1),
-              flagged: pruneFlags(s.l1.flagged, s.l1.placements, next).filter((f) => f !== "V2" && f !== "V3"),
-            },
+            l1: { ...s.l1, sort: next, history: pushCapped(s.l1.history, s.l1.sort), future: s.l1.future.slice(0, -1), sortResult: null },
           };
         }),
-      checkSort: (flagged) =>
+      checkSort: (result) =>
+        set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, sortChecks: s.l1.sortChecks + 1, sortResult: result } })),
+      showSortClue: () => set((s) => ({ l1: { ...s.l1, sortClue: true } })),
+      openReasoning: () => set((s) => ({ l1: { ...s.l1, reasoningOpened: true } })),
+      setFill: (cell, value) =>
         set((s) => ({
-          l1: {
-            ...s.l1,
-            checks: s.l1.checks + 1,
-            // a sort check replaces the record and citation flags and leaves the mapping flags alone
-            flagged: [...flagged, ...s.l1.flagged.filter(isMapFlag)],
-            clueShown: Object.fromEntries(Object.entries(s.l1.clueShown).filter(([k]) => isMapFlag(k))),
-          },
+          l1: { ...s.l1, fill: { ...s.l1.fill, [cell]: value }, fillFlagged: s.l1.fillFlagged.filter((f) => f !== cell) },
         })),
-      setMapBucket: (row, bucket) =>
-        set((s) => ({
-          l1: {
-            ...s.l1,
-            flagged: s.l1.flagged.filter((f) => f !== row),
-            mapping: { ...s.l1.mapping, rows: { ...s.l1.mapping.rows, [row]: { ...s.l1.mapping.rows[row], bucket } } },
-          },
-        })),
-      setMapCite: (row, cite) =>
-        set((s) => ({
-          l1: {
-            ...s.l1,
-            flagged: s.l1.flagged.filter((f) => f !== row),
-            mapping: { ...s.l1.mapping, rows: { ...s.l1.mapping.rows, [row]: { ...s.l1.mapping.rows[row], cite } } },
-          },
-        })),
-      setMapSentence: (t) => set((s) => ({ l1: { ...s.l1, mapping: { ...s.l1.mapping, sentence: t } } })),
-      checkMapping: (flagged) =>
-        set((s) => ({
-          l1: {
-            ...s.l1,
-            checks: s.l1.checks + 1,
-            flagged: [...s.l1.flagged.filter((f) => !isMapFlag(f)), ...flagged],
-            clueShown: Object.fromEntries(Object.entries(s.l1.clueShown).filter(([k]) => !isMapFlag(k))),
-          },
-        })),
-      showL1Clue: (id) => set((s) => ({ l1: { ...s.l1, clueShown: { ...s.l1.clueShown, [id]: true } } })),
-      setVerdict: (patch) =>
-        set((s) => {
-          let flagged = s.l1.flagged;
-          if ("category" in patch) flagged = flagged.filter((f) => f !== "V2" && f !== "V3");
-          if ("cite1" in patch) flagged = flagged.filter((f) => f !== "V2");
-          if ("cite2" in patch) flagged = flagged.filter((f) => f !== "V3");
-          return { l1: { ...s.l1, flagged, verdict: { ...s.l1.verdict, ...patch } } };
-        }),
-      fileVerdict: () =>
-        set((s) => ({ l1: { ...s.l1, verdict: { ...s.l1.verdict, filedAt: new Date().toISOString() } } })),
+      checkFill: (flagged) => set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, fillFlagged: flagged, fillClue: {} } })),
+      showFillClue: (cell) => set((s) => ({ l1: { ...s.l1, fillClue: { ...s.l1.fillClue, [cell]: true } } })),
+      setWeakest: (id) => set((s) => ({ l1: { ...s.l1, weakest: id, weakestFlagged: false, weakestClue: false } })),
+      checkWeakest: (flagged) =>
+        set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, weakestFlagged: flagged, weakestClue: false } })),
+      showWeakestClue: () => set((s) => ({ l1: { ...s.l1, weakestClue: true } })),
+      setSentence: (t) => set((s) => ({ l1: { ...s.l1, sentence: t, sentenceFlagged: false } })),
+      checkSentence: (flagged) =>
+        set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, sentenceFlagged: flagged, sentenceClue: false } })),
+      showSentenceClue: () => set((s) => ({ l1: { ...s.l1, sentenceClue: true } })),
 
-      // --- Task 2 -----------------------------------------------------------
-      setLayer: (id, value) =>
-        set((s) => ({ l2: { ...s.l2, explorerLayers: { ...s.l2.explorerLayers, [id]: value } } })),
-      setCare: (value) => set((s) => ({ l2: { ...s.l2, careOn: value } })),
-      setFillin: (id, value) =>
+      // --- Route 2 · Task 2 --------------------------------------------------
+      selectCalc: (patch) => set((s) => ({ l2: { ...s.l2, calcSel: { ...s.l2.calcSel, ...patch } } })),
+      setGrid: (key, value) =>
+        set((s) => ({ l2: { ...s.l2, grid: { ...s.l2.grid, [key]: value }, gridFlagged: s.l2.gridFlagged.filter((f) => f !== key) } })),
+      checkGrid: (flagged) => set((s) => ({ l2: { ...s.l2, checks: s.l2.checks + 1, gridFlagged: flagged, gridClue: {} } })),
+      showGridClue: (key) => set((s) => ({ l2: { ...s.l2, gridClue: { ...s.l2.gridClue, [key]: true } } })),
+      toggleLoss: (key) =>
+        set((s) => ({
+          l2: { ...s.l2, loss: { ...s.l2.loss, [key]: !s.l2.loss[key] }, lossNone: false, lossResult: null },
+        })),
+      setLossNone: (v) =>
         set((s) => ({
           l2: {
             ...s.l2,
-            fillins: { ...s.l2.fillins, [id]: value },
-            flagged: s.l2.flagged.filter((f) => f !== id),
+            lossNone: v,
+            loss: v ? Object.fromEntries(CELL_KEYS.map((k) => [k, false])) : s.l2.loss,
+            lossResult: null,
           },
         })),
-      checkFigures: (flagged) =>
-        set((s) => ({ l2: { ...s.l2, checks: s.l2.checks + 1, flagged, clueShown: {} } })),
-      showL2Clue: (id) => set((s) => ({ l2: { ...s.l2, clueShown: { ...s.l2.clueShown, [id]: true } } })),
-      chooseMotive: (role, motive) =>
-        set((s) => ({ l2: { ...s.l2, motives: { ...s.l2.motives, [role]: motive } } })),
-      setRecommendation: (r) => set((s) => ({ l2: { ...s.l2, recommendation: r } })),
-      setJustification: (t) => set((s) => ({ l2: { ...s.l2, justification: t } })),
-      setLimits: (t) => set((s) => ({ l2: { ...s.l2, limits: t } })),
-      setQ6: (t) => set((s) => ({ l2: { ...s.l2, q6: t, q6Overclaim: isOverclaim(t) } })),
-      submitQ6: () =>
-        set((s) => ({ l2: { ...s.l2, q6Submitted: true, q6Overclaim: isOverclaim(s.l2.q6) } })),
+      checkLoss: (holds) => set((s) => ({ l2: { ...s.l2, checks: s.l2.checks + 1, lossResult: { holds } } })),
+      showLossClue: () => set((s) => ({ l2: { ...s.l2, lossClue: true } })),
+      setRec: (seg, opt) => set((s) => ({ l2: { ...s.l2, rec: { ...s.l2.rec, [seg]: opt } } })),
+      setJust: (seg, t) => set((s) => ({ l2: { ...s.l2, just: { ...s.l2.just, [seg]: t } } })),
+      setUniform: (opt) => set((s) => ({ l2: { ...s.l2, uniform: opt, uniformFlagged: false, uniformClue: false } })),
+      checkUniform: (flagged) =>
+        set((s) => ({ l2: { ...s.l2, checks: s.l2.checks + 1, uniformFlagged: flagged, uniformClue: false } })),
+      showUniformClue: () => set((s) => ({ l2: { ...s.l2, uniformClue: true } })),
+      setTradeoff: (t) => set((s) => ({ l2: { ...s.l2, tradeoff: t } })),
 
-      // --- session / mentor / reset ----------------------------------------
-      setFocusedFigure: (id) => set({ focusedFigure: id }),
+      // --- session / mentor / reset ------------------------------------------
       setMentorUnlocked: (v) => set({ mentorUnlocked: v }),
 
-      // Mentor autofill: every answer in Routes 1, 2 and 3, plus a participant number and
-      // name if they are empty, so the note can be exported straight away.
+      // Mentor autofill: every model answer in Routes 1 and 2, plus a participant number and name if they
+      // are empty, so each note can be exported straight away.
       mentorFill: () =>
         set((s) => {
           const l1 = emptyL1();
-          l1.placements = { ...KEY_L1.placements };
-          l1.verdict = { ...KEY_L1.verdict, filedAt: new Date().toISOString() };
-          l1.mapping = {
-            rows: Object.fromEntries(MAP_ROW_IDS.map((id) => [id, { ...KEY_L1.mapping.rows[id] }])) as Record<MapRowId, MapAnswer>,
-            sentence: KEY_L1.mapping.sentence,
-          };
+          l1.sort = { ...KEY_L1.sort };
+          l1.fill = { ...KEY_L1.fill };
+          l1.weakest = KEY_L1.weakest;
+          l1.sentence = KEY_L1.sentence;
           const l2 = emptyL2();
-          l2.fillins = { ...KEY_L2.fillins };
-          l2.motives = { ...KEY_L2.motives };
-          l2.recommendation = KEY_L2.recommendation;
-          l2.justification = KEY_L2.justification;
-          l2.limits = KEY_L2.limits;
-          l2.q6 = KEY_L2.q6;
-          l2.q6Submitted = true;
-          l2.q6Overclaim = isOverclaim(KEY_L2.q6);
-          l2.explorerLayers = { onboarding: true, incident: true, ale: true };
+          l2.grid = { ...KEY_L2.grid };
+          l2.loss = { ...KEY_L2.loss };
+          l2.rec = { ...KEY_L2.rec };
+          l2.just = { ...KEY_L2.just };
+          l2.uniform = KEY_L2.uniform;
+          l2.tradeoff = KEY_L2.tradeoff;
+          l2.calcSel = { opt: "A", seg: "P" };
           const participant = {
             no: s.participant.no.trim() ? s.participant.no : "99",
             name: s.participant.name.trim() ? s.participant.name : "Mentor Check",
           };
-          const now = new Date().toISOString();
-          const r3 = emptyRoute3();
-          r3.levers = { ...KEY_L3.levers };
-          r3.scenariosViewed = { statusQuo: true, priceWar: true };
-          r3.fillins = { ...KEY_L3.fillins };
-          for (const a of ACTIVITIES) for (const r of ROLES) r3.raci[a.id][r.id] = KEY_L3.raci[a.id][r.id] ?? null;
-          r3.allocFiledAt = now;
-          r3.raciFiledAt = now;
-          r3.risk = KEY_L3.risk;
-          r3.governance = KEY_L3.governance.map((g) => ({ ...g }));
-          r3.notFunding = KEY_L3.notFunding;
-          r3.exec = KEY_L3.exec;
-          return { participant, l1, l2, route3: r3, resetCount: s.resetCount + 1 };
+          return { participant, l1, l2, resetCount: s.resetCount + 1 };
         }),
 
-      // --- Task 3 (Route 3) ---------------------------------------------------
-      setLever: (id, position) =>
-        set((s) => ({
-          route3: {
-            ...s.route3,
-            levers: { ...s.route3.levers, [id]: position },
-            // a lever change changes what the board reads, so earlier G flags no longer apply
-            flagged: [],
-            clueShown: {},
-          },
-        })),
-      setScenario: (sc) =>
-        set((s) => ({
-          route3: { ...s.route3, scenario: sc, scenariosViewed: { ...s.route3.scenariosViewed, [sc]: true } },
-        })),
-      setG: (id, value) =>
-        set((s) => ({
-          route3: {
-            ...s.route3,
-            fillins: { ...s.route3.fillins, [id]: value },
-            flagged: s.route3.flagged.filter((f) => f !== id),
-          },
-        })),
-      checkG: (flagged) =>
-        set((s) => ({ route3: { ...s.route3, checks: s.route3.checks + 1, flagged, clueShown: {} } })),
-      showL3Clue: (id) =>
-        set((s) => ({ route3: { ...s.route3, clueShown: { ...s.route3.clueShown, [id]: true } } })),
-      fileAllocation: () => set((s) => ({ route3: { ...s.route3, allocFiledAt: new Date().toISOString() } })),
-      setRaciChip: (activity, role, chip) =>
-        set((s) => ({
-          route3: {
-            ...s.route3,
-            raci: { ...s.route3.raci, [activity]: { ...s.route3.raci[activity], [role]: chip } },
-          },
-        })),
-      fileRaci: () => set((s) => ({ route3: { ...s.route3, raciFiledAt: new Date().toISOString() } })),
-      setRisk: (t) => set((s) => ({ route3: { ...s.route3, risk: t } })),
-      setGov: (i, patch) =>
-        set((s) => ({
-          route3: {
-            ...s.route3,
-            governance: s.route3.governance.map((r, k) => (k === i ? { ...r, ...patch } : r)),
-          },
-        })),
-      setNotFunding: (t) => set((s) => ({ route3: { ...s.route3, notFunding: t } })),
-      setExec: (t) => set((s) => ({ route3: { ...s.route3, exec: t } })),
-
-      // One route's state only (Route 1 = Materi A + Task 1, Route 2 = Materi B + Task 2).
-      // The participant strip stays. `null` clears both routes.
+      // One route's state only (Route 1 = Materi A + Task 1, Route 2 = Materi B + Task 2). The participant strip stays.
       resetRoute: (route) =>
         set((s) => {
           const prefix = route === 1 ? "A" : route === 2 ? "B" : "C";
@@ -487,23 +321,14 @@ export const useStore = create<Persisted & Session & Actions>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 2,
+      version: 1,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
-      // Session-only flags (mentor unlock, focus, reset counter) never persist.
-      partialize: (s) => ({
-        participant: s.participant,
-        ui: s.ui,
-        l1: s.l1,
-        l2: s.l2,
-        route3: s.route3,
-      }),
-      // v1 -> v2: Route 3 (Level 3) state was added. A stored blob without it gets the empty slice.
-      migrate: (persisted) => {
-        const p = (persisted ?? {}) as Partial<Persisted>;
-        return { ...p, route3: { ...emptyRoute3(), ...(p.route3 as Partial<Route3State> | undefined) } } as Persisted;
-      },
-      // A stored blob from an older shape must never leave a field undefined.
+      // Session-only flags (mentor unlock, reset counter) never persist.
+      partialize: (s) => ({ participant: s.participant, ui: s.ui, l1: s.l1, l2: s.l2, route3: s.route3 }),
+      // Any change to the persisted shape bumps `version` and adds a step here; `merge` below then fills
+      // every field an older blob lacks from the defaults.
+      migrate: (persisted) => (persisted ?? {}) as Persisted,
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<Persisted>;
         const base = emptyPersisted();
@@ -512,38 +337,31 @@ export const useStore = create<Persisted & Session & Actions>()(
           participant: { ...base.participant, ...p.participant },
           ui: {
             sectionsRead: { ...base.ui.sectionsRead, ...p.ui?.sectionsRead },
-            // An older blob stored a single boolean here; anything that is not a map is dropped.
             bannerDismissed:
-              p.ui && typeof p.ui.bannerDismissed === "object" && p.ui.bannerDismissed !== null
-                ? { ...p.ui.bannerDismissed }
-                : {},
+              p.ui && typeof p.ui.bannerDismissed === "object" && p.ui.bannerDismissed !== null ? { ...p.ui.bannerDismissed } : {},
           },
           l1: {
             ...base.l1,
             ...p.l1,
-            placements: { ...base.l1.placements, ...p.l1?.placements },
-            verdict: { ...base.l1.verdict, ...p.l1?.verdict },
-            mapping: {
-              sentence: p.l1?.mapping?.sentence ?? "",
-              rows: { ...base.l1.mapping.rows, ...p.l1?.mapping?.rows },
-            },
+            sort: { ...base.l1.sort, ...p.l1?.sort },
+            fill: { ...base.l1.fill, ...p.l1?.fill },
+            history: Array.isArray(p.l1?.history) ? p.l1.history : [],
+            future: Array.isArray(p.l1?.future) ? p.l1.future : [],
+            fillFlagged: Array.isArray(p.l1?.fillFlagged) ? p.l1.fillFlagged : [],
+            fillClue: { ...p.l1?.fillClue },
           },
           l2: {
             ...base.l2,
             ...p.l2,
-            explorerLayers: { ...base.l2.explorerLayers, ...p.l2?.explorerLayers },
-            fillins: { ...base.l2.fillins, ...p.l2?.fillins },
-            motives: { ...base.l2.motives, ...p.l2?.motives },
+            calcSel: { ...base.l2.calcSel, ...p.l2?.calcSel },
+            grid: { ...base.l2.grid, ...p.l2?.grid },
+            loss: { ...base.l2.loss, ...p.l2?.loss },
+            rec: { ...base.l2.rec, ...p.l2?.rec },
+            just: { ...base.l2.just, ...p.l2?.just },
+            gridFlagged: Array.isArray(p.l2?.gridFlagged) ? p.l2.gridFlagged : [],
+            gridClue: { ...p.l2?.gridClue },
           },
-          route3: {
-            ...base.route3,
-            ...p.route3,
-            levers: { ...base.route3.levers, ...p.route3?.levers },
-            scenariosViewed: { ...base.route3.scenariosViewed, ...p.route3?.scenariosViewed },
-            fillins: { ...base.route3.fillins, ...p.route3?.fillins },
-            raci: mergeRaci(p.route3?.raci),
-            governance: mergeGov(p.route3?.governance),
-          },
+          route3: { ...base.route3, ...p.route3 },
         };
       },
     },
@@ -551,11 +369,9 @@ export const useStore = create<Persisted & Session & Actions>()(
 );
 
 /**
- * The store is created with `skipHydration`, so the server render and the
- * first client paint both see empty defaults (no hydration mismatch). This hook
- * — mounted once by <StoreHydrator/> — reads localStorage after mount and
- * reports when it has finished, for UI that must not flash a default
- * (a dismissed banner, a filed stamp).
+ * The store is created with `skipHydration`, so the server render and the first client paint both see the
+ * defaults (no hydration mismatch). <StoreHydrator/> reads localStorage once after mount. This hook reports
+ * when it has finished, for UI that must not flash a default (a dismissed banner, a read mark).
  */
 export function useHydrated() {
   const [hydrated, setHydrated] = useState(false);
@@ -570,3 +386,6 @@ export function useHydrated() {
 export function rehydrateStore() {
   return useStore.persist.rehydrate();
 }
+
+// Kept so a future Route 3 slice can be seeded without touching the persisted shape.
+export const SEG_LIST = SEG_IDS;

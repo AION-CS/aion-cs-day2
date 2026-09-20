@@ -63,6 +63,13 @@ export function extractAmounts(text: string): number[] {
   return out;
 }
 
+/** A percentage or a percentage-point gap typed as `42.7`, `42,7 %`, `−32.3 pp`, `-32.3pp`. Null when unreadable. */
+export function parsePct(raw: string): number | null {
+  if (typeof raw !== "string") return null;
+  const s = raw.replace(/percentage\s*points?|pp|%/gi, "").trim();
+  return parseAmount(s);
+}
+
 export function formatEuro(n: number): string {
   return `€${Math.round(n).toLocaleString("en-US")}`;
 }

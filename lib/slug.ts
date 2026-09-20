@@ -14,8 +14,8 @@ export function slug(input: string): string {
 
 export type TaskSlug = "l1-diagnostic" | "l2-calculation" | "l3-memo";
 
-/** `{no}-{name}-day1-{task}` — e.g. `1-muchson-day1-l1-diagnostic`. */
+/** `{no}-{name}-day2-{task}` — e.g. `1-muchson-day2-l1-diagnostic`. The leading number is the Participant No. */
 export function exportName(no: string, name: string, task: TaskSlug): string {
   const n = String(no).trim() || "0";
-  return `${n}-${slug(name) || "participant"}-day1-${task}`;
+  return `${n}-${slug(name) || "participant"}-day2-${task}`;
 }

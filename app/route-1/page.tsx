@@ -5,7 +5,7 @@ import { MateriA } from "@/components/materi/Materi";
 import { Task1 } from "@/components/task1/Task1";
 import { ResetRoute } from "@/components/ui/ResetRoute";
 
-export const metadata = { title: "Route 1 · Knowledge — Retention Lab · Day 1" };
+export const metadata = { title: "Route 1 · Knowledge — Retention Lab · Day 2" };
 
 export default function Route1() {
   return (
@@ -13,11 +13,11 @@ export default function Route1() {
       <HashFlash />
       <header className="space-y-1">
         <p className="smallcaps text-accent">Route 1 · Level 1 · Knowledge</p>
-        <h1>Read what the file records</h1>
+        <h1>Find where the prospects go</h1>
       </header>
       <SuggestedOrderBanner
         routeKey="r1"
-        text="Materi A → Task 1. Every section stays open, so you can start anywhere."
+        text="Materi A → Task 1. Every section stays open, so you can start anywhere. Route 1 sets up the figures Route 2 builds on."
       />
       <SectionRail route={1} />
       <MateriA />

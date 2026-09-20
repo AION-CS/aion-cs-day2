@@ -5,7 +5,7 @@ import { IDS } from "@/lib/missing";
 
 /**
  * Participant number and full name — persisted, on every page. They only build
- * the export file name: {no}-{name}-day1-{task}.
+ * the export file name: {no}-{name}-day2-{task}.
  */
 export function ParticipantStrip() {
   const participant = useStore((s) => s.participant);
@@ -23,7 +23,7 @@ export function ParticipantStrip() {
           Participant No.
         </label>
         <p id="participant-no-help" className="text-micro normal-case tracking-normal text-ash">
-          A whole number. Used in your export file name: 1-muchson-day1-l1-diagnostic.
+          A whole number. Used in your export file name: 1-muchson-day2-l1-diagnostic.
         </p>
         <input
           id="participant-no"
@@ -44,7 +44,7 @@ export function ParticipantStrip() {
         </label>
         <p id="participant-name-help" className="text-micro normal-case tracking-normal text-ash">
           Use the same name all week — it is how your submissions are matched. Used in your export file name:
-          1-muchson-day1-l1-diagnostic.
+          1-muchson-day2-l1-diagnostic.
         </p>
         <input
           id="participant-name"
