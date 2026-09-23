@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { Callout, MaterialCard } from "@/components/ui/MaterialCard";
-import { Bul, Diagram } from "@/components/materi/kit";
+import { Bul, Diagram, Insight } from "@/components/materi/kit";
 
 const eur = (n: number) => `€${Math.round(n).toLocaleString("en-US")}`;
 
@@ -95,6 +95,9 @@ function ChainMap() {
         <p><span className="font-semibold text-ink">KPI. </span>{c.kpi}.</p>
         <p className="text-ash">{c.note}</p>
       </div>
+      <Insight>
+        The same three-column shape holds for a rate, a funnel gap and a sales behaviour alike — what makes a chain work is not the goal&apos;s subject, it is that the KPI on the right reads the exact number the goal on the left is written in. Where that number is missing (no baseline, no direct measure), the note names the specific way the chain would fail, not just that it might.
+      </Insight>
     </div>
   );
 }
@@ -199,6 +202,9 @@ function ControlLoop() {
         </p>
         <p className="text-ink">{n.text}</p>
       </div>
+      <Insight>
+        Click around the loop and it always returns to KPI — that return arrow is the whole point: Act changes something, and the next reading of KPI is what shows whether the change worked. The one-off fix on the right also has an outcome (revenue), but no step is scheduled to read it again, so a discount campaign that fails looks identical to one that works — nothing comes back to tell them apart.
+      </Insight>
     </div>
   );
 }
@@ -273,10 +279,12 @@ function ScaleChart() {
         <line x1="270" x2="298" y1="12" y2="12" stroke="#A4472A" strokeWidth="3" strokeDasharray="7 5" />
         <text x="304" y="16" fontSize="13" fontWeight="600" fill="#A4472A">Per client</text>
       </svg>
-      <p aria-live="polite" className="rounded-lg border border-line bg-paper p-3 text-caption text-ink">
-        At <strong>{n} clients</strong> the system costs <strong>{eur(SC.fixed)}</strong> and the per-client action costs <strong>{eur(per)}</strong>. They cost the same at <strong>{cross.toFixed(1)} clients</strong>; beyond that the
-        per-client action keeps growing and the system does not.
-      </p>
+      <Insight>
+        {n < cross
+          ? `Below ${cross.toFixed(1)} clients the fixed system is still the pricier option at ${eur(SC.fixed)} — you're paying for capacity the client base hasn't grown into yet, while the per-client action costs only ${eur(per)}.`
+          : `Past ${cross.toFixed(1)} clients the per-client action has overtaken the system: at ${n} clients it costs ${eur(per)} and keeps climbing €${SC.perClient} at a time, while the system's ${eur(SC.fixed)} never moves.`}{" "}
+        The system only pays for itself once there is a big enough base to spread its fixed cost across; below the crossover, a per-client action is the cheaper choice on cost alone.
+      </Insight>
       <div>
         <label htmlFor={`${uid}-n`} className="text-caption font-semibold">Clients served: <span className="tnum">{n}</span></label>
         <p className="text-micro normal-case tracking-normal text-ash">Move it to see where the two costs cross.</p>
@@ -373,6 +381,9 @@ function GovTable() {
         <p className="smallcaps">{g.kpi} · escalates to {g.to}</p>
         <p className="text-ink">{g.why}</p>
       </div>
+      <Insight>
+        The three rows share the same three columns, but the cadence tracks how fast each KPI can actually move: the show-up rate is read weekly because a week of bookings is already a signal, while the repeat-purchase rate needs two full months before a dip means more than noise. Match the cadence to the KPI&apos;s own speed, not to a single company-wide rhythm.
+      </Insight>
     </div>
   );
 }

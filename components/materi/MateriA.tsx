@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { Callout, MaterialCard } from "@/components/ui/MaterialCard";
-import { Bul, Diagram } from "@/components/materi/kit";
+import { Bul, Diagram, Insight } from "@/components/materi/kit";
 import { wrap } from "@/lib/svg";
 
 /* ------------------------------------------------------------------ A1 */
@@ -119,6 +119,9 @@ function MotiveLadder() {
           {m.german}
         </p>
       </div>
+      <Insight>
+        Every motive keeps the same shape — a claim the buyer has to be able to check — but what counts as proof changes completely from row to row: trust needs an outside party to vouch (a reference, a pilot, a certificate); price needs the whole contract life made visible, not the headline number; benefit needs the buyer&apos;s own KPI, not the vendor&apos;s case study; relationship needs a named, stable person. A pitch built to prove one motive rarely helps with another.
+      </Insight>
     </div>
   );
 }
@@ -239,6 +242,9 @@ function JourneyPhases() {
         </p>
         <p className="text-ink">{t.text}</p>
       </div>
+      <Insight>
+        The two dashed lines don&apos;t track how engaged the buyer feels, they track two concrete tests: does a seller now own a named contact in a scheduled or held conversation, and has the contract been signed. First contact and consultation can look similar from outside — both involve the buyer reaching out — but only consultation puts a seller in a booked meeting, which is what moves a touchpoint from pre-sales into sales.
+      </Insight>
     </div>
   );
 }
@@ -354,6 +360,9 @@ function MechanismGrid() {
         </p>
         <p className="text-ink">{c.text}</p>
       </div>
+      <Insight>
+        The same three mechanisms recur in every phase, but what proves each one changes with where the buyer stands: pre-sales trust rests on public evidence (references, a certificate) because no one has met yet, while after-sales trust rests on an incident actually being handled as promised. Read a row across, not just a cell alone — a mechanism that looked satisfied in one phase can still be undone in the next.
+      </Insight>
     </div>
   );
 }

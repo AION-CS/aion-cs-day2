@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { Callout, MaterialCard } from "@/components/ui/MaterialCard";
-import { Bul, Diagram } from "@/components/materi/kit";
+import { Bul, Diagram, Insight } from "@/components/materi/kit";
 
 const eur = (n: number) => `${n < 0 ? "−" : ""}€${Math.abs(Math.round(n)).toLocaleString("en-US")}`;
 
@@ -102,6 +102,9 @@ function LeverMap() {
         <p><span className="font-semibold text-ink">How the cost is counted. </span>{l.cost}</p>
         <p><span className="font-semibold text-ink">Where it fits. </span>{l.fits}</p>
       </div>
+      <Insight>
+        The cost shape splits the levers into two families before their price does: Option A and Option C are a block you pay once per client, however many orders follow; Option B is a stripe you pay again on every single order — so a discount is the only lever whose total cost keeps growing the more it succeeds at bringing orders in.
+      </Insight>
     </div>
   );
 }
@@ -203,6 +206,9 @@ function SegmentMap() {
         <p><span className="font-semibold text-ink">Who. </span>{s.what}</p>
         <p><span className="font-semibold text-ink">How levers land. </span>{s.how}</p>
       </div>
+      <Insight>
+        The same lever lands differently depending on which corner of this chart a segment sits in. A discount is paid on every order, so it costs little against Project's rare, large orders but adds up fast against Retainer's frequent, small ones. A relationship lever needs contact to build on, which Project barely offers between its long gaps and Retainer has in abundance.
+      </Insight>
     </div>
   );
 }
@@ -361,10 +367,12 @@ function BreakEvenChart() {
         <circle cx={px(u)} cy={py(fN)} r="5" fill="#2F5D62" />
         <circle cx={px(u)} cy={py(dN)} r="5" fill="#A4472A" />
       </svg>
-      <p aria-live="polite" className="rounded-lg border border-line bg-paper p-3 text-caption text-ink">
-        At <strong>{u} pp</strong> the fixed-cost lever nets <strong>{eur(fN)}</strong> and the discount nets <strong>{eur(dN)}</strong>. The discount breaks even at{" "}
-        <strong>{be.toFixed(1)} pp</strong>; the fixed-cost lever at <strong>{fixedBreakEven.toFixed(1)} pp</strong>.
-      </p>
+      <Insight>
+        {fN >= dN
+          ? `At ${u} pp the fixed-cost lever leads by ${eur(fN - dN)}: it only has to clear ${fixedBreakEven.toFixed(1)} pp to turn positive, while the discount — paid on all ${base} existing repeat orders plus the new ones — needs ${be.toFixed(1)} pp.`
+          : `At ${u} pp the discount leads by ${eur(dN - fN)}: with only ${base} existing repeat orders to discount, it clears its ${be.toFixed(1)} pp break-even before the fixed-cost lever clears its own ${fixedBreakEven.toFixed(1)} pp.`}{" "}
+        Drag &quot;Existing repeat orders&quot; up and the discount&apos;s break-even moves right — the fixed-cost lever&apos;s does not, because it is never paid per order.
+      </Insight>
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label htmlFor={`${uid}-u`} className="text-caption font-semibold">Uplift in the repeat rate: <span className="tnum">{u} pp</span></label>
