@@ -33,7 +33,7 @@ const CHAINS = [
   },
 ] as const;
 
-function ChainMap() {
+export function ChainMap() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("repeat");
   const c = CHAINS.find((x) => x.id === sel)!;
@@ -140,7 +140,7 @@ const LOOP = [
   { id: "act", label: "Act", sub: "escalate", text: "The action changes, is escalated to a named person, or is stopped. The next reading shows whether the change worked, and the loop starts again." },
 ] as const;
 
-function ControlLoop() {
+export function ControlLoop() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("trigger");
   const n = LOOP.find((x) => x.id === sel)!;
@@ -242,7 +242,7 @@ export function CardC2() {
 
 const SC = { fixed: 30000, perClient: 800, max: 80 };
 
-function ScaleChart() {
+export function ScaleChart() {
   const uid = useId().replace(/:/g, "");
   const [n, setN] = useState(38);
   const X0 = 56;
@@ -363,7 +363,7 @@ const GOV = [
   },
 ] as const;
 
-function GovTable() {
+export function GovTable() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("repeat");
   const g = GOV.find((x) => x.id === sel)!;

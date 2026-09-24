@@ -4,10 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { COURSE, ROUTES } from "@/lib/routes";
+import { useOptionalRoutes } from "@/lib/useOptionalRoutes";
 
 /** Persistent top bar: the site name and the two routes. Nothing is locked — every route is always reachable. */
 export function TopBar() {
   const pathname = usePathname() ?? "";
+  const { shown } = useOptionalRoutes();
+  // The optional routes are listed once the learner asks, or as soon as one of them is open.
+  const routes = ROUTES.filter((r) => !r.optional || shown || pathname.startsWith(`/route-${r.n}`));
   return (
     <header className="sticky top-0 z-40 h-12 bg-slate text-paper print:hidden">
       <div className="mx-auto flex h-full w-full max-w-[1100px] items-center gap-4 px-4 md:px-6">
@@ -19,7 +23,7 @@ export function TopBar() {
         </Link>
         <nav aria-label="Routes" className="ml-auto">
           <ol className="flex items-center gap-1">
-            {ROUTES.map((r) => {
+            {routes.map((r) => {
               const active = pathname.startsWith(`/route-${r.n}`);
               return (
                 <li key={r.n}>
@@ -33,6 +37,7 @@ export function TopBar() {
                   >
                     <span className="tnum">{r.n}</span>
                     <span className="hidden md:inline">{r.short}</span>
+                    {r.optional && <span className="hidden text-micro font-normal opacity-70 md:inline">optional</span>}
                   </Link>
                 </li>
               );

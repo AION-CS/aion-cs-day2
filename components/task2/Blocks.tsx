@@ -11,6 +11,7 @@ import { scrollToAndFlash } from "@/lib/flash";
 import { cellGuide, lossGuide, recommendGuide, tradeoffGuide } from "@/lib/mentorGuide";
 import { IDS } from "@/lib/missing";
 import { useJumpTo } from "@/lib/useJumpTo";
+import { useMateri } from "@/lib/materiAlias";
 import { getLeakSentence, weakestLabel } from "@/store/selectors";
 import { useHydrated, useStore } from "@/store/useStore";
 import { AnswerKey } from "@/components/ui/AnswerKey";
@@ -19,12 +20,14 @@ import { Field } from "@/components/ui/Field";
 import { FormulaBuilder } from "@/components/ui/FormulaBuilder";
 import { MentorGuide } from "@/components/ui/MentorGuide";
 import { RevealHint } from "@/components/ui/RevealHint";
+import { WritingHelp } from "@/components/ui/WritingHelp";
 
 const GRID_CLUE =
   "Select this option and segment in the calculator again. Which line of its working is the net impact, and does your figure match it, sign included?";
 
 /** Block 2.1 — the net-impact grid, three options by two segments. One shared grid, checked on request. */
 export function GridBlock() {
+  const m = useMateri();
   const l2 = useStore((s) => s.l2);
   const setGrid = useStore((s) => s.setGrid);
   const check = useStore((s) => s.checkGrid);
@@ -50,7 +53,7 @@ export function GridBlock() {
         One cell per combination. Type the net impact in euros the calculator shows: a loss with a minus sign (for example −4,872). Any layout works: 4872, 4,872 or €4.872.
       </p>
       <p className="text-caption text-ink">
-        The method is taught in Materi B3, with a worked example on Alpenwerk&apos;s numbers. Try each cell yourself first. If you get stuck, press <strong>Help for this cell</strong> under it: it opens two helps, &ldquo;Show the formula&rdquo; (in
+        The method is taught in {m.name("B3")}, with a worked example on Alpenwerk&apos;s numbers. Try each cell yourself first. If you get stuck, press <strong>Help for this cell</strong> under it: it opens two helps, &ldquo;Show the formula&rdquo; (in
         words, with a calculator that checks each part) and &ldquo;Show where the numbers are&rdquo; (the exact rows of the tables above). You are practising combining the numbers correctly.
       </p>
       <div className="grid gap-3 md:grid-cols-[minmax(0,12rem)_repeat(2,minmax(0,1fr))]">
@@ -168,6 +171,7 @@ export function GridBlock() {
 
 /** The two on-demand helps for one grid cell, hidden until asked for: the formula in words with the automatic calculator, and the printed rows it uses. */
 function CellHelp({ cell }: { cell: string }) {
+  const m = useMateri();
   const parts = useStore((s) => s.l2.parts);
   const partFlags = useStore((s) => s.l2.partFlags);
   const setPart = useStore((s) => s.setL2Part);
@@ -176,8 +180,10 @@ function CellHelp({ cell }: { cell: string }) {
   const anyFlag = partFlags.some((k) => k.startsWith(`${cell}.`));
   return (
     <div className="flex flex-wrap items-start gap-2">
-      <RevealHint id={`formula-${cell}`} label="Show the formula" title={`Formula · ${cellLabel(cell)} · from Materi B3`} forceOpen={anyFlag}>
-        <p className="text-caption text-ink">{cellFormula(opt)}</p>
+      <RevealHint id={`formula-${cell}`} label="Show the formula" title={`Formula · ${cellLabel(cell)} · from ${m.name("B3")}`} forceOpen={anyFlag}>
+        <p className="text-caption text-ink">
+          {cellFormula(opt)} Taught in {m.name("B3")}.
+        </p>
         <FormulaBuilder
           figure={cell}
           builder={GRID_BUILDERS[cell]}
@@ -296,7 +302,7 @@ function TaskOneQuote() {
   if (!hydrated) return <div id={IDS.taskOneQuote} className="min-h-[3rem]" />;
   return (
     <aside id={IDS.taskOneQuote} className="rounded-lg border border-line bg-mist/60 p-3 text-caption">
-      <p className="smallcaps">Your Task 1 answer · for context</p>
+      <p className="smallcaps">Your leak diagnosis · for context</p>
       {weakest || sentence ? (
         <div className="mt-1 space-y-1 text-ink">
           <p>
@@ -305,10 +311,10 @@ function TaskOneQuote() {
           <blockquote className="border-l-4 border-gold bg-accentSoft px-3 py-1.5">{sentence || "You have not written the cost sentence yet."}</blockquote>
         </div>
       ) : (
-        <p className="mt-1 text-ash">You have not answered Task 1 yet. Nothing here depends on it.</p>
+        <p className="mt-1 text-ash">You have not answered the diagnosis yet (Blocks 1.3 and 1.4). Nothing here depends on it.</p>
       )}
       <button type="button" onClick={() => jump(IDS.sentence, "/route-1/")} className="btn-ghost btn-sm mt-2">
-        {sentence ? "Open it in Route 1" : "Go to Task 1, Block 1.4"}
+        {sentence ? "Open it (Block 1.4)" : "Go to Block 1.4"}
       </button>
     </aside>
   );
@@ -371,6 +377,20 @@ export function RecommendBlock() {
                 value={l2.just[s]}
                 onChange={(e) => setJust(s, e.target.value)}
                 placeholder="e.g. Option … nets … in this segment, against … for …"
+              />
+              <WritingHelp
+                id={`frame-rec-${s}`}
+                steps={[
+                  "Name the option you recommend for this segment.",
+                  "Give its net impact from your grid, and set it beside the figure of one other option in the same segment.",
+                  "Say what the figure rests on (the uplift you were given) and what would make you choose differently. A recommendation with no figure scores 0.",
+                ]}
+                refs={OPT_IDS.map((o) => ({
+                  label: `${OPTIONS[o].short} · ${SEGMENTS[s].short}`,
+                  value: (l2.grid[cellKey(o, s)] ?? "").trim() || "not entered yet in Block 2.1",
+                  target: IDS.grid(cellKey(o, s)),
+                }))}
+                refsTitle="Your grid, this segment"
               />
             </Field>
             <AnswerKey block={recommendationKey(s)} />
@@ -441,13 +461,22 @@ export function UniformBlock() {
 
 /** Formula in words and the learner's own grid entries for Block 2.4, hidden until asked for. The method is taught in Materi B2. */
 function UniformHelp() {
+  const m = useMateri();
   const grid = useStore((s) => s.l2.grid);
   return (
     <div className="flex flex-wrap items-start gap-2">
-      <RevealHint id="formula-uniform" label="Show the formula" title="Formula · from Materi B2">
+      <WritingHelp
+        id="frame-tradeoff"
+        steps={[
+          "Name the single option and its total across both segments.",
+          "For each segment, name that segment's own best option and say how many euros you give up by not running it there.",
+          "State both amounts in euros from your grid, not only the letter of the option.",
+        ]}
+      />
+      <RevealHint id="formula-uniform" label="Show the formula" title={`Formula · from ${m.name("B2")}`}>
         <p className="text-caption text-ink">
           Total of an option = its result in project clients + its result in retainer clients. The single best option is the largest total. What it gives up = for each segment, that segment&apos;s own best result minus the chosen option&apos;s
-          result there; then add the two. Taught in Materi B2.
+          result there; then add the two. Taught in {m.name("B2")}.
         </p>
       </RevealHint>
       <RevealHint id="src-uniform" label="Show where the numbers are" title="Numbers you need · your own grid from Block 2.1">

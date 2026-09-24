@@ -2,14 +2,17 @@
 
 **Customer Retention & Buying Behaviour in B2B IT Sales · Module 1, Day 2 of 2.**
 *Applying behaviour-based sales strategy and systematic customer retention.*
-A self-study companion: study material, three working documents (a Diagnostic Note, a Calculation Note and a Decision Memo)
-and three live instruments (a funnel, a lever calculator and a budget-allocation grid). One route per level. All three routes are built.
+**This is a Friday day** (`../CLAUDE.md` #29): learners leave early, so the day is **one capstone route of about two hours**
+(60 min of material, 60 min of task) that carries one case through all three levels and ends in one document, the **Case File**.
+The full Level 2 and Level 3 routes are kept as **optional Routes 2 and 3**, listed only after a small button is pressed.
+A self-study companion: study material, three live instruments (a funnel, a lever calculator and a budget-allocation grid) and
+the working documents built on them.
 It carries the shared standards `../CLAUDE.md` #1 to #28 (the day-1 level of interaction): a home page that opens with what the day is about and what is in it for the
 learner, a page map on every route, an "In plain words" box on every card, hidden helps under every calculation, and mentor worked answers
 for every task question.
 
 The case company is **DigitalIT Solutions GmbH**, a mid-size B2B IT services vendor in Germany (project
-implementations and retainer support contracts): *many leads, few closings, weak retention.* Every figure is exactly as briefed, so Route 3 (a €150,000, four-month budget case) reuses Routes 1 and 2.
+implementations and retainer support contracts): *many leads, few closings, weak retention.* Every figure is exactly as briefed, so the decision stage (a €150,000, four-month budget case) reuses the diagnosis and the calculation.
 
 This repo was bootstrapped from `day1` (same chrome, primitives, store pattern and tokens) and its content was
 replaced. The Day 1 history is kept; nothing of the Kessler case remains in the tree.
@@ -18,11 +21,15 @@ replaced. The Day 1 history is kept; nothing of the Kessler case remains in the 
 
 | Route | Content | Export |
 |---|---|---|
-| `/route-1/` | Level 1 · Materi A (A1–A4, 30 min) → Task 1 Diagnostic Note (15 min): sort the six funnel stages into journey phases (1.1), transcribe the funnel's figures (1.2), name the stage with the largest negative gap (1.3), one judged sentence on what the leak costs (1.4) | `{route}-{name}-day2-l1-diagnostic.html` |
-| `/route-2/` | Level 2 · Materi B (B1–B4, 30 min) → Task 2 Calculation Note (15 min): net-impact grid 3 options × 2 segments (2.1), which cells are a loss (2.2), one option per segment defended with a € figure (2.3), one option for both segments and what it gives up (2.4) | `{route}-{name}-day2-l2-calculation.html` |
-| `/route-3/` | Level 3 · Materi C (C1–C4, 30 min) → Task 3 Decision Memo (15 min): allocation grid under a €150,000 budget with a live budget bar (3.1), rollout order and the KPI-blind-spot warning (3.2), what was cut (3.3), governance per funded KPI (3.4), the measure you postponed (3.5), with the memo assembling itself beside the questions | `{route}-{name}-day2-l3-memo.html` |
+| `/route-1/` **Capstone** | **Materi A**: six cards, two per level, 10 min each (A1 buying motive → sales action, A2 the journey and the funnel read by its gaps · A3 three levers and what each nets, A4 segments and why a discount is weak · A5 goal → action → KPI and a governed system, A6 scale, sequence, owner, cadence, trigger). **Case File**, one case brief and three stages: *Stage 1 · Diagnose* (about 15 min: sort the touchpoints 1.1 and write down the funnel's figures 1.2, both Optional; name the largest negative gap 1.3 and what the leak costs 1.4, both Core), *Stage 2 · Calculate* (about 20 min: net-impact grid 2.1, one option per segment 2.3, one option for both segments 2.4, Core; loss marks 2.2, Optional), *Stage 3 · Decide* (about 25 min: allocation 3.1, rollout order 3.2, what was cut 3.3, governance 3.4, the postponed measure 3.5, all Core). Each stage opens with a "Carried forward" panel of the learner's own earlier answers. | `1-{name}-day2-case-file.html` |
+| `/route-2/` *optional* | The full Level 2: Materi B (B1–B4, 30 min) → Task 2 Calculation Note (15 min). Same blocks 2.1–2.4 and the same answers as Stage 2. | `2-{name}-day2-l2-calculation.html` |
+| `/route-3/` *optional* | The full Level 3: Materi C (C1–C4, 30 min) → Task 3 Decision Memo (15 min), the memo assembling itself beside the questions. Same blocks 3.1–3.5 and the same answers as Stage 3. | `3-{name}-day2-l3-memo.html` |
 
-Material minutes: A = 8 + 8 + 8 + 6 = 30, B = 8 + 7 + 7 + 8 = 30, C = 8 + 7 + 7 + 8 = 30. The task minutes (15 each) are split per block on the page.
+Route 1 material minutes: 6 × 10 = 60. Stage minutes 15 + 20 + 25 = 60; the **Core** blocks alone (about 50 min) make a complete Case File, and the **Optional** blocks are never listed as missing. The optional routes keep their own minutes (Materi B and C 30 each, tasks 15 each).
+
+**Optional routes.** By default the home page, the top navigation and Route 1 show Route 1 only. A small quiet button under the Route 1 card (and a one-line notice at the end of Route 1) lists Routes 2 and 3 as cards and nav entries labelled "Optional"; the choice is saved (`ui.optionalRoutesShown`). Hidden is not locked: `/route-2/` and `/route-3/` open by URL at any time, and opening one lists them from then on.
+
+**Shared answers.** Route 1's stages and the optional routes use the same store slices (`l1`, `l2`, `route3`), so an answer written in Stage 2 is already in Route 2, and the other way round.
 
 ## Stack
 
@@ -46,10 +53,11 @@ npm run build        # writes the static site to out/  (stop `npm run dev` first
 app/                  page.tsx (home) · route-1/ · route-2/ · route-3/
 components/chrome/    MentorBar, TopBar, ParticipantStrip, SectionRail, PageNav, GlossaryPanel, HashFlash, Footer, StoreHydrator
 components/ui/        MaterialCard, FunnelInstrument, LeverCalculator, AnswerBlock, AnswerKey, MentorGuide, RevealHint, FormulaBuilder, CalcDiagnosis, ExportBar, MissingList, Field …
-components/materi/    MateriA (A1–A4), MateriB (B1–B4), MateriC (C1–C4), Materi (the three blocks + references)
-components/task1|2|3/ Task 1 (SortBoard, FillTable, WeakestBlock), Task 2 (Blocks: grid, loss marks, recommendations, one option), Task 3 (AllocationGrid, SequenceBlock, MemoFields, MemoPanel)
+components/materi/    CapstoneCards (A1–A6, Route 1), MateriA / MateriB / MateriC (the diagrams the capstone reuses; B and C also hold the full cards of Routes 2 and 3), Materi (the three blocks + references)
+components/capstone/  Capstone (brief, stages, Core/Optional tiers, the Case File export), CarriedForward (handover panel + reference position)
+components/task1|2|3/ Task 1 blocks (SortBoard, FillTable, WeakestBlock), Task 2 (Blocks: grid, loss marks, recommendations, one option; `Task2Workspace`), Task 3 (AllocationGrid, SequenceBlock, MemoFields, MemoPanel; `Task3Workspace`). The workspaces are shared by Route 1 and the optional routes
 data/                 funnel, touchpoints, segments, program, references, glossary, materialIndex, materialPlain, dayIntro, pageNav, mentorKey
-lib/                  checks, program, missing, progress, exportDoc, answerKey, mentorGuide, calcBuilder, parseAmount, slug, flash, svg
+lib/                  checks, program, missing, progress, exportDoc (incl. `caseFileBody`), answerKey, mentorGuide, calcBuilder, materiAlias, useOptionalRoutes, parseAmount, slug, flash, svg
 store/                useStore (slices l1, l2, route3), selectors (Route 2 reads Route 1's answers here)
 scripts/              verify-calc.mjs
 ```
@@ -150,3 +158,31 @@ gamification; the rules decide the structure, style and mechanics). Where they d
 22. **Task 3 has no numeric answer field.** Its only figures (the total, the remaining budget, the lever's cost by scope) are computed by the app and printed live, so #21, #24 and #26 have nothing to attach to; its questions are covered by the answer keys (#7) and the worked answers (#23).
 23. **Owner profiles are a Case assumption.** The prompt gave the owner options but not what each role does. The profile lines (`OWNER_PROFILE` in `data/program.ts`) are a practitioner observation for a company of this kind, labelled so on screen, and are the single source for the material table, the hidden help and the answer key.
 24. **The model owner for the sales training is a mentor-side choice.** The model allocation leaves the training out, so the model answer has no governance row for it. `GOV_EXPECT.train` (Sales team lead, monthly) exists only so the answer key has an expected answer if a learner funds it.
+25. **Day 2 is a Friday day, so Route 1 is now a capstone (CLAUDE.md #29).** Deviations 1, 2 and 12 above describe the earlier layout (three routes, one per level, each with its own export). Route 1 (Materi A + Task 1) was replaced by the two-hour capstone; the Route 2 and Route 3 that were already built are kept unchanged in form and hidden behind a small button. The old Route 1 (Diagnostic Note, its four A cards) is in git history.
+26. **The capstone reuses the day's tasks instead of writing new ones.** Its stages are the answer blocks of Tasks 1 to 3 (same numbers 1.1–3.5, same helps, keys and worked answers), each tagged **Core** or **Optional**. This is why the optional routes share answers with it. The blocks and their Core minutes (Core about 50, everything about 60) are set in `components/capstone/Capstone.tsx`.
+27. **Materi A was rewritten for the capstone.** Six cards, two per level, built from the diagrams of the full Materi A, B and C. The old cards A3 (trust, relevance, consistency at each touchpoint, with the German consent and tracking constraint) and the separate KPI primer were folded or dropped: A2 keeps the journey, the phase tests, the worked sort and the funnel-gap worked example; A3 to A6 carry the Level 2 and Level 3 rules. The German consent constraint is no longer on Route 1's path (it is in git history); say if it should come back as a callout in A1.
+28. **The Case File counts Core blocks only.** Its one `missing` list (`caseMissing` in `lib/missing.ts`) spans all three stages and never lists 1.1, 1.2 or 2.2. Those blocks appear in the file only when the learner filled them in. The optional routes keep their own, stricter lists.
+29. **"Use the reference position".** When an earlier stage is empty, the Carried-forward panel offers a labelled stand-in (the day's model answers for the leak, the grid, the single option and its trade-off), filled only where the learner has not answered and marked "Reference position, not your answer" on screen and in the file (`l1.refPosition`, `l2.refPosition`). Editing the handover field makes it the learner's own. It does not fill 2.3 or any Stage 3 block: those stay the learner's work.
+30. **Reset semantics.** Route 1 is the whole Case File, so "Reset Route 1" (and "Clear this route" in the mentor bar on Route 1) clears all three answer slices, which the optional routes share. Resetting Route 2 or 3 clears its own slice, and so also that stage of Route 1.
+31. **Mobile memo strip.** The live memo of Stage 3 shows as a sticky column on wide screens; on a phone it is not shown as a fixed strip inside the Case File (it would sit over the other stages). The Case File preview above the export button shows the same content.
+32. **Persist version 5.** `ui.optionalRoutesShown`, `l1.refPosition` and `l2.refPosition` were added; `merge` fills them from the defaults for an older blob.
+
+## Coverage: where each task block is taught, and what helps
+
+| Block | Taught in | Help while answering |
+|---|---|---|
+| 1.1 Sort (Optional) | A2 (phase tests, table, worked sort) | Show the test questions · Check + clue per touchpoint · reasoning after two checks |
+| 1.2 Funnel figures (Optional) | A2 (conversion, gap, repeat rate) | FIND IT line · Check + one clue per cell |
+| 1.3 Largest gap | A2 (rank by gap in pp, not by count) | Check + clue |
+| 1.4 Cost of the leak | A2 (worked cost of a leak) | Show the formula (with per-part calculator) · Show where the numbers are · Check + clue |
+| 2.1 Net-impact grid | A3 (four steps, two cost shapes, worked example) | Help for this cell: formula + calculator, numbers · Check + clue · calculator shows the working |
+| 2.2 Loss marks (Optional) | A3 (a negative net impact is an answer) | Check (how many hold) + clue |
+| 2.3 One option per segment | A3, A4 (choose by cause, cite the figure, say what it rests on) | Show how to build the answer (frame + your own grid cells) |
+| 2.4 One option for both | A4 (add the segments, what you give up) | Show the formula · Show where the numbers are (your grid) · Show how to build the answer · Check + clue |
+| 3.1 Allocation | A6 (cost shapes, add the costs, descope, cut the weakest evidence) | Live total, budget bar, message naming the moves that close a gap · "Limits and reference points" in the brief |
+| 3.2 Rollout order | A5, A6 (baseline first) | Live sequencing warning · Check + clue |
+| 3.3 What was cut | A6 (consequence in the material's terms) | Show how to build the answer (frame + printed prices) |
+| 3.4 Governance | A6 (owner test, profiles, cadence, threshold) | Show the test questions (with the case's reference points for a trigger) · a trigger without a number is flagged |
+| 3.5 Postponed measure | A6 (postpone with a pickup point) | "Left open" list · Show how to build the answer |
+
+The case brief also carries a "Limits and reference points you can rely on" card: budget and time, option costs, what the fix and the dashboard do, and how to read a benchmark.

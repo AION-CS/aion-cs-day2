@@ -1,4 +1,5 @@
 import { HashFlash } from "@/components/chrome/HashFlash";
+import { RevealOnVisit } from "@/components/chrome/OptionalRoutes";
 import { SectionRail } from "@/components/chrome/SectionRail";
 import { PageNav } from "@/components/chrome/PageNav";
 import { SuggestedOrderBanner } from "@/components/ui/Banner";
@@ -12,6 +13,7 @@ export default function Route3() {
   return (
     <div className="space-y-8 pt-4">
       <HashFlash />
+      <RevealOnVisit />
       <header className="space-y-3">
         <div className="space-y-1">
           <p className="smallcaps text-accent">Route 3 · Level 3 · Management decision</p>
@@ -26,7 +28,7 @@ export default function Route3() {
       </header>
       <SuggestedOrderBanner
         routeKey="r3"
-        text="Routes 1 and 2 first are recommended: Task 3 quotes your leak diagnosis and your lever choice, and its grid opens once you have named the weakest funnel stage (Route 1) and chosen one option for both segments (Route 2). Inside this route: Materi C → Task 3. Every section stays open."
+        text="Optional, full-depth Level 3 on the same case as the Route 1 capstone. Route 1 (and Route 2) first is recommended: Task 3 quotes your leak diagnosis and your lever choice, and its grid opens once you have named the weakest funnel stage and chosen one option for both segments. Your answers here are the same as the Stage 3 answers in Route 1. Every section stays open."
       />
       <SectionRail route={3} />
       <PageNav route={3} />

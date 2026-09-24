@@ -12,7 +12,7 @@ import { useHydrated, useStore } from "@/store/useStore";
 import { BudgetBar } from "@/components/ui/BudgetBar";
 import { Insight } from "@/components/materi/kit";
 
-export const LOCK_TIP_3 = "Unlocks once you've diagnosed the leak and chosen a lever in Routes 1 and 2";
+export const LOCK_TIP_3 = "Unlocks once you've named the weakest funnel stage (Block 1.3) and chosen one option for both segments (Block 2.4)";
 
 /** Hook shared by the grid and the sequence block: is the grid open, and where does a click on it go while it is not. */
 export function useL3Lock() {

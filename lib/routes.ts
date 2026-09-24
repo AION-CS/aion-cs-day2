@@ -17,20 +17,22 @@ export type RouteInfo = {
   blurb: string;
   plan: { label: string; minutes: number }[];
   built: boolean;
+  /** Kept for a longer day but not listed until the learner asks (CLAUDE.md #29). Never locked: the URL always opens. */
+  optional?: boolean;
 };
 
 export const ROUTES: RouteInfo[] = [
   {
     n: 1,
     href: "/route-1/",
-    short: "Diagnose",
-    title: "Route 1 · Knowledge",
-    level: "Level 1 · Knowledge",
+    short: "Capstone",
+    title: "Route 1 · Capstone",
+    level: "Levels 1 to 3 · one case",
     blurb:
-      "Read where DigitalIT Solutions loses prospects between the website and the signature, and what its repeat-purchase rate says about retention. Study material, then a Diagnostic Note.",
+      "One complete case in two hours: find where DigitalIT Solutions loses prospects, put a euro figure on three ways to keep clients, and decide how a €150,000 budget is spent. Study material, then a Case File in three stages.",
     plan: [
-      { label: "Materi A · Level 1", minutes: 30 },
-      { label: "Task 1 · Diagnostic Note", minutes: 15 },
+      { label: "Materi A · six cards, Levels 1 to 3", minutes: 60 },
+      { label: "Task · Case File in three stages", minutes: 60 },
     ],
     built: true,
   },
@@ -40,8 +42,9 @@ export const ROUTES: RouteInfo[] = [
     short: "Calculate",
     title: "Route 2 · Application",
     level: "Level 2 · Application",
+    optional: true,
     blurb:
-      "Put a euro figure on three retention levers for two client segments, and choose one option per segment. Study material, then a Calculation Note.",
+      "The full Level 2 material and task on the same case: put a euro figure on three retention levers for two client segments, and choose one option per segment. Study material, then a Calculation Note.",
     plan: [
       { label: "Materi B · Level 2", minutes: 30 },
       { label: "Task 2 · Calculation Note", minutes: 15 },
@@ -54,8 +57,9 @@ export const ROUTES: RouteInfo[] = [
     short: "Decide",
     title: "Route 3 · Management decision",
     level: "Level 3 · Management decision",
+    optional: true,
     blurb:
-      "Decide how a €150,000 budget over four months is spent on retention, and who owns it. Study material, then a Decision Memo that assembles itself beside your answers.",
+      "The full Level 3 material and task on the same case: decide how a €150,000 budget over four months is spent on retention, and who owns it. Study material, then a Decision Memo that assembles itself beside your answers.",
     plan: [
       { label: "Materi C · Level 3", minutes: 30 },
       { label: "Task 3 · Decision Memo", minutes: 15 },

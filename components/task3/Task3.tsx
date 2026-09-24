@@ -15,6 +15,7 @@ import { memoBody } from "@/lib/exportDoc";
 import { allocKey, rubricRows } from "@/lib/answerKey";
 import { allocGuide } from "@/lib/mentorGuide";
 import { AnswerKey } from "@/components/ui/AnswerKey";
+import type { Tier } from "@/components/ui/AnswerBlock";
 import { MentorGuide } from "@/components/ui/MentorGuide";
 import { IDS, l3Missing } from "@/lib/missing";
 import { exportName } from "@/lib/slug";
@@ -22,6 +23,81 @@ import { COURSE } from "@/lib/routes";
 import { useJumpTo } from "@/lib/useJumpTo";
 import { usePersisted } from "@/store/usePersisted";
 import { useHydrated, useStore } from "@/store/useStore";
+
+type T3 = "3.1" | "3.2" | "3.3" | "3.4" | "3.5";
+
+/** Stage 3 · Decide: the five answer blocks of Task 3 with the memo assembling beside them. */
+export function Task3Workspace({ tiers, where = "Route 3 → Task 3", mobileStrip = true }: { tiers?: Partial<Record<T3, Tier>>; where?: string; mobileStrip?: boolean }) {
+  return (
+    <>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
+        <div className="min-w-0 space-y-5">
+          <DiagnosisNotice />
+
+          <AnswerBlock
+            tier={tiers?.["3.1"]}
+            id="block-3-1"
+            title="Block 3.1 · Allocate the budget"
+            kind="OBJECTIVE"
+            findIt={`${where} → “Budget allocation grid” below. Each line item shows its cost and effect; the bar at the top is the running total against the €150,000.`}
+          >
+            <MaterialRefs refs={["C3", "C4"]} />
+            <AllocationGrid />
+            <AnswerKey block={allocKey()} />
+            <MentorGuide guide={allocGuide()} />
+          </AnswerBlock>
+
+          <AnswerBlock
+            tier={tiers?.["3.2"]}
+            id="block-3-2"
+            title="Block 3.2 · Set the rollout order"
+            kind="OBJECTIVE"
+            findIt={`${where} → “Budget allocation grid” → the start month of each funded item, then the sequencing warning that appears under it. Answer below.`}
+          >
+            <MaterialRefs refs={["C1", "C4"]} />
+            <SequenceBlock />
+          </AnswerBlock>
+
+          <AnswerBlock
+            tier={tiers?.["3.3"]}
+            id="block-3-3"
+            title="Block 3.3 · What was cut"
+            kind="JUDGED"
+            findIt={`${where} → your allocation in Block 3.1 and the list of what it leaves open in Block 3.5. Answer below.`}
+          >
+            <MaterialRefs refs={["C3", "C4"]} />
+            <CutField />
+          </AnswerBlock>
+
+          <AnswerBlock
+            tier={tiers?.["3.4"]}
+            id="block-3-4"
+            title="Block 3.4 · Governance"
+            kind="JUDGED"
+            findIt={`${where} → the items you funded in Block 3.1, one row each. Answer below.`}
+          >
+            <MaterialRefs refs={["C2", "C4"]} />
+            <GovernanceRows />
+          </AnswerBlock>
+
+          <AnswerBlock
+            tier={tiers?.["3.5"]}
+            id="block-3-5"
+            title="Block 3.5 · The measure you postponed"
+            kind="JUDGED"
+            findIt={`${where} → “Left open by your allocation”, below. Answer beneath it.`}
+          >
+            <MaterialRefs refs={["C1", "C4"]} />
+            <PostponedField />
+          </AnswerBlock>
+
+          <RubricPanel />
+        </div>
+        <MemoPanel mobileStrip={mobileStrip} />
+      </div>
+    </>
+  );
+}
 
 /** Task 3 · Level 3 · the Decision Memo: a constraint check, a sequencing rule and three judged sections, with the memo assembling itself beside the questions. */
 export function Task3() {
@@ -66,66 +142,7 @@ export function Task3() {
         <MaterialRefs refs={["C1", "C3", "C4"]} lead="Read first" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
-        <div className="min-w-0 space-y-5">
-          <DiagnosisNotice />
-
-          <AnswerBlock
-            id="block-3-1"
-            title="Block 3.1 · Allocate the budget"
-            kind="OBJECTIVE"
-            findIt="Route 3 → Task 3 → “Budget allocation grid” below. Each line item shows its cost and effect; the bar at the top is the running total against the €150,000."
-          >
-            <MaterialRefs refs={["C3", "C4"]} />
-            <AllocationGrid />
-            <AnswerKey block={allocKey()} />
-            <MentorGuide guide={allocGuide()} />
-          </AnswerBlock>
-
-          <AnswerBlock
-            id="block-3-2"
-            title="Block 3.2 · Set the rollout order"
-            kind="OBJECTIVE"
-            findIt="Route 3 → Task 3 → “Budget allocation grid” → the start month of each funded item, then the sequencing warning that appears under it. Answer below."
-          >
-            <MaterialRefs refs={["C1", "C4"]} />
-            <SequenceBlock />
-          </AnswerBlock>
-
-          <AnswerBlock
-            id="block-3-3"
-            title="Block 3.3 · What was cut"
-            kind="JUDGED"
-            findIt="Route 3 → Task 3 → your allocation in Block 3.1 and the list of what it leaves open in Block 3.5. Answer below."
-          >
-            <MaterialRefs refs={["C3", "C4"]} />
-            <CutField />
-          </AnswerBlock>
-
-          <AnswerBlock
-            id="block-3-4"
-            title="Block 3.4 · Governance"
-            kind="JUDGED"
-            findIt="Route 3 → Task 3 → the items you funded in Block 3.1, one row each. Answer below."
-          >
-            <MaterialRefs refs={["C2", "C4"]} />
-            <GovernanceRows />
-          </AnswerBlock>
-
-          <AnswerBlock
-            id="block-3-5"
-            title="Block 3.5 · The measure you postponed"
-            kind="JUDGED"
-            findIt="Route 3 → Task 3 → “Left open by your allocation”, below. Answer beneath it."
-          >
-            <MaterialRefs refs={["C1", "C4"]} />
-            <PostponedField />
-          </AnswerBlock>
-
-          <RubricPanel />
-        </div>
-        <MemoPanel />
-      </div>
+      <Task3Workspace />
 
       <div className="space-y-3">
         <MissingList items={missing} lead="Your decision memo is still missing:" />
@@ -155,19 +172,19 @@ function DiagnosisNotice() {
     <aside role="note" className="rounded-lg border border-line bg-mist/60 p-3 text-caption text-ink">
       <p className="smallcaps">Section 1 of the memo quotes your earlier answers</p>
       <p className="mt-1">
-        {!weakest && "You have not named the weakest funnel stage in Route 1. "}
-        {!uniform && "You have not chosen one option for both segments in Route 2. "}
+        {!weakest && "You have not named the weakest funnel stage (Block 1.3). "}
+        {!uniform && "You have not chosen one option for both segments (Block 2.4). "}
         Finish them first and the diagnosis fills in by itself. Nothing on this page is blocked.
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         {!weakest && (
           <button type="button" onClick={() => jump(IDS.weakest, "/route-1/")} className="btn-ghost btn-sm">
-            Go to Route 1, Block 1.3
+            Go to Block 1.3
           </button>
         )}
         {!uniform && (
           <button type="button" onClick={() => jump(IDS.uniform, "/route-2/")} className="btn-ghost btn-sm">
-            Go to Route 2, Block 2.4
+            Go to Block 2.4
           </button>
         )}
       </div>

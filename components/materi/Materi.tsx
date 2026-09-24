@@ -1,14 +1,15 @@
 import { ReferencesAccordion } from "@/components/ui/ReferencesAccordion";
 import { MATERIALS } from "@/data/materialIndex";
 import type { RefKey } from "@/data/references";
-import { CardA1, CardA2, CardA3, CardA4 } from "@/components/materi/MateriA";
+import { CardA1, CardA2, CardA3, CardA4, CardA5, CardA6 } from "@/components/materi/CapstoneCards";
 import { CardB1, CardB2, CardB3, CardB4 } from "@/components/materi/MateriB";
 import { CardC1, CardC2, CardC3, CardC4 } from "@/components/materi/MateriC";
 
 // What each block's cards cite, for its References accordion.
 const REFS_A: RefKey[] = [
-  "bauer1960", "morgan1994", "anderson2006", "iso27001", "bsic5", "gdpr", "lemon2016", "gartner2017", "mayer1995",
-  "burnham2003", "cialdini2021", "tdddg25", "edpb2020", "uwg7", "gupta2003", "reichheld1990",
+  "bauer1960", "morgan1994", "anderson2006", "iso27001", "bsic5", "gdpr", "lemon2016", "gartner2017", "gupta2003", "reichheld1990",
+  "dick1994", "nagle2018", "fader2005", "burnham2003", "kahneman1979", "samuelson1988", "kahneman1991", "gustafsson2005",
+  "kaplan1992", "doran1981", "deming1986", "brealey2020", "betrvg87",
 ];
 const REFS_B: RefKey[] = [
   "morgan1994", "anderson2006", "reichheld1990", "dick1994", "fader2005", "gupta2003", "nagle2018", "burnham2003",
@@ -23,17 +24,19 @@ export function MateriA() {
   return (
     <section id="materi-a" className="space-y-4">
       <header className="space-y-1">
-        <p className="smallcaps text-accent">Materi A · Level 1 · Knowledge · {minutes("A")} min</p>
-        <h2 className="text-h1">Reading a sales funnel from the buyer’s side</h2>
+        <p className="smallcaps text-accent">Materi A · Levels 1 to 3 · {minutes("A")} min</p>
+        <h2 className="text-h1">The whole case in six cards</h2>
         <p className="max-w-prose text-body text-ash">
-          Four short cards ({minutes("A")} min, facilitator-led). They give you the tests you need for Task 1: why an action follows a motive, how to sort a stage into a journey phase,
-          what each touchpoint has to achieve in Germany, and how to read conversion and gap figures.
+          Six short cards, two per level ({minutes("A")} min, facilitator-led). Level 1 (A1, A2): why a buyer acts, and where a funnel leaks. Level 2 (A3, A4): what a retention lever nets in euros, and why segments differ.
+          Level 3 (A5, A6): how to govern what you fund under a budget that does not cover everything. Each card holds the tests you need for the Case File below; the full Level 2 and Level 3 material is kept as optional Routes 2 and 3.
         </p>
       </header>
       <CardA1 />
       <CardA2 />
       <CardA3 />
       <CardA4 />
+      <CardA5 />
+      <CardA6 />
       <ReferencesAccordion block="A" keys={REFS_A} />
     </section>
   );

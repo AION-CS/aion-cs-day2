@@ -65,7 +65,7 @@ const MOTIVES = [
   },
 ] as const;
 
-function MotiveLadder() {
+export function MotiveLadder() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("trust");
   const m = MOTIVES.find((x) => x.id === sel)!;
@@ -129,34 +129,6 @@ function MotiveLadder() {
   );
 }
 
-export function CardA1() {
-  return (
-    <MaterialCard
-      id="A1"
-      scan="Choose the sales action from the buyer’s motive, not from your product’s feature list."
-      sources={["bauer1960", "morgan1994", "anderson2006", "iso27001", "bsic5", "gdpr"]}
-      reasoning={[
-        "Name the motive first (trust, price, benefit or relationship), then choose the action and the proof. If you cannot say which motive an action serves, it is a feature pitch.",
-        "Match the action to the motive: trust → references, a pilot and compliance proof; price → the total cost made visible; benefit → a value case in the buyer’s own figures; relationship → named, stable contacts and a review rhythm.",
-        "An action aimed at a different motive spends effort without touching the reason. A discount answers the price motive only; offered against a trust or relationship motive it gives margin away and leaves the reason in place.",
-        "A motive is inferred from evidence, and one observation is not evidence of a motive. State what you saw before you name what it means.",
-      ]}
-    >
-      <Diagram label="Motive → strategy" caption="Select a motive to read the proof that buyer needs. The four motives are the ones used on Day 1.">
-        <MotiveLadder />
-      </Diagram>
-      <Bul
-        items={[
-          <><strong>What it is.</strong> A behaviour-based sales strategy starts from why this buyer would act, the buying <em>motive</em>, and derives the sales action and the proof from it. A feature-led pitch starts from what the product does and hopes the motive matches.</>,
-          <><strong>Why it matters in long-cycle IT procurement.</strong> The buyer carries the risk of a wrong choice personally: Bauer (1960) called this perceived risk. Where risk aversion is the motive, the strategy is to build trust: references, a pilot phase and compliance proof, exactly the things a security-minded committee can check.</>,
-          <><strong>Trust is built, not asserted.</strong> Morgan &amp; Hunt (1994) found that trust and commitment together carry a business relationship forward. Anderson, Narus &amp; van Rossum (2006) add the value side: a customer value proposition states the points of difference the buyer will actually get.</>,
-          <><strong>Boundary.</strong> The four motives can sit in the same committee at once, in different people. The strategy for one buyer is chosen by the motive the evidence shows, not by the one you would prefer.</>,
-        ]}
-      />
-    </MaterialCard>
-  );
-}
-
 /* ------------------------------------------------------------------ A2 */
 
 const JOURNEY = [
@@ -176,7 +148,7 @@ const PHASE_STYLE = {
   after: { fill: "#DFEEEB", label: "AFTER-SALES" },
 } as const;
 
-function JourneyPhases() {
+export function JourneyPhases() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("first");
   const t = JOURNEY.find((x) => x.id === sel)!;
@@ -306,7 +278,7 @@ const SORT_EXAMPLE: { id: string; label: string; phase: Phase; why: string; insi
   },
 ];
 
-function SortExample() {
+export function SortExample() {
   const [sel, setSel] = useState<string>("datefixed");
   const item = SORT_EXAMPLE.find((x) => x.id === sel)!;
   const test = PHASE_TESTS.find((t) => t.phase === item.phase)!;
@@ -351,165 +323,6 @@ function SortExample() {
   );
 }
 
-export function CardA2() {
-  return (
-    <MaterialCard
-      id="A2"
-      scan="A journey is an ordered list of touchpoints. Sorting a stage into the right phase tells you who owns it and what measures it."
-      sources={["lemon2016", "gartner2017"]}
-      reasoning={[
-        "To sort a stage, ask two questions. (1) By this point, are a named buyer contact and a seller in a scheduled or held conversation? (2) Does this event come after the signature? No to both → pre-sales. Yes to the first only → sales, up to and including the signature itself. Anything after the signature → after-sales.",
-        "A booked consultation is sales: a seller now owns a named contact and a date. This is the convention the task uses, so apply it to every stage alike.",
-        "Contact details or a download are first contact but still pre-sales: nobody has spoken to the person yet.",
-        "The signature is the last sales event, not the first after-sales one. Onboarding, support and renewal are after-sales, and they come after it.",
-        "A phase can be empty in a funnel. A funnel counts people up to the signature, so after-sales never appears as a stage; it shows in other numbers, such as the repeat-purchase rate.",
-        ...PHASE_PAIR_TESTS.slice(0, 2).map((t) => `${t.pair} ${t.test}`),
-      ]}
-    >
-      <Diagram label="Customer journey map" caption="Eight touchpoints, three phases and the two boundaries used in this course. Select a touchpoint to read what it covers.">
-        <JourneyPhases />
-      </Diagram>
-      <DataTable
-        caption="One test question per phase, and what belongs in it"
-        head={["Phase", "The test question", "What belongs", "What does not"]}
-        rows={PHASE_TESTS.map((t) => [t.name, t.test, t.belongs, t.notBelongs])}
-      />
-      <Diagram
-        label="Worked sort · Alpenwerk GmbH (Case assumption, illustrative, read-only)"
-        caption="A different company's stages, sorted with the same tests you will use in Task 1. Select a stage to read why it sits in its phase."
-      >
-        <SortExample />
-      </Diagram>
-      <Bul
-        items={[
-          <><strong>The framework.</strong> Customer journey mapping (also touchpoint mapping): list every point where buyer and vendor meet, in order, and group them by phase (Lemon &amp; Verhoef, 2016). It is standard practice in CX and B2B sales work, and it is what lets a funnel be read stage by stage.</>,
-          <><strong>Pre-sales.</strong> Awareness and first contact. The buyer is researching, mostly without you: Gartner (2017) found buyers spend about 17% of buying time meeting suppliers, and the rest on independent research and internal alignment.</>,
-          <><strong>Sales.</strong> Consultation, proposal, negotiation and contract, up to the signature. A German committee often runs several rounds, and the security and data-protection questionnaires sit inside this phase.</>,
-          <><strong>After-sales.</strong> Onboarding, support and renewal. In project business this is the stretch most vendors do not staff, and it is where the next purchase is decided.</>,
-        ]}
-      />
-    </MaterialCard>
-  );
-}
-
-/* ------------------------------------------------------------------ A3 */
-
-const MECH = ["Trust", "Relevance", "Consistency"] as const;
-const PHASES3 = ["Pre-sales", "Sales", "After-sales"] as const;
-const CELLS: { key: string; text: string }[][] = [
-  [
-    { key: "Named references on the site", text: "Case studies from named Mittelstand clients and visible certifications (ISO/IEC 27001) let a buyer check the vendor before anyone talks to them." },
-    { key: "A pilot before the contract", text: "A reference call and a paid pilot phase let a committee test the vendor’s ability at low cost; the security officer sees the certificate and the AVV draft." },
-    { key: "Incidents handled as promised", text: "An incident is answered inside the agreed response time and explained honestly. This is where ability, benevolence and integrity are seen in use." },
-  ],
-  [
-    { key: "Content by role and sector", text: "A page for the CIO and a page for the plant manager. Relevance here comes from content and from what the visitor chooses to say, not from a tracked profile (see the constraint below)." },
-    { key: "An offer built on their process", text: "The proposal restates the buyer’s own problem and figures, and the consultation asks before it pitches." },
-    { key: "Reviews report their KPIs", text: "Onboarding and business reviews report the KPI the buyer signed up for, not the vendor’s activity." },
-  ],
-  [
-    { key: "Site = first call", text: "The promise on the website is the promise the seller repeats on the first call. A gap here is noticed by a committee that compares notes." },
-    { key: "Same people, same price", text: "The people who consulted are the people who propose; the price in the offer is the price in the contract." },
-    { key: "SLA delivered as offered", text: "The account owner at renewal is the one from onboarding, and the service level is delivered as sold. Aligned processes and integrations also raise the switching cost (Burnham et al., 2003)." },
-  ],
-];
-
-const CONSTRAINT = [
-  "Ability, benevolence and integrity (Mayer, Davis & Schoorman, 1995) are what a buying committee tests. In a procurement with six to ten people (Gartner, 2017), the most cautious one sets the pace.",
-  "Personalisation at the website is limited. Non-essential cookies and tracking need prior consent (GDPR Art. 6(1)(a) and Art. 7; § 25 TDDDG; EDPB Guidelines 05/2020). Cold e-mail to a business contact needs consent as well (§ 7 UWG). Relevance therefore comes from content by role and sector, and from context the visitor volunteers.",
-  "Consistency is a promise-and-delivery test over time (Cialdini, 2021). A promise made in pre-sales and not kept in sales resets trust for the whole committee, and long procurement cycles mean the committee remembers.",
-];
-
-function MechanismGrid() {
-  const uid = useId().replace(/:/g, "");
-  const [sel, setSel] = useState<[number, number]>([0, 1]);
-  const c = CELLS[sel[0]][sel[1]];
-  const X0 = 112;
-  const CW = 148;
-  const RH = 62;
-  return (
-    <div className="space-y-3">
-      <svg viewBox="0 0 560 222" className="mx-auto h-auto w-full max-w-[600px]" role="group" aria-labelledby={`${uid}-t ${uid}-d`}>
-        <title id={`${uid}-t`}>{`Three mechanisms across three journey phases`}</title>
-        <desc id={`${uid}-d`}>{`A grid of trust, relevance and consistency against pre-sales, sales and after-sales. Each cell names one concrete German B2B IT example. Select a cell to read it.`}</desc>
-        {PHASES3.map((p, j) => (
-          <text key={p} x={X0 + j * CW + CW / 2 - 2} y="18" textAnchor="middle" fontSize="13" fontWeight="700" fill="#59606A">{p.toUpperCase()}</text>
-        ))}
-        {MECH.map((m, i) => (
-          <g key={m}>
-            <text x="4" y={34 + i * RH + RH / 2 + 2} fontSize="15" fontWeight="700" fill="#1F2328">{m}</text>
-            {CELLS[i].map((cell, j) => {
-              const on = sel[0] === i && sel[1] === j;
-              const pick = () => setSel([i, j]);
-              const lines = wrap(cell.key, 17);
-              return (
-                <g
-                  key={j}
-                  className="hit"
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={on}
-                  aria-label={`${m}, ${PHASES3[j]}: ${cell.key}`}
-                  onClick={pick}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      pick();
-                    }
-                  }}
-                >
-                  <rect x={X0 + j * CW} y={28 + i * RH} width={CW - 6} height={RH - 8} rx="8" fill={on ? "#FBF0D6" : "#FFFEFA"} stroke={on ? "#8A5A0B" : "#59606A"} strokeWidth={on ? 2.6 : 1.4} className="hit-shape" />
-                  {lines.map((l, k) => (
-                    <text key={k} x={X0 + j * CW + 10} y={28 + i * RH + 24 + k * 15 - (lines.length - 1) * 4} fontSize="12.5" fill="#1F2328">{l}</text>
-                  ))}
-                </g>
-              );
-            })}
-          </g>
-        ))}
-      </svg>
-      <div aria-live="polite" className="space-y-1 rounded-lg border border-line bg-paper p-4 text-caption">
-        <p className="smallcaps">
-          {MECH[sel[0]]} · {PHASES3[sel[1]]}
-        </p>
-        <p className="text-ink">{c.text}</p>
-      </div>
-      <Insight>
-        The same three mechanisms recur in every phase, but what proves each one changes with where the buyer stands: pre-sales trust rests on public evidence (references, a certificate) because no one has met yet, while after-sales trust rests on an incident actually being handled as promised. Read a row across, not just a cell alone — a mechanism that looked satisfied in one phase can still be undone in the next.
-      </Insight>
-    </div>
-  );
-}
-
-export function CardA3() {
-  return (
-    <MaterialCard
-      id="A3"
-      scan="At each touchpoint one mechanism does most of the work, and in German B2B IT each one meets a hard local constraint."
-      sources={["mayer1995", "morgan1994", "gartner2017", "burnham2003", "cialdini2021", "gdpr", "tdddg25", "edpb2020", "uwg7"]}
-      reasoning={[
-        "Let the touchpoint’s job pick the mechanism. Doubt about the vendor → trust. “Is this for us?” → relevance. “Will it be the same later?” → consistency.",
-        "Relevance at the website is not tracking. In Germany it rests on content by role and sector and on what the visitor volunteers; a hidden behavioural profile needs consent and is the wrong tool here.",
-        "A mechanism can be undone at the next touchpoint: consistency is broken by a promise that the next phase does not keep. Read a leak in a journey as a possible break between two touchpoints, not only as a weakness in one.",
-      ]}
-    >
-      <Diagram label="Mechanisms × phases" caption="Nine concrete examples. Select a cell to read it.">
-        <MechanismGrid />
-      </Diagram>
-      <Bul
-        items={[
-          <><strong>Trust</strong> is the buyer’s willingness to rely on the vendor. Morgan &amp; Hunt (1994) tie trust and commitment to keeping a relationship. {CONSTRAINT[0]}</>,
-          <><strong>Relevance</strong> is the buyer’s sense that the message is about their problem. {CONSTRAINT[1]}</>,
-          <><strong>Consistency</strong> is the match between what was promised and what happens next. {CONSTRAINT[2]}</>,
-        ]}
-      />
-      <Callout label="German constraint to remember" tone="rust">
-        <p>Do not answer a relevance problem with more tracking. Ask what consent you hold, and use content, context the visitor chose, or a direct conversation instead.</p>
-      </Callout>
-    </MaterialCard>
-  );
-}
-
 /* ------------------------------------------------------------------ A4 */
 
 const EX = [
@@ -517,7 +330,7 @@ const EX = [
   { label: "Leads → Consultation", from: 300, to: 60, ref: 25 },
 ];
 
-function KpiLadder() {
+export function KpiLadder() {
   const uid = useId().replace(/:/g, "");
   const f = (n: number) => n.toLocaleString("en-US");
   return (
@@ -554,43 +367,3 @@ function KpiLadder() {
   );
 }
 
-export function CardA4() {
-  return (
-    <MaterialCard
-      id="A4"
-      scan="Conversion rate, customer value and repurchase rate are the three numbers the two tasks use. Read them the same way each time."
-      sources={["gupta2003", "reichheld1990"]}
-      reasoning={[
-        "Compute each step from its own two counts: this stage ÷ the stage above it × 100. Never divide by the top of the funnel.",
-        "Counts fall at every stage by design. The step that loses the most people is not the step with the largest gap: rank the steps by the gap to their benchmark, in percentage points, and take the most negative.",
-        "A gap is actual minus benchmark, in percentage points (pp), with its sign. 42.7% against 75% is −32.3 pp, not −43%; a relative percentage answers a different question.",
-        "State the cost of a leak as a number you can trace: prospects lost × the funnel’s own downstream conversion (× the contract value if the case gives one). Do not import a figure the case never printed.",
-        "A benchmark is a comparison point, not a verdict. A gap tells you where to ask “why here?”; it does not tell you the cause.",
-      ]}
-    >
-      <Diagram label="Worked example · Alpenwerk GmbH (illustrative, read-only)" caption="Case assumption. Two steps of a different company, computed the way Task 1 asks you to read DigitalIT Solutions.">
-        <KpiLadder />
-      </Diagram>
-      <div className="grid gap-3 md:grid-cols-3">
-        <Callout label="Conversion rate · gap">
-          <p>Conversion = count at this stage ÷ count at the stage above × 100. Gap = actual % − benchmark %, in <strong>percentage points</strong>.</p>
-        </Callout>
-        <Callout label="Customer value (CLV)">
-          <p>
-            The gross profit one client is expected to bring over the whole relationship. Simple form: annual gross profit per client × expected years, with expected years ≈ 1 ÷ (1 − retention). At €12,000 a year and 80% retention that is 5 years and €60,000; at 90% it is 10 years and €120,000 (undiscounted; Gupta &amp; Lehmann, 2003, give the discounted form).
-          </p>
-        </Callout>
-        <Callout label="Repurchase rate">
-          <p>Existing clients who re-order within a stated window ÷ existing clients. 12 of 40 clients re-ordering within 18 months is 30.0%. The window is part of the definition: state it.</p>
-        </Callout>
-      </div>
-      <Bul
-        items={[
-          <><strong>Why retention gets its own number.</strong> Reichheld &amp; Sasser (1990) found that cutting defections by 5% raised profits by 25% to 85% across the service industries they studied. A funnel shows how a company wins clients; the repurchase rate shows whether it keeps them.</>,
-          <><strong>Cost of a leak, worked (Alpenwerk, Case assumption).</strong> 60 consultations booked, 45 held: 15 prospects fall out. Of every 45 held, 6 sign (13.3%), so the 15 would have brought about 15 × 6 ÷ 45 = <strong>2.0 contracts</strong>. At €50,000 a contract that is about €100,000 of revenue a year.</>,
-          <><strong>Boundary.</strong> That figure assumes the lost prospects would have behaved like the ones who were held. It is an estimate to size a leak, not a forecast.</>,
-        ]}
-      />
-    </MaterialCard>
-  );
-}

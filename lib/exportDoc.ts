@@ -73,38 +73,6 @@ function gapBarsSvg(p: Persisted): string {
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Gap to the benchmark reference, as you entered it"><title>Gap to the benchmark reference, as you entered it</title>${rows}</svg>`;
 }
 
-export function diagnosticBody(p: Persisted): string {
-  const { l1 } = p;
-  const sortRows = TOUCHPOINTS.map(
-    (t) => `<tr><td class="id">${esc(t.label)}</td><td>${l1.sort[t.id] ? esc(PHASE_LABEL[l1.sort[t.id]!]) : "—"}</td></tr>`,
-  ).join("");
-  const fillRows = ROW_IDS.map(
-    (r) =>
-      `<tr><td class="id">${esc(ROW_LABEL[r])}</td>${COLS.map((c) => `<td class="num">${esc((l1.fill[cellId(r, c)] ?? "").trim() || "—")}</td>`).join("")}</tr>`,
-  ).join("");
-  return `${header("Diagnostic Note", "Level 1 · Knowledge", p)}
-<h2>The case</h2>
-<p>${esc(COURSE.company)} is a mid-size B2B IT services vendor in Germany (project implementations and retainer support contracts). The brief: many leads, few closings, weak retention. Annual funnel: ${esc(
-    ["24,000 website visitors", "480 leads", "96 consultations booked", "41 held", "22 proposals", "4 contracts signed"].join(" → "),
-  )}. Average contract value ${esc(fmtEuroPlain(CONTRACT.price))} <span class="muted">(Case assumption; the benchmark references are also a Case assumption)</span>.</p>
-
-<h2>1.1 · The six touchpoints, sorted into journey phases</h2>
-<table><thead><tr><th>Touchpoint</th><th>Phase</th></tr></thead><tbody>${sortRows}</tbody></table>
-
-<h2>1.2 · The funnel figures, as you read them</h2>
-<table><thead><tr><th>Step</th>${COLS.map((c) => `<th class="num">${esc(COL_LABEL[c])}</th>`).join("")}</tr></thead><tbody>${fillRows}</tbody></table>
-${gapBarsSvg(p)}
-<p class="legend">Bar length = size of the gap you entered. pp = percentage points.</p>
-
-<h2>1.3 · The stage with the largest negative gap</h2>
-<p><strong>${l1.weakest ? esc(STEP_BY_ID[l1.weakest].label) : "—"}</strong></p>
-
-<h2>1.4 · What the leak costs</h2>
-${para(l1.sentence)}
-
-<div class="foot">Checks requested: ${l1.checks}${l1.reasoningOpened ? " · The sort reasoning was opened after " + l1.sortChecks + " checks." : ""}<br/>Generated ${esc(dateLabel())}.</div>`;
-}
-
 export function calculationBody(p: Persisted): string {
   const { l1, l2 } = p;
   const gridRows = OPT_IDS.map(
@@ -262,4 +230,115 @@ export function printDocument(title: string, html: string) {
     w.print();
     window.setTimeout(() => iframe.remove(), 1000);
   }, 250);
+}
+
+/* ------------------------------------------------------------------ the Case File (Route 1, CLAUDE.md #29) */
+
+/**
+ * The Case File: one document in three parts (Diagnosis, Calculation, Decision), built here for both the on-screen preview
+ * and the download. Optional blocks (1.1, 1.2, 2.2) appear only if the learner filled them in. A part filled from the labelled
+ * reference position says so. It never prints answer keys, ticks, crosses or scores.
+ */
+export function caseFileBody(p: Persisted): string {
+  const { l1, l2, route3: r } = p;
+  const a = r.alloc;
+  const funded = fundedItems(a);
+  const money = (n: number) => `€${Math.round(n).toLocaleString("en-US")}`;
+  const refNote = (used: boolean, what: string) =>
+    used ? `<p class="legend"><span class="tag">reference position</span> ${esc(what)} was filled from the reference position offered by the app, not written by the participant.</p>` : "";
+
+  // Part 1 · Diagnosis
+  const sorted = TOUCHPOINTS.some((t) => l1.sort[t.id]);
+  const sortRows = TOUCHPOINTS.map(
+    (t) => `<tr><td class="id">${esc(t.label)}</td><td>${l1.sort[t.id] ? esc(PHASE_LABEL[l1.sort[t.id]!]) : "—"}</td></tr>`,
+  ).join("");
+  const filled = ROW_IDS.some((row) => COLS.some((c) => (l1.fill[cellId(row, c)] ?? "").trim()));
+  const fillRows = ROW_IDS.map(
+    (row) => `<tr><td class="id">${esc(ROW_LABEL[row])}</td>${COLS.map((c) => `<td class="num">${esc((l1.fill[cellId(row, c)] ?? "").trim() || "—")}</td>`).join("")}</tr>`,
+  ).join("");
+  const part1 = `<h2>Part 1 · Diagnosis</h2>
+${sorted ? `<h2>1.1 · The six touchpoints, sorted into journey phases</h2>
+<table><thead><tr><th>Touchpoint</th><th>Phase</th></tr></thead><tbody>${sortRows}</tbody></table>` : ""}
+${filled ? `<h2>1.2 · The funnel figures, as you read them</h2>
+<table><thead><tr><th>Step</th>${COLS.map((c) => `<th class="num">${esc(COL_LABEL[c])}</th>`).join("")}</tr></thead><tbody>${fillRows}</tbody></table>
+${gapBarsSvg(p)}
+<p class="legend">Bar length = size of the gap you entered. pp = percentage points.</p>` : ""}
+<h2>1.3 · The stage with the largest negative gap</h2>
+<p><strong>${l1.weakest ? esc(STEP_BY_ID[l1.weakest].label) : "—"}</strong></p>
+<h2>1.4 · What the leak costs</h2>
+${para(l1.sentence)}
+${refNote(l1.refPosition, "The stage and the cost sentence")}`;
+
+  // Part 2 · Calculation
+  const gridRows = OPT_IDS.map(
+    (o) =>
+      `<tr><td class="id">${esc(OPTIONS[o].name)}</td>${SEG_IDS.map((s) => {
+        const k = cellKey(o, s);
+        return `<td class="num">${esc((l2.grid[k] ?? "").trim() || "—")}${l2.loss[k] ? `<span class="tag">net loss</span>` : ""}</td>`;
+      }).join("")}</tr>`,
+  ).join("");
+  const lossAnswered = l2.lossNone || Object.values(l2.loss).some(Boolean);
+  const recs = SEG_IDS.map(
+    (s) => `<h2>2.3 · ${esc(SEGMENTS[s].name)}</h2>
+<p><strong>${l2.rec[s] ? esc(OPTIONS[l2.rec[s]!].name) : "—"}</strong></p>${para(l2.just[s])}`,
+  ).join("\n");
+  const part2 = `<h2>Part 2 · Calculation</h2>
+<p class="muted">Inputs as briefed: contract price ${esc(fmtEuroPlain(CONTRACT.price))}, gross margin ${CONTRACT.margin * 100}%, gross profit per order ${esc(fmtEuroPlain(CONTRACT.gp))}. Project clients ${SEGMENTS.P.clients} (baseline repeat orders ${SEGMENTS.P.baseline}), retainer clients ${SEGMENTS.R.clients} (baseline ${SEGMENTS.R.baseline}).</p>
+<h2>2.1 · Net impact per option and segment (€ per year)</h2>
+<table><thead><tr><th>Option</th>${SEG_IDS.map((s) => `<th class="num">${esc(SEGMENTS[s].name)}</th>`).join("")}</tr></thead><tbody>${gridRows}</tbody></table>
+${lossAnswered ? `<p class="legend">2.2 · ${esc(l2.lossNone ? "You stated that no cell shows a net loss." : "Cells marked as a net loss are tagged in the grid above.")}</p>` : ""}
+${recs}
+<h2>2.4 · One option across both segments</h2>
+<p><strong>${l2.uniform ? esc(OPTIONS[l2.uniform].name) : "—"}</strong></p>${para(l2.tradeoff)}
+${refNote(l2.refPosition, "The grid, the single option and its trade-off")}`;
+
+  // Part 3 · Decision
+  const scopeLabel = `${a.leverOpt ? esc(OPT_NAME[a.leverOpt]) : ""} · ${esc(SCOPES.find((s) => s.id === a.leverScope)!.short)}`;
+  const allocRows = ITEM_IDS.map((id) => {
+    const on = funded.includes(id);
+    const detail = id === "lever" ? (on ? scopeLabel : "not funded") : on ? "funded in full" : "not funded";
+    return `<tr><td class="id">${ITEMS[id].n} · ${esc(ITEMS[id].short)}</td><td>${detail}</td><td class="num">${on ? esc(money(itemCost(a, id))) : "—"}</td><td class="num">${on && r.start[id] !== null ? "month " + r.start[id] : "—"}</td></tr>`;
+  }).join("");
+  const spent = totalSpent(a);
+  const rest = remaining(a);
+  const leverLine = a.leverOpt ? ` The lever nets about ${esc(money(leverNet(a.leverOpt, a.leverScope)).replace("€-", "−€"))} a year (the Stage 2 figures).` : "";
+  const order = [...funded].filter((i) => r.start[i] !== null).sort((x, y) => r.start[x]! - r.start[y]!);
+  const orderText = order.length ? order.map((i) => `${ITEMS[i].short} (month ${r.start[i]})`).join(" → ") : "—";
+  const seq = sequenceTruth(a, r.start);
+  const warnedText = r.warned === null ? "not recorded" : r.warned ? "yes, it appeared" : "no, it did not appear";
+  const govRows = funded
+    .map((id) => {
+      const g = r.gov[id];
+      return `<tr><td class="id">${esc(ITEM_KPI[id])}</td><td>${esc(g.owner) || "—"}</td><td>${esc(g.cadence) || "—"}</td><td>${esc(g.trigger.trim()) || "—"}</td></tr>`;
+    })
+    .join("");
+  const part3 = `<h2>Part 3 · Decision</h2>
+<h2>3.1 · Allocation of the ${esc(money(BUDGET))} budget</h2>
+<table><thead><tr><th>Line item</th><th>Scope</th><th class="num">Cost</th><th class="num">Starts</th></tr></thead><tbody>${allocRows}</tbody></table>
+<p><strong>Spent ${esc(money(spent))}</strong> of ${esc(money(BUDGET))}; ${rest >= 0 ? esc(money(rest)) + " remaining" : esc(money(-rest)) + " over budget"}.${leverLine}</p>
+<h2>3.2 · Sequence</h2>
+<p><strong>Rollout order:</strong> ${esc(orderText)}.</p>
+<p><strong>KPI blind-spot warning:</strong> ${esc(warnedText)}${r.warned && r.missingKpi ? "; the KPI that loses its baseline: " + esc(KPI_LABEL[r.missingKpi]) : ""}.</p>${seq.text ? `<blockquote>${esc(seq.text)}</blockquote>` : ""}
+<h2>3.3 · What was cut</h2>
+${para(r.cut)}
+<h2>3.4 · Governance</h2>
+${funded.length ? `<table><thead><tr><th>KPI</th><th>Owner</th><th>Review cadence</th><th>Escalation trigger</th></tr></thead><tbody>${govRows}</tbody></table>` : "<p>—</p>"}
+<h2>3.5 · The measure I postponed</h2>
+${para(r.postponed)}
+<p><strong>Picked up:</strong> ${esc(r.pickup) || "—"}</p>
+<p class="legend">Left open by this allocation: ${leftOpen(a).map((o) => esc(o)).join(" ")}</p>`;
+
+  return `${header("Case File", "Levels 1 to 3 · Route 1 capstone", p)}
+<h2>The case</h2>
+<p>${esc(COURSE.company)} is a mid-size B2B IT services vendor in Germany (project implementations and retainer support contracts). The brief: many leads, few closings, weak retention. Annual funnel: ${esc(
+    ["24,000 website visitors", "480 leads", "96 consultations booked", "41 held", "22 proposals", "4 contracts signed"].join(" → "),
+  )}. Average contract value ${esc(fmtEuroPlain(CONTRACT.price))} <span class="muted">(Case assumption; the benchmark references are also a Case assumption)</span>. ${SEGMENTS.P.clients + SEGMENTS.R.clients} clients: ${SEGMENTS.P.clients} project and ${SEGMENTS.R.clients} retainer. Budget ${esc(money(BUDGET))} over four months.</p>
+
+${part1}
+
+${part2}
+
+${part3}
+
+<div class="foot">Checks requested: Stage 1 ${l1.checks}, Stage 2 ${l2.checks}, Stage 3 ${r.checks}${l1.reasoningOpened ? " · The sort reasoning was opened after " + l1.sortChecks + " checks." : ""}<br/>Generated ${esc(dateLabel())}.</div>`;
 }

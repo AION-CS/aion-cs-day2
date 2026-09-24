@@ -2,6 +2,24 @@ import type { ReactNode } from "react";
 
 export type BlockKind = "OBJECTIVE" | "JUDGED" | "OBJECTIVE + JUDGED" | "EXPLORATORY";
 
+/**
+ * Where a block sits in the Friday Case File (CLAUDE.md #29): Core blocks are required for a complete file, Optional
+ * blocks are for whoever has time and are never listed as missing. Minutes are a guide, not a timer.
+ */
+export type Tier = { level: "core" | "optional"; minutes: number };
+
+export function TierPill({ tier }: { tier: Tier }) {
+  return tier.level === "core" ? (
+    <span className="pill border-signal/40 bg-signalSoft text-signal" title="Needed for a complete Case File.">
+      CORE · about {tier.minutes} min
+    </span>
+  ) : (
+    <span className="pill border-dashed border-ash/60 bg-mist text-ash" title="For whoever has time. Never listed as missing.">
+      OPTIONAL · about {tier.minutes} min
+    </span>
+  );
+}
+
 export function Pill({ kind }: { kind: BlockKind }) {
   if (kind === "OBJECTIVE + JUDGED") {
     return (
@@ -41,6 +59,7 @@ export function AnswerBlock({
   findIt,
   children,
   analyse = true,
+  tier,
 }: {
   id?: string;
   title: string;
@@ -48,12 +67,14 @@ export function AnswerBlock({
   findIt: string;
   analyse?: boolean;
   children: ReactNode;
+  tier?: Tier;
 }) {
   return (
     <section id={id} className="card space-y-3 p-4 md:p-5">
       <header className="flex flex-wrap items-center gap-2">
         <h3>{title}</h3>
         <Pill kind={kind} />
+        {tier && <TierPill tier={tier} />}
       </header>
       <FindIt path={findIt} analyse={analyse} />
       <div className="space-y-4 border-t border-line pt-3">{children}</div>

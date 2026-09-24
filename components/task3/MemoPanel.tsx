@@ -10,7 +10,7 @@ import { useHydrated } from "@/store/useStore";
  * sections 1 to 6) whatever order the questions on the left are answered in, so what the participant reads
  * here is exactly what they download. A sticky column on desktop; on a phone a sticky strip that expands.
  */
-export function MemoPanel() {
+export function MemoPanel({ mobileStrip = true }: { mobileStrip?: boolean }) {
   const p = usePersisted();
   const [open, setOpen] = useState(false);
   // The memo carries today's date and the stored answers, so it is drawn only after the client has hydrated:
@@ -27,7 +27,7 @@ export function MemoPanel() {
         </div>
       </aside>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper shadow-lg lg:hidden print:hidden">
+      <div className={"fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper shadow-lg lg:hidden print:hidden" + (mobileStrip ? "" : " hidden")}>
         <button
           type="button"
           aria-expanded={open}

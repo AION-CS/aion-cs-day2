@@ -35,7 +35,7 @@ export function MentorBar() {
       : pathname.startsWith("/route-3")
         ? 3
         : null;
-  const exportId = route === 1 ? "export-l1" : route === 2 ? "export-l2" : route === 3 ? "export-l3" : null;
+  const exportId = route === 1 ? "export-case" : route === 2 ? "export-l2" : route === 3 ? "export-l3" : null;
 
   const submit = () => {
     if (code === MENTOR_PASSCODE) {

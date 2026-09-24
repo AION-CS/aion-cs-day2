@@ -38,7 +38,7 @@ const LEVERS = [
   },
 ] as const;
 
-function LeverMap() {
+export function LeverMap() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("A");
   const l = LEVERS.find((x) => x.id === sel)!;
@@ -159,7 +159,7 @@ const SEGS = [
   },
 ] as const;
 
-function SegmentMap() {
+export function SegmentMap() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("project");
   const s = SEGS.find((x) => x.id === sel)!;
@@ -254,7 +254,7 @@ function netDiscount(clients: number, upliftPp: number, gp: number, price: numbe
   return { extra, gain: extra * gp, cost, net: extra * gp - cost };
 }
 
-function FormulaChain() {
+export function FormulaChain() {
   const uid = useId().replace(/:/g, "");
   const boxes = [
     { x: 0, w: 130, top: "Extra orders", sub: "clients × uplift" },
@@ -326,7 +326,7 @@ const discNet = (u: number, base: number) => {
 const discBreakEven = (base: number) => (base * CH.price * CH.disc) / (GP - CH.price * CH.disc) / CH.clients * 100;
 const fixedBreakEven = (CH.clients * CH.costPerClient) / GP / CH.clients * 100;
 
-function BreakEvenChart() {
+export function BreakEvenChart() {
   const uid = useId().replace(/:/g, "");
   const [u, setU] = useState(8);
   const [base, setBase] = useState(10);
@@ -418,5 +418,30 @@ export function CardB4() {
         </p>
       </Callout>
     </MaterialCard>
+  );
+}
+
+/** The B3 worked example on a different company, as a reusable callout (Case assumption, read-only). */
+export function B3WorkedExample() {
+  const a = netFixed(20, 5, 10000, 1000);
+  const d = netDiscount(20, 5, 10000, 40000, 0.05, 4);
+  return (
+    <Callout label="Worked example · Alpenwerk GmbH (Case assumption, illustrative, read-only)">
+      <p>
+        Same uplift, two levers. The fixed-cost lever: {a.extra} extra order × €10,000 = {eur(a.gain)}, less {eur(a.cost)} = <strong>{eur(a.net)}</strong>. The discount: {a.extra} extra order × €10,000 = {eur(d.gain)}, less{" "}
+        (4 + {d.extra}) × €2,000 = {eur(d.cost)} = <strong>{eur(d.net)}</strong>. Same uplift, different verdicts: what decides it is how the cost is counted.
+      </p>
+    </Callout>
+  );
+}
+
+/** The B4 reading of the break-even chart, as a reusable callout. */
+export function B4ReadChart() {
+  return (
+    <Callout label="Read the chart">
+      <p>
+        Set the existing repeat orders to 2 and the discount breaks even at {discBreakEven(2).toFixed(1)} pp, before the fixed-cost lever. Set them to 10 and it needs {discBreakEven(10).toFixed(1)} pp, well after it. Nothing about the discount changed; the base it is paid on did.
+      </p>
+    </Callout>
   );
 }

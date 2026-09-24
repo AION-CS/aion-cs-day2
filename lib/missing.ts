@@ -13,6 +13,7 @@ export const IDS = {
   cell: (id: string) => `cell-${id.replace(".", "-")}`,
   weakest: "weakest-field",
   sentence: "cost-sentence-field",
+  exportCase: "export-case",
   exportL1: "export-l1",
   // Route 2
   grid: (k: string) => `grid-${k}`,
@@ -87,6 +88,17 @@ export function l2Missing(p: Persisted): MissingEntry[] {
   else if (t.length < 40) out.push({ id: IDS.tradeoff, label: "Block 2.4: the trade-off needs at least 40 characters." });
   else if (citedGridFigures(t, l2).length === 0) out.push({ id: IDS.tradeoff, label: "Block 2.4: the trade-off cites no € figure from your grid." });
   return out;
+}
+
+/**
+ * Everything still missing from the Case File of Route 1: the Core blocks of all three stages, in one list (CLAUDE.md #29).
+ * Optional blocks (1.1, 1.2, 2.2) are never listed. Each entry jumps to its block on the same page.
+ */
+export function caseMissing(p: Persisted): MissingEntry[] {
+  const out = participantMissing(p);
+  const optional = (l: string) => /^Block (1.1|1.2|2.2):/.test(l);
+  const notShared = (m: MissingEntry) => m.id !== IDS.participant && !optional(m.label) && !m.label.startsWith("Unlock the grid");
+  return [...out, ...l1Missing(p).filter(notShared), ...l2Missing(p).filter(notShared), ...l3Missing(p).filter(notShared)];
 }
 
 /** The grid opens once Route 1 has diagnosed the leak and Route 2 has chosen one option for both segments. */

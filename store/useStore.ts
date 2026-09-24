@@ -45,6 +45,8 @@ export type L1State = {
   parts: Record<string, string>;
   /** Part keys flagged by the last check. */
   partFlags: string[];
+  /** The Stage 1 handover (weakest stage, cost sentence) was filled from the labelled reference position, not by the learner. */
+  refPosition: boolean;
   /** Every check requested in Route 1, printed in the export footer. */
   checks: number;
 };
@@ -74,6 +76,8 @@ export type L2State = {
   parts: Record<string, string>;
   /** Part keys flagged by the last check. */
   partFlags: string[];
+  /** The Stage 2 handover (grid, single option, trade-off) was filled from the labelled reference position, not by the learner. */
+  refPosition: boolean;
   checks: number;
 };
 
@@ -102,7 +106,12 @@ export type Route3State = {
 
 export type Persisted = {
   participant: { name: string };
-  ui: { bannerDismissed: Record<string, boolean>; sectionsRead: Record<string, boolean> };
+  ui: {
+    bannerDismissed: Record<string, boolean>;
+    sectionsRead: Record<string, boolean>;
+    /** Routes 2 and 3 are optional on this day (CLAUDE.md #29): listed only once the learner asks. Never a lock. */
+    optionalRoutesShown: boolean;
+  };
   l1: L1State;
   l2: L2State;
   route3: Route3State;
@@ -117,6 +126,9 @@ type Session = {
 type Actions = {
   setParticipant: (patch: Partial<Persisted["participant"]>) => void;
   dismissBanner: (routeKey: string) => void;
+  setOptionalRoutes: (v: boolean) => void;
+  /** Fills what an earlier stage has not produced from the labelled reference position. Never overwrites a learner's answer. */
+  applyReference: (stage: 2 | 3) => void;
   toggleRead: (cardId: string, value?: boolean) => void;
 
   // Route 1
@@ -194,6 +206,7 @@ const emptyL1 = (): L1State => ({
   sentenceClue: false,
   parts: {},
   partFlags: [],
+  refPosition: false,
   checks: 0,
 });
 
@@ -214,6 +227,7 @@ const emptyL2 = (): L2State => ({
   tradeoff: "",
   parts: {},
   partFlags: [],
+  refPosition: false,
   checks: 0,
 });
 
@@ -236,7 +250,7 @@ const emptyRoute3 = (): Route3State => ({
 
 const emptyPersisted = (): Persisted => ({
   participant: { name: "" },
-  ui: { bannerDismissed: {}, sectionsRead: {} },
+  ui: { bannerDismissed: {}, sectionsRead: {}, optionalRoutesShown: false },
   l1: emptyL1(),
   l2: emptyL2(),
   route3: emptyRoute3(),
@@ -252,6 +266,42 @@ export const useStore = create<Persisted & Session & Actions>()(
       resetCount: 0,
 
       setParticipant: (patch) => set((s) => ({ participant: { ...s.participant, ...patch } })),
+      setOptionalRoutes: (v) => set((s) => ({ ui: { ...s.ui, optionalRoutesShown: v } })),
+      applyReference: (stage) =>
+        set((s) => {
+          const l1 = { ...s.l1 };
+          let l1Used = false;
+          if (!l1.weakest) {
+            l1.weakest = KEY_L1.weakest;
+            l1Used = true;
+          }
+          if (!l1.sentence.trim()) {
+            l1.sentence = KEY_L1.sentence;
+            l1Used = true;
+          }
+          if (l1Used) l1.refPosition = true;
+          let l2 = s.l2;
+          if (stage === 3) {
+            l2 = { ...s.l2, grid: { ...s.l2.grid } };
+            let l2Used = false;
+            for (const k of CELL_KEYS) {
+              if (!(l2.grid[k] ?? "").trim()) {
+                l2.grid[k] = KEY_L2.grid[k];
+                l2Used = true;
+              }
+            }
+            if (!l2.uniform) {
+              l2.uniform = KEY_L2.uniform;
+              l2Used = true;
+            }
+            if (!l2.tradeoff.trim()) {
+              l2.tradeoff = KEY_L2.tradeoff;
+              l2Used = true;
+            }
+            if (l2Used) l2.refPosition = true;
+          }
+          return { l1, l2 };
+        }),
       dismissBanner: (routeKey) =>
         set((s) => ({ ui: { ...s.ui, bannerDismissed: { ...s.ui.bannerDismissed, [routeKey]: true } } })),
       toggleRead: (cardId, value) =>
@@ -301,11 +351,11 @@ export const useStore = create<Persisted & Session & Actions>()(
       checkFill: (flagged) => set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, fillFlagged: flagged, fillClue: {} } })),
       showFillClue: (cell) => set((s) => ({ l1: { ...s.l1, fillClue: { ...s.l1.fillClue, [cell]: true } } })),
       // A different stage changes what the Block 1.4 calculator expects, so its part flags no longer apply.
-      setWeakest: (id) => set((s) => ({ l1: { ...s.l1, weakest: id, weakestFlagged: false, weakestClue: false, partFlags: [] } })),
+      setWeakest: (id) => set((s) => ({ l1: { ...s.l1, weakest: id, weakestFlagged: false, weakestClue: false, partFlags: [], refPosition: false } })),
       checkWeakest: (flagged) =>
         set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, weakestFlagged: flagged, weakestClue: false } })),
       showWeakestClue: () => set((s) => ({ l1: { ...s.l1, weakestClue: true } })),
-      setSentence: (t) => set((s) => ({ l1: { ...s.l1, sentence: t, sentenceFlagged: false } })),
+      setSentence: (t) => set((s) => ({ l1: { ...s.l1, sentence: t, sentenceFlagged: false, refPosition: false } })),
       checkSentence: (flagged, partFlags) =>
         set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, sentenceFlagged: flagged, partFlags, sentenceClue: false } })),
       showSentenceClue: () => set((s) => ({ l1: { ...s.l1, sentenceClue: true } })),
@@ -338,11 +388,11 @@ export const useStore = create<Persisted & Session & Actions>()(
       showLossClue: () => set((s) => ({ l2: { ...s.l2, lossClue: true } })),
       setRec: (seg, opt) => set((s) => ({ l2: { ...s.l2, rec: { ...s.l2.rec, [seg]: opt } } })),
       setJust: (seg, t) => set((s) => ({ l2: { ...s.l2, just: { ...s.l2.just, [seg]: t } } })),
-      setUniform: (opt) => set((s) => ({ l2: { ...s.l2, uniform: opt, uniformFlagged: false, uniformClue: false } })),
+      setUniform: (opt) => set((s) => ({ l2: { ...s.l2, uniform: opt, uniformFlagged: false, uniformClue: false, refPosition: false } })),
       checkUniform: (flagged) =>
         set((s) => ({ l2: { ...s.l2, checks: s.l2.checks + 1, uniformFlagged: flagged, uniformClue: false } })),
       showUniformClue: () => set((s) => ({ l2: { ...s.l2, uniformClue: true } })),
-      setTradeoff: (t) => set((s) => ({ l2: { ...s.l2, tradeoff: t } })),
+      setTradeoff: (t) => set((s) => ({ l2: { ...s.l2, tradeoff: t, refPosition: false } })),
 
       // --- Route 3 · Task 3 --------------------------------------------------
       setAlloc: (patch) =>
@@ -403,7 +453,8 @@ export const useStore = create<Persisted & Session & Actions>()(
           return { participant, l1, l2, route3, resetCount: s.resetCount + 1 };
         }),
 
-      // One route's state only (Route 1 = Materi A + Task 1, Route 2 = Materi B + Task 2). The participant strip stays.
+      // One route's state (participant strip stays). Route 1 is the whole Case File, so it clears all three slices; Routes 2 and 3
+      // share the Level 2 and Level 3 slices with it, so each clears its own. The optional-routes choice is kept.
       resetRoute: (route) =>
         set((s) => {
           const prefix = route === 1 ? "A" : route === 2 ? "B" : "C";
@@ -414,16 +465,16 @@ export const useStore = create<Persisted & Session & Actions>()(
           else delete bannerDismissed[`r${route}`];
           return {
             l1: route === null || route === 1 ? emptyL1() : s.l1,
-            l2: route === null || route === 2 ? emptyL2() : s.l2,
-            route3: route === null || route === 3 ? emptyRoute3() : s.route3,
-            ui: { bannerDismissed, sectionsRead },
+            l2: route === null || route === 1 || route === 2 ? emptyL2() : s.l2,
+            route3: route === null || route === 1 || route === 3 ? emptyRoute3() : s.route3,
+            ui: { bannerDismissed, sectionsRead, optionalRoutesShown: s.ui.optionalRoutesShown },
             resetCount: s.resetCount + 1,
           };
         }),
     }),
     {
       name: STORAGE_KEY,
-      version: 4,
+      version: 5,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       // Session-only flags (mentor unlock, reset counter) never persist.
@@ -433,7 +484,8 @@ export const useStore = create<Persisted & Session & Actions>()(
       // state; a v1 blob carries an empty route3, which merge fills from the defaults. v2 -> v3: the typed
       // participant number was dropped (the file number now comes from the route), so it is removed here.
       // v3 -> v4: the formula calculators' parts and part flags were added to l1 (Block 1.4) and l2 (Block 2.1);
-      // merge fills them from the defaults for an older blob.
+      // merge fills them from the defaults for an older blob. v4 -> v5: `ui.optionalRoutesShown` and the two reference-position
+      // flags (l1, l2) were added for the Friday capstone; merge fills them from the defaults.
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<Persisted> & { participant?: { no?: string; name?: string } };
         return { ...p, participant: { name: p.participant?.name ?? "" } } as Persisted;
@@ -446,6 +498,7 @@ export const useStore = create<Persisted & Session & Actions>()(
           participant: { name: p.participant?.name ?? base.participant.name },
           ui: {
             sectionsRead: { ...base.ui.sectionsRead, ...p.ui?.sectionsRead },
+            optionalRoutesShown: p.ui?.optionalRoutesShown === true,
             bannerDismissed:
               p.ui && typeof p.ui.bannerDismissed === "object" && p.ui.bannerDismissed !== null ? { ...p.ui.bannerDismissed } : {},
           },

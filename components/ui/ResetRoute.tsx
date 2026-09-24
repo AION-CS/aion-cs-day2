@@ -16,7 +16,9 @@ export function ResetRoute({ route }: { route: 1 | 2 | 3 }) {
       ) : (
         <>
           <p className="text-caption text-ink">
-            Clear every Route {route} answer, mark and check count? Your number, name and the other routes stay.
+            {route === 1
+              ? "Clear every answer of the Case File, in all three stages, with every mark and check count? Your name stays. The optional Routes 2 and 3 share the Level 2 and Level 3 answers, so those are cleared too."
+              : `Clear every Route ${route} answer, mark and check count? Your name and the other routes stay, apart from the answers they share with this one.`}
           </p>
           <button
             type="button"

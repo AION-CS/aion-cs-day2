@@ -119,8 +119,8 @@ export const T2_IDS = {
 /** The formula of one grid cell, in words and with no numbers. It names the card that teaches the method (Materi B3). */
 export const cellFormula = (opt: OptId): string =>
   OPTIONS[opt].discount === null
-    ? "Net impact = (clients × uplift ÷ 100 × gross profit per order) − (clients × cost per client per year). Extra orders come first; the cost of a fixed-cost option does not depend on how many orders follow. Taught in Materi B3."
-    : "Net impact = (clients × uplift ÷ 100 × gross profit per order) − ((existing repeat orders + extra orders) × contract price × discount ÷ 100). The discount is paid on every repeat order in the segment, the existing ones as well as the extra ones. Taught in Materi B3.";
+    ? "Net impact = (clients × uplift ÷ 100 × gross profit per order) − (clients × cost per client per year). Extra orders come first; the cost of a fixed-cost option does not depend on how many orders follow."
+    : "Net impact = (clients × uplift ÷ 100 × gross profit per order) − ((existing repeat orders + extra orders) × contract price × discount ÷ 100). The discount is paid on every repeat order in the segment, the existing ones as well as the extra ones.";
 
 export type CellSource = { target: string; where: string; label: string; value: string };
 

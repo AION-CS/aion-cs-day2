@@ -68,7 +68,7 @@ export function WeakestPick() {
 
 /** The formula of Block 1.4 in words, with no numbers. Taught in Materi A4. */
 const COST_FORMULA =
-  "Prospects lost at the arrow = the count above it minus the count below it. Contracts they would have brought = those prospects × (contracts signed ÷ the count below the arrow). Cost in euros = those contracts × the average contract value. Taught in Materi A4, in the worked example on Alpenwerk.";
+  "Prospects lost at the arrow = the count above it minus the count below it. Contracts they would have brought = those prospects × (contracts signed ÷ the count below the arrow). Cost in euros = those contracts × the average contract value. Taught in Materi A2, in the worked example on Alpenwerk.";
 
 /**
  * The two on-demand helps under the cost sentence, hidden until asked for: the formula in words with the
@@ -103,7 +103,7 @@ function CostHelp() {
   ];
   return (
     <div className="flex flex-wrap items-start gap-2">
-      <RevealHint id="formula-cost" label="Show the formula" title="Formula · from Materi A4" forceOpen={anyFlag}>
+      <RevealHint id="formula-cost" label="Show the formula" title="Formula · from Materi A2" forceOpen={anyFlag}>
         <p className="text-caption text-ink">{COST_FORMULA}</p>
         <FormulaBuilder figure={COST_FIGURE} builder={builder} parts={parts} partFlags={partFlags} onPart={setPart} unit="€" source="the funnel and the case brief" />
       </RevealHint>
@@ -140,7 +140,7 @@ export function CostSentence() {
   return (
     <div className="space-y-3">
       <p className="text-caption text-ink">
-        The method is taught in Materi A4, with a worked example on Alpenwerk&apos;s numbers. Try it yourself first. If you get stuck, two helps sit under the field: &ldquo;Show the formula&rdquo; gives the formula in words with a
+        The method is taught in Materi A2, with a worked example on Alpenwerk&apos;s numbers. Try it yourself first. If you get stuck, two helps sit under the field: &ldquo;Show the formula&rdquo; gives the formula in words with a
         calculator that checks each part, and &ldquo;Show where the numbers are&rdquo; lists the exact bars to read. You are practising combining the counts correctly, then writing the result in one sentence.
       </p>
       <Field

@@ -1,7 +1,10 @@
 "use client";
 
 import clsx from "clsx";
-import { CADENCES, GOV_TESTS, ITEMS, ITEM_KPI, OWNERS, OWNER_PROFILE, PICKUPS } from "@/data/program";
+import { CADENCES, FIXED_COST, GOV_TESTS, ITEMS, ITEM_KPI, OWNERS, OWNER_PROFILE, PICKUPS, SHOW_UP } from "@/data/program";
+import { REPEAT, STEP_BY_ID } from "@/data/funnel";
+import { WritingHelp } from "@/components/ui/WritingHelp";
+import { fmtEuroPlain } from "@/data/segments";
 import { IDS } from "@/lib/missing";
 import { fundedItems, hasThreshold, leftOpen } from "@/lib/program";
 import { useStore } from "@/store/useStore";
@@ -12,6 +15,7 @@ import { MentorGuide } from "@/components/ui/MentorGuide";
 import { RevealHint } from "@/components/ui/RevealHint";
 import { governanceKey, pickupKey } from "@/lib/answerKey";
 import { Gloss } from "@/lib/glossify";
+import { useMateri } from "@/lib/materiAlias";
 import { cutGuide, govGuide, postponedGuide } from "@/lib/mentorGuide";
 
 /** Block 3.3 — what was cut. Judged: name the item and the consequence in the material's own terms. */
@@ -42,6 +46,29 @@ export function CutField() {
         onChange={(e) => setCut(e.target.value)}
         placeholder="e.g. I cut item … (€…). As a result … stays …"
       />
+      <WritingHelp
+        id="frame-cut"
+        steps={
+          nothingCut
+            ? [
+                "Say plainly that every line item is funded on cost.",
+                "Name what you did not buy anyway: the margin the discount gives away on every repeat order, or the 7 pp of the show-up gap the fix leaves open.",
+                "Say what that leaves exposed, in the terms of the material.",
+              ]
+            : [
+                "Name the line item or the scope you cut, with its cost.",
+                "Say what the cut leaves open in the terms of the material: which KPI stays unmeasured, which segment's lever is delayed, which leak stays partly open.",
+                "If you cut the weakest-evidenced item first, say why that item and not another.",
+              ]
+        }
+        refs={[
+          { label: "Budget and what you have allocated", value: "see the running total", target: IDS.allocTotal },
+          { label: "Funnel-leak fix", value: fmtEuroPlain(FIXED_COST.fix), target: IDS.allocGrid },
+          { label: "KPI dashboard", value: fmtEuroPlain(FIXED_COST.dash), target: IDS.allocGrid },
+          { label: "Sales training (its effect is not quantified in the case)", value: fmtEuroPlain(FIXED_COST.train), target: IDS.allocGrid },
+        ]}
+        refsTitle="Prices and effects printed in Block 3.1"
+      />
       <MentorGuide guide={cutGuide()} />
     </Field>
   );
@@ -49,6 +76,7 @@ export function CutField() {
 
 /** Block 3.4 — one owner, one review cadence and one escalation trigger per funded line item's KPI. */
 export function GovernanceRows() {
+  const m = useMateri();
   const r = useStore((s) => s.route3);
   const setGov = useStore((s) => s.setGov);
   const funded = fundedItems(r.alloc);
@@ -59,9 +87,9 @@ export function GovernanceRows() {
     <div className="space-y-3">
       <p className="text-caption text-ash">One row per funded item, each governed by its own KPI. Every KPI needs an owner, a review cadence and an escalation trigger with a threshold.</p>
       <div className="flex flex-wrap items-start gap-2">
-        <RevealHint id="gov-tests" label="Show the test questions" title="Test questions · taught in Materi C4">
+        <RevealHint id="gov-tests" label="Show the test questions" title={`Test questions · taught in ${m.name("C4")}`}>
           <div className="space-y-2 text-caption text-ink">
-            <p>Ask these of every row. They repeat the tests from Materi C4; they never say which owner fits which KPI.</p>
+            <p>Ask these of every row. They repeat the tests from {m.name("C4")}; they never say which owner fits which KPI.</p>
             <ul className="space-y-1.5">
               {GOV_TESTS.map((t) => (
                 <li key={t.name}>
@@ -78,6 +106,19 @@ export function GovernanceRows() {
                   {OWNER_PROFILE[o].does} <span className="text-ash">Changes: {OWNER_PROFILE[o].changes}</span>
                 </li>
               ))}
+            </ul>
+            <p className="smallcaps text-ash">Reference points from the case for a trigger (Case assumption)</p>
+            <ul className="list-disc space-y-0.5 pl-5">
+              <li>
+                Repeat-purchase rate: {REPEAT.actual}% now, against a benchmark of {REPEAT.bench}%.
+              </li>
+              <li>
+                Show-up rate (booked → held): {SHOW_UP.before}% now, {SHOW_UP.after}% after the funnel fix, against a benchmark of {SHOW_UP.benchmark}%.
+              </li>
+              <li>Dashboard: no baseline KPI tracking exists today, so a threshold for the other KPIs can only be set once it has produced data.</li>
+              <li>
+                Conversion, proposal → signed: {STEP_BY_ID.signed.actual}% now, against a benchmark of {STEP_BY_ID.signed.bench}%. The training&apos;s effect on it is not quantified.
+              </li>
             </ul>
             <MaterialRefs refs={["C4"]} lead="Taught in" />
           </div>
@@ -175,6 +216,14 @@ export function PostponedField() {
           value={r.postponed}
           onChange={(e) => setPostponed(e.target.value)}
           placeholder="e.g. … is not pursued now because … "
+        />
+        <WritingHelp
+          id="frame-postponed"
+          steps={[
+            "Pick one real item from the list above: an unfunded or descoped item, or the part of the leak the fix leaves open.",
+            "Say why it can wait: what has to be in place or known first.",
+            "Choose a pickup point that fits. A measure judged by a KPI waits for a baseline; a measure that only needs money can wait for a budget round. A postponed measure without a pickup point is a cut.",
+          ]}
         />
       </Field>
       <Field id={IDS.pickup} htmlFor="pickup-select" label="When will it be picked up?" help="Required. A postponed measure without a pickup point is a cut.">

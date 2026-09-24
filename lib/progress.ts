@@ -30,8 +30,26 @@ export function taskBlocks(p: Persisted): Record<TaskBlockId, boolean> {
   };
 }
 
+/**
+ * The Case File of Route 1 (CLAUDE.md #29): which blocks are required (Core) and which are for whoever has time
+ * (Optional). The Core blocks alone give a complete file; Optional blocks are never listed as missing.
+ */
+export const STAGE_CORE: Record<1 | 2 | 3, TaskBlockId[]> = {
+  1: ["b13", "b14"],
+  2: ["b21", "b23", "b24"],
+  3: ["b31", "b32", "b33", "b34", "b35"],
+};
+export const STAGE_OPTIONAL: Record<1 | 2 | 3, TaskBlockId[]> = { 1: ["b11", "b12"], 2: ["b22"], 3: [] };
+export const isCoreBlock = (b: TaskBlockId) => [...STAGE_CORE[1], ...STAGE_CORE[2], ...STAGE_CORE[3]].includes(b);
+
+/** How many Core blocks of one stage are filled in, for the three-segment strip. "Filled in", never "correct". */
+export function stageProgress(p: Persisted, stage: 1 | 2 | 3): { done: number; total: number } {
+  const tb = taskBlocks(p);
+  return { done: STAGE_CORE[stage].filter((b) => tb[b]).length, total: STAGE_CORE[stage].length };
+}
+
 const BLOCKS_OF: Record<1 | 2 | 3, TaskBlockId[]> = {
-  1: ["b11", "b12", "b13", "b14"],
+  1: [...STAGE_CORE[1], ...STAGE_CORE[2], ...STAGE_CORE[3]],
   2: ["b21", "b22", "b23", "b24"],
   3: ["b31", "b32", "b33", "b34", "b35"],
 };

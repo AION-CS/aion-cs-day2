@@ -76,7 +76,7 @@ export function PageNav({ route }: { route: 1 | 2 | 3 }) {
       {/* Wide screens: fixed column on the right edge, outside the 1100 px content column. */}
       <nav
         aria-label={`Route ${route} page map`}
-        className="fixed right-3 top-1/2 z-30 hidden -translate-y-1/2 py-1 xl:block print:hidden"
+        className="fixed right-3 top-1/2 z-30 hidden max-h-[calc(100vh-7rem)] -translate-y-1/2 overflow-y-auto py-1 xl:block print:hidden"
       >
         <ol className="flex flex-col items-end gap-2">
           {groups.map((g) => (

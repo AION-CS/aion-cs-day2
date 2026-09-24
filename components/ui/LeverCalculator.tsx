@@ -9,7 +9,7 @@ import { useJumpTo } from "@/lib/useJumpTo";
 import { IDS } from "@/lib/missing";
 import { useHydrated, useStore } from "@/store/useStore";
 
-const LOCK_TIP = "Unlocks once you've named the weakest funnel stage in Task 1";
+const LOCK_TIP = "Unlocks once you've named the weakest funnel stage (Block 1.3)";
 
 /**
  * The Task 2 instrument: the given data (read-only) and a live calculator for one Option × Segment at a time.
@@ -133,7 +133,7 @@ export function LeverCalculator() {
             </div>
             {locked && (
               <p className="mt-1 text-micro normal-case tracking-normal text-ash">
-                {LOCK_TIP}. Select a segment to be taken to that field in Route 1; the rest of this page stays open.
+                {LOCK_TIP}. Select a segment to be taken to that field; the rest of this page stays open.
               </p>
             )}
           </div>
@@ -173,7 +173,7 @@ export function LeverCalculator() {
               </svg>
             </div>
           ) : (
-            <p className="text-caption text-ash">{locked ? "Pick an option; the segment selector unlocks after Task 1." : "Pick an option and a segment to see the working."}</p>
+            <p className="text-caption text-ash">{locked ? "Pick an option; the segment selector unlocks once you have named the weakest funnel stage." : "Pick an option and a segment to see the working."}</p>
           )}
         </div>
         <Insight className="mt-3">{reading(result, sel.opt, sel.seg)}</Insight>

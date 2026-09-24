@@ -1,6 +1,7 @@
 "use client";
 
 import { AnswerBlock } from "@/components/ui/AnswerBlock";
+import type { Tier } from "@/components/ui/AnswerBlock";
 import { Gloss } from "@/lib/glossify";
 import { ExportBar } from "@/components/ui/ExportBar";
 import { LeverCalculator } from "@/components/ui/LeverCalculator";
@@ -12,6 +13,67 @@ import { IDS, l2Missing } from "@/lib/missing";
 import { exportName } from "@/lib/slug";
 import { COURSE } from "@/lib/routes";
 import { usePersisted } from "@/store/usePersisted";
+
+type T2 = "2.1" | "2.2" | "2.3" | "2.4";
+
+/** Stage 2 · Calculate: the read-only calculator and the four answer blocks of Task 2. */
+export function Task2Workspace({ tiers, where = "Route 2 → Task 2" }: { tiers?: Partial<Record<T2, Tier>>; where?: string }) {
+  return (
+    <>
+      <section id="lever-calculator" className="card space-y-3 p-4 md:p-5" aria-labelledby="calc-h">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 id="calc-h">Retention lever calculator</h3>
+          <span className="text-caption text-ash">The given data is read-only</span>
+        </div>
+        <LeverCalculator />
+      </section>
+
+      <AnswerBlock
+        tier={tiers?.["2.1"]}
+        id="block-2-1"
+        title="Block 2.1 · Net impact of every option in every segment"
+        kind="OBJECTIVE"
+        findIt={`${where} → “Retention lever calculator” → select an option, then a segment. Read the last line of its working. Answer in the grid below.`}
+      >
+        <MaterialRefs refs={["B3", "B4"]} />
+        <GridBlock />
+      </AnswerBlock>
+
+      <AnswerBlock
+        tier={tiers?.["2.2"]}
+        id="block-2-2"
+        title="Block 2.2 · Which cells are a net loss?"
+        kind="OBJECTIVE"
+        findIt={`${where} → “Retention lever calculator” → the working of each combination: the line that reads “Net loss”. Answer below.`}
+      >
+        <MaterialRefs refs={["B3"]} />
+        <LossBlock />
+      </AnswerBlock>
+
+      <AnswerBlock
+        tier={tiers?.["2.3"]}
+        id="block-2-3"
+        title="Block 2.3 · Recommend one option per segment"
+        kind="JUDGED"
+        findIt={`${where} → your grid in Block 2.1, and “Retention lever calculator” for the working behind each figure. Answer below.`}
+      >
+        <MaterialRefs refs={["B1", "B2", "B4"]} />
+        <RecommendBlock />
+      </AnswerBlock>
+
+      <AnswerBlock
+        tier={tiers?.["2.4"]}
+        id="block-2-4"
+        title="Block 2.4 · One option for both segments"
+        kind="OBJECTIVE + JUDGED"
+        findIt={`${where} → your grid in Block 2.1: add the two segment results of each option. Answer below.`}
+      >
+        <MaterialRefs refs={["B2", "B4"]} />
+        <UniformBlock />
+      </AnswerBlock>
+    </>
+  );
+}
 
 /** Task 2 · Level 2 · the Calculation Note. Objective grid and flags, a judged recommendation, one trap question. */
 export function Task2() {
@@ -56,53 +118,7 @@ export function Task2() {
         <MaterialRefs refs={["B3", "B1"]} lead="Read first" />
       </div>
 
-      <section id="lever-calculator" className="card space-y-3 p-4 md:p-5" aria-labelledby="calc-h">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 id="calc-h">Retention lever calculator</h3>
-          <span className="text-caption text-ash">The given data is read-only</span>
-        </div>
-        <LeverCalculator />
-      </section>
-
-      <AnswerBlock
-        id="block-2-1"
-        title="Block 2.1 · Net impact of every option in every segment"
-        kind="OBJECTIVE"
-        findIt="Route 2 → Task 2 → “Retention lever calculator” → select an option, then a segment. Read the last line of its working. Answer in the grid below."
-      >
-        <MaterialRefs refs={["B3", "B4"]} />
-        <GridBlock />
-      </AnswerBlock>
-
-      <AnswerBlock
-        id="block-2-2"
-        title="Block 2.2 · Which cells are a net loss?"
-        kind="OBJECTIVE"
-        findIt="Route 2 → Task 2 → “Retention lever calculator” → the working of each combination: the line that reads “Net loss”. Answer below."
-      >
-        <MaterialRefs refs={["B3"]} />
-        <LossBlock />
-      </AnswerBlock>
-
-      <AnswerBlock
-        id="block-2-3"
-        title="Block 2.3 · Recommend one option per segment"
-        kind="JUDGED"
-        findIt="Route 2 → Task 2 → your grid in Block 2.1, and “Retention lever calculator” for the working behind each figure. Answer below."
-      >
-        <MaterialRefs refs={["B1", "B2", "B4"]} />
-        <RecommendBlock />
-      </AnswerBlock>
-
-      <AnswerBlock
-        id="block-2-4"
-        title="Block 2.4 · One option for both segments"
-        kind="OBJECTIVE + JUDGED"
-        findIt="Route 2 → Task 2 → your grid in Block 2.1: add the two segment results of each option. Answer below."
-      >
-        <MaterialRefs refs={["B2", "B4"]} />
-        <UniformBlock />
-      </AnswerBlock>
+      <Task2Workspace />
 
       <div className="space-y-3">
         <MissingList items={missing} lead="Your calculation note is still missing:" />

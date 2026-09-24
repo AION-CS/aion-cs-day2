@@ -1,5 +1,5 @@
 /**
- * The home page's day intro: what the day is about, the story that runs through the three routes, and
+ * The home page's day intro (Friday day, CLAUDE.md #29: one capstone route of two hours; three stages of one case): what the day is about, the story that runs through the three routes, and
  * "What's in it for you" (WIIFM), the personal pay-off of each skill. Only facts the day's own material and
  * cases state (DigitalIT Solutions, its funnel of 24,000 visitors and 4 signed contracts, its 38 clients, the
  * €150,000 budget over four months).
@@ -12,54 +12,54 @@ export const DAY_INTRO = {
     "One case runs through the whole day: DigitalIT Solutions GmbH, a mid-size B2B IT services vendor in Germany that sells project implementations and retainer support contracts. The managing director's brief is three phrases long: many leads, few closings, weak retention. In a year its website had 24,000 visitors and its funnel ended in 4 signed contracts.",
   story: [
     {
-      route: 1 as const,
+      stage: 1 as const,
       verb: "Diagnose",
-      question: "Where does DigitalIT Solutions lose prospects between the website and the signature, and what does the repeat-purchase rate say about the clients it already has?",
-      output: "Diagnostic Note",
+      question: "Where does DigitalIT Solutions lose prospects between the website and the signature, and what does that leak cost it every year?",
+      output: "Part 1 of the Case File, the diagnosis",
     },
     {
-      route: 2 as const,
+      stage: 2 as const,
       verb: "Calculate",
       question: "Three ways to keep clients (a personal account manager, a discount, a value-added service): what does each net in euros for its 14 project clients and its 24 retainer clients, and which do you recommend?",
-      output: "Calculation Note",
+      output: "Part 2 of the Case File, the calculation",
     },
     {
-      route: 3 as const,
+      stage: 3 as const,
       verb: "Decide",
       question: "With €150,000 and four months, which of four line items do you fund, in what order, who owns each result, and what do you postpone?",
-      output: "Decision Memo",
+      output: "Part 3 of the Case File, the decision",
     },
   ],
   wiifm: [
     {
       skill: "Read a funnel by its gaps, not its counts",
       payoff: "Counts fall at every stage of any sales pipeline, so the biggest drop is not automatically the biggest problem. Comparing each step with its benchmark, in percentage points, shows where you really lose people, and it works on any pipeline report you are handed.",
-      route: 1 as const,
+      stage: 1 as const,
     },
     {
       skill: "Match the sales action to the buyer's reason",
       payoff: "Trust, price, benefit and relationship each call for different proof. You learn to name the reason first, so you stop offering a discount to a buyer who is worried about risk or who lost their contact person.",
-      route: 1 as const,
+      stage: 1 as const,
     },
     {
       skill: "Put a euro figure on a retention idea",
       payoff: "Extra orders times the profit on each, minus what the idea costs. Any proposal you meet at work (“let's add a service”, “let's cut the price”) then arrives with a number you can defend or challenge, including a negative one.",
-      route: 2 as const,
+      stage: 2 as const,
     },
     {
       skill: "Know when a price cut costs more than it wins",
       payoff: "A discount is paid on every order, including the ones that would have come anyway. You can check its break-even in a minute and explain to a colleague why the same discount pays in one client group and loses money in another.",
-      route: 2 as const,
+      stage: 2 as const,
     },
     {
       skill: "Decide with a budget that cannot fund everything",
       payoff: "You practise choosing, starting the measurement before the action it measures, saying openly what you leave out and when you will come back to it. That is what gets a budget request approved and then carried out, in any role.",
-      route: 3 as const,
+      stage: 3 as const,
     },
     {
-      skill: "Leave with three documents you can reuse",
-      payoff: "A Diagnostic Note, a Calculation Note and a Decision Memo, each built on a case file. Use them as templates the next time you have to diagnose a funnel, compare options in euros or ask for budget, and give each KPI an owner, a rhythm and a trigger.",
-      route: 3 as const,
+      skill: "Leave with one document you can reuse",
+      payoff: "A Case File in three parts: a diagnosis, a calculation and a decision. Use it as a template the next time you have to diagnose a funnel, compare options in euros or ask for budget, and give each KPI an owner, a rhythm and a trigger.",
+      stage: 3 as const,
     },
   ],
 } as const;
