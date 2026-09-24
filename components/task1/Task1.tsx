@@ -42,7 +42,7 @@ export function Task1() {
         <p className="text-body"><Gloss>
           <strong>{COURSE.company}</strong> is a mid-size B2B IT services vendor in Germany. It sells project implementations and retainer support contracts.
           The managing director&apos;s brief: <em>many leads, few closings, weak retention.</em> The funnel below is a year of the company&apos;s own data. A signed
-          project contract is worth <strong>€{CONTRACT_VALUE.toLocaleString("en-US")}</strong> on average, and every benchmark reference is an industry reference
+          project contract is worth <strong id="t1-contract">€{CONTRACT_VALUE.toLocaleString("en-US")}</strong> on average, and every benchmark reference is an industry reference
           for a company of this kind.
         </Gloss></p>
       </div>
@@ -55,6 +55,9 @@ export function Task1() {
           </li>
           <li>
             <span className="pill-obj mr-1">OBJECTIVE</span> the diagram settles it. <span className="pill-jdg mx-1">JUDGED</span> your reasoning, in your words.
+          </li>
+          <li>
+            Where a block asks you to work something out or to sort, a hidden help waits under it: <strong>Show the test questions</strong>, <strong>Show the formula</strong> and <strong>Show where the numbers are</strong>. Try first; open one when you are stuck.
           </li>
           <li>
             Time: about <strong>3 min</strong> for the sort (1.1), <strong>6 min</strong> for the table (1.2), <strong>2 min</strong> for the pick (1.3) and <strong>4 min</strong> for the sentence (1.4).

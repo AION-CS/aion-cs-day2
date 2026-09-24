@@ -4,6 +4,9 @@
 *Applying behaviour-based sales strategy and systematic customer retention.*
 A self-study companion: study material, three working documents (a Diagnostic Note, a Calculation Note and a Decision Memo)
 and three live instruments (a funnel, a lever calculator and a budget-allocation grid). One route per level. All three routes are built.
+It carries the shared standards `../CLAUDE.md` #1 to #28 (the day-1 level of interaction): a home page that opens with what the day is about and what is in it for the
+learner, a page map on every route, an "In plain words" box on every card, hidden helps under every calculation, and mentor worked answers
+for every task question.
 
 The case company is **DigitalIT Solutions GmbH**, a mid-size B2B IT services vendor in Germany (project
 implementations and retainer support contracts): *many leads, few closings, weak retention.* Every figure is exactly as briefed, so Route 3 (a €150,000, four-month budget case) reuses Routes 1 and 2.
@@ -24,7 +27,7 @@ Material minutes: A = 8 + 8 + 8 + 6 = 30, B = 8 + 7 + 7 + 8 = 30, C = 8 + 7 + 7 
 ## Stack
 
 Next.js 14 App Router · TypeScript strict · Tailwind (tokens in `tailwind.config.ts`, the CS palette) · Zustand +
-`persist` (key `cs-d2-v1`, version 2 with a `migrate` step, `skipHydration` + `StoreHydrator`, deep `merge`) · static export
+`persist` (key `cs-d2-v1`, version 4 with a `migrate` step, `skipHydration` + `StoreHydrator`, deep `merge`) · static export
 (`output: "export"`, `trailingSlash`). No animation, drag-and-drop, PDF or chart library: hand-written SVG, CSS
 keyframes, native HTML5 DnD with a click-to-place fallback, `window.print()`. Hosting in a sub-folder: set
 `NEXT_PUBLIC_BASE_PATH`.
@@ -41,12 +44,12 @@ npm run build        # writes the static site to out/  (stop `npm run dev` first
 
 ```
 app/                  page.tsx (home) · route-1/ · route-2/ · route-3/
-components/chrome/    MentorBar, TopBar, ParticipantStrip, SectionRail, HashFlash, Footer, StoreHydrator
-components/ui/        MaterialCard, FunnelInstrument, LeverCalculator, AnswerBlock, AnswerKey, ExportBar, MissingList, Field …
+components/chrome/    MentorBar, TopBar, ParticipantStrip, SectionRail, PageNav, GlossaryPanel, HashFlash, Footer, StoreHydrator
+components/ui/        MaterialCard, FunnelInstrument, LeverCalculator, AnswerBlock, AnswerKey, MentorGuide, RevealHint, FormulaBuilder, CalcDiagnosis, ExportBar, MissingList, Field …
 components/materi/    MateriA (A1–A4), MateriB (B1–B4), MateriC (C1–C4), Materi (the three blocks + references)
 components/task1|2|3/ Task 1 (SortBoard, FillTable, WeakestBlock), Task 2 (Blocks: grid, loss marks, recommendations, one option), Task 3 (AllocationGrid, SequenceBlock, MemoFields, MemoPanel)
-data/                 funnel, touchpoints, segments, program, references, glossary, materialIndex, mentorKey
-lib/                  checks, program, missing, progress, exportDoc, answerKey, parseAmount, slug, flash, svg
+data/                 funnel, touchpoints, segments, program, references, glossary, materialIndex, materialPlain, dayIntro, pageNav, mentorKey
+lib/                  checks, program, missing, progress, exportDoc, answerKey, mentorGuide, calcBuilder, parseAmount, slug, flash, svg
 store/                useStore (slices l1, l2, route3), selectors (Route 2 reads Route 1's answers here)
 scripts/              verify-calc.mjs
 ```
@@ -59,14 +62,32 @@ button (`lib/glossify.tsx`); a click opens one explanation card (`GlossaryPanel`
 tables, callouts, captions and field help are glossified automatically; other prose is wrapped in `<Gloss>`. Rule:
 `../CLAUDE.md` #19.
 
+## What a learner sees on top of the material and the tasks
+
+- **Home page** (`data/dayIntro.ts`, CLAUDE.md #27): "What today is about" with the case and one tile per route (verb, question, the export it ends in), then "What's in it for you", six skills with their pay-off at the learner's own work, each tagged with the route that teaches it. Every figure in it is one the day itself prints.
+- **Page map** (`components/chrome/PageNav.tsx`, `data/pageNav.ts`, #28): every card and every task block of the route, in page order. A slim column of pills on the right at 1280 px and wider, a "Jump to" button below that. A card marked read or a block filled in carries a teal dot; the pill for the part in view is dark.
+- **"In plain words" box** on every card (`data/materialPlain.ts`, #22): the idea in everyday words, why it matters for the case, and how to read the picture below. A full `Record<MaterialId, …>`, so a card without one fails the typecheck.
+- **Hidden helps under a calculation** (#21, #24, #26): Block 1.4 (the cost of the leak) and every cell of Block 2.1 carry "Show the formula" (in words, no numbers, naming the card that teaches it, plus an automatic calculator that splits it into small labelled parts) and "Show where the numbers are" (the printed rows, each a button that scrolls to and flashes its row or bar). After a check, a wrong part is outlined in amber and names the table, the row and which part of the row to read, never the value; a flagged answer always gets a specific "What to check" line. Block 2.4 has the same two helps built on the learner's own grid. Parts and part flags are persisted (`l1`, `l2`), which is why the persist version is 4.
+- **Test questions for the assignment exercises** (#25): the sort in Block 1.1 and the owner column of Block 3.4 both ask the learner to put an option on an item. Materi A2 carries one test per phase, the tests for the confusable pairs, a phase profile table and a worked sort on a different company (Alpenwerk) explained per stage; Materi C4 carries a profile of every owner option, the tests for owner, cadence and trigger, and a governance example that explains each of its three columns. Both blocks have a hidden "Show the test questions".
+- **"What this shows"** under every exploratory control (#20): the funnel arrows, the lever calculator and the allocation grid join the material diagrams.
+
 ## Mentor bar
 
 The first element on every page. Enter `muchson123` once and every model answer of Routes 1, 2 and 3 fills in (plus a
-participant name if empty), so each export downloads straight away. The same unlock shows a mentor-only
-**answer key** (in rust, never the amber accent) next to each exercise with fixed options: the sort, the largest-gap
-pick, the recommendation per segment, the single-option question and the sequencing answer; Task 3 also shows a rubric-evidence panel (the objective items computed from the learner's own state). Each key gives the expected answer, a reason per
-option including why each rejected option is rejected, and a teaching note. Client-side convenience gate, not security;
-the unlock is session-only, so a reload locks it. Model answers: `data/mentorKey.ts`; keys: `lib/answerKey.ts`.
+participant name if empty; it also fills every formula calculator's parts), so each export downloads straight away. The same unlock shows two
+mentor-only tools, in rust and never the amber accent:
+
+- an **answer key** next to each exercise with fixed options: the sort, the largest-gap pick, the loss marks (2.2), the recommendation per
+  segment, the single-option question, the allocation (3.1), the sequencing answer, the owner and cadence per funded item (3.4) and the pickup
+  point (3.5). Each key gives the expected answer, a reason per option including why each rejected option is rejected, and a teaching note;
+- a **worked answer** for every other question (`lib/mentorGuide.ts`, #23): each row of the table in 1.2, the cost sentence in 1.4, each of the six
+  grid cells in 2.1, the loss marks, both justifications, the trade-off, the allocation, what was cut, the trigger per funded item and the
+  postponed measure. A calculation is a table of *step · calculation · result* with the real numbers, then *why*, then the typical wrong answers
+  with the number each produces. Free text gets the model answer and what a good answer must contain. Every number is computed from the same
+  constants as the tables, the calculator and `data/mentorKey.ts`.
+
+Task 3 also shows a rubric-evidence panel (the objective items computed from the learner's own state). Client-side convenience gate, not security;
+the unlock is session-only, so a reload locks it. Model answers: `data/mentorKey.ts`; keys: `lib/answerKey.ts`; worked answers: `lib/mentorGuide.ts`.
 
 ## Cross-route continuity
 
@@ -122,3 +143,10 @@ gamification; the rules decide the structure, style and mechanics). Where they d
 15. **The sequencing rule is stated generally.** The brief gave the warning for a lever that launches before the dashboard. The widget applies it to a lever that starts before or in the same month as the dashboard, or with no dashboard, and prints the same sentence with the months that apply (month 1 and the dashboard in month 1 gives the briefed text exactly). The "what goes missing" question is one pick among the three dashboard KPIs (the repeat-purchase rate is the answer).
 16. **A trigger must name a number.** The brief asked for owner, cadence and trigger; Block 3.4 also requires the trigger to contain a threshold (a digit), which is what the material (C4) teaches.
 17. **`UX-STANDARDS.md` was replaced by a pointer** to the shared `CLAUDE.md`; the copy it held described the older Green IT days.
+18. **Upgrade to the day-1 standards (#20 to #28) changed features only.** The number of cards (12), their minutes (30 per route) and the task minutes (15 per route) are as before. Two cards grew in length, not in number: A2 gained a phase table and a worked sort (#25), and C4 gained an owner-profile table and the test questions.
+19. **Block 1.2 has no formula calculator.** Its three columns are read off the funnel (the conversion, the "ref" figure and the gap are all printed), so a builder would only re-print them. Its worked answer per row shows where each printed figure comes from.
+20. **The helps of Block 2.1 live in one panel under the grid, not under each cell.** The grid is a two-column layout (CLAUDE.md #14), and a formula calculator with four to six parts does not fit in half a column. Each cell has a "Help for this cell" button that opens the panel on that cell; a check that flags a part opens it by itself, so a flag is never behind a closed panel.
+21. **Block 1.4's calculator is built on the arrow the learner named in Block 1.3.** Its part labels and clues say "the arrow you named", never a stage, so the help does not hand over the answer to 1.3. If nothing is named yet it says so and points there.
+22. **Task 3 has no numeric answer field.** Its only figures (the total, the remaining budget, the lever's cost by scope) are computed by the app and printed live, so #21, #24 and #26 have nothing to attach to; its questions are covered by the answer keys (#7) and the worked answers (#23).
+23. **Owner profiles are a Case assumption.** The prompt gave the owner options but not what each role does. The profile lines (`OWNER_PROFILE` in `data/program.ts`) are a practitioner observation for a company of this kind, labelled so on screen, and are the single source for the material table, the hidden help and the answer key.
+24. **The model owner for the sales training is a mentor-side choice.** The model allocation leaves the training out, so the model answer has no governance row for it. `GOV_EXPECT.train` (Sales team lead, monthly) exists only so the answer key has an expected answer if a learner funds it.

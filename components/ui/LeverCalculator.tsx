@@ -2,7 +2,8 @@
 
 import { useId } from "react";
 import clsx from "clsx";
-import { CONTRACT, OPTIONS, OPT_IDS, SEGMENTS, SEG_IDS, calc, fmtEuro, fmtEuroPlain } from "@/data/segments";
+import { CONTRACT, OPTIONS, OPT_IDS, SEGMENTS, SEG_IDS, T2_IDS, calc, fmtEuro, fmtEuroPlain } from "@/data/segments";
+import { Insight } from "@/components/materi/kit";
 import type { OptId, SegId } from "@/data/segments";
 import { useJumpTo } from "@/lib/useJumpTo";
 import { IDS } from "@/lib/missing";
@@ -46,7 +47,7 @@ export function LeverCalculator() {
             </thead>
             <tbody>
               {SEG_IDS.map((s) => (
-                <tr key={s} className="border-t border-line">
+                <tr key={s} id={T2_IDS.seg(s)} className="border-t border-line">
                   <td className="px-3 py-2 font-semibold">{SEGMENTS[s].name}</td>
                   <td className="tnum px-3 py-2 text-right">{SEGMENTS[s].clients}</td>
                   <td className="tnum px-3 py-2 text-right">{SEGMENTS[s].baseline}</td>
@@ -54,7 +55,7 @@ export function LeverCalculator() {
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-caption text-ash">
+          <p id={T2_IDS.contract} className="mt-2 text-caption text-ash">
             Contract price <strong className="text-ink">{fmtEuroPlain(CONTRACT.price)}</strong> · gross margin <strong className="text-ink">{CONTRACT.margin * 100}%</strong> · gross profit per
             order <strong className="text-ink">{fmtEuroPlain(CONTRACT.gp)}</strong>
           </p>
@@ -73,7 +74,7 @@ export function LeverCalculator() {
             </thead>
             <tbody>
               {OPT_IDS.map((o) => (
-                <tr key={o} className="border-t border-line align-top">
+                <tr key={o} id={T2_IDS.opt(o)} className="border-t border-line align-top">
                   <td className="px-3 py-2 font-semibold">{OPTIONS[o].name}</td>
                   <td className="tnum px-3 py-2 text-right">{OPTIONS[o].costPerClient === null ? "—" : fmtEuroPlain(OPTIONS[o].costPerClient!)}</td>
                   <td className="tnum px-3 py-2 text-right">+{OPTIONS[o].uplift.P} pp</td>
@@ -175,6 +176,7 @@ export function LeverCalculator() {
             <p className="text-caption text-ash">{locked ? "Pick an option; the segment selector unlocks after Task 1." : "Pick an option and a segment to see the working."}</p>
           )}
         </div>
+        <Insight className="mt-3">{reading(result, sel.opt, sel.seg)}</Insight>
       </div>
     </div>
   );
@@ -187,4 +189,21 @@ function Row({ label, value }: { label: string; value: string }) {
       <dd className="tnum font-semibold text-ink">{value}</dd>
     </div>
   );
+}
+
+/** What the working demonstrates, computed from the selected combination: the reading of the last line, not a restatement of it. */
+function reading(r: ReturnType<typeof calc> | null, opt: OptId | null, seg: SegId | null): string {
+  if (!r || !opt || !seg) {
+    return "Fixed-cost options are paid for every client whether or not it re-orders; the discount is paid on every repeat order. Pick an option and a segment and the working shows which of the two outgrows the extra gross profit.";
+  }
+  const discount = OPTIONS[opt].discount !== null;
+  if (discount) {
+    const orders = r.baseline + r.extraOrders;
+    return r.net < 0
+      ? `The discount is paid on all ${Math.round(orders * 100) / 100} repeat orders in this segment: the ${r.baseline} that already exist as well as the ${r.extraOrders} new ones. That costs ${fmtEuroPlain(r.cost)}, more than the ${fmtEuroPlain(r.extraGp)} the new orders bring, so the option loses ${fmtEuroPlain(Math.abs(r.net))} a year here.`
+      : `The discount is paid on all ${Math.round(orders * 100) / 100} repeat orders in this segment, the ${r.baseline} that already exist and the ${r.extraOrders} new ones, costing ${fmtEuroPlain(r.cost)}. The new orders bring ${fmtEuroPlain(r.extraGp)}, which still covers it, so ${fmtEuroPlain(r.net)} is left. Few existing orders to discount is what makes it pay.`;
+  }
+  return r.net < 0
+    ? `The cost of ${fmtEuroPlain(r.cost)} is paid for all ${r.clients} clients however many re-order, and it is larger than the ${fmtEuroPlain(r.extraGp)} the extra orders bring: the option loses ${fmtEuroPlain(Math.abs(r.net))} a year here.`
+    : `The cost of ${fmtEuroPlain(r.cost)} is paid for all ${r.clients} clients however many re-order. The ${r.extraOrders} extra orders bring ${fmtEuroPlain(r.extraGp)}, which covers it, so ${fmtEuroPlain(r.net)} is left.`;
 }

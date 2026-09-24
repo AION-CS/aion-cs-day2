@@ -28,7 +28,7 @@ export const GLOSSARY: GlossEntry[] = [
   {
     id: "clv",
     title: "CLV — customer lifetime value",
-    match: ["CLV", "customer lifetime value", "lifetime value"],
+    match: ["CLV", "customer lifetime value", "lifetime value", "customer value"],
     plain:
       "How much profit one customer brings you in total, for as long as they stay. Two things drive it: how much profit you make from them each year, and how likely they are to stay another year.",
     example: "€30,000 profit a year and 80% of customers staying each year gives about €80,000 over the whole relationship (a Case assumption).",
@@ -1087,6 +1087,61 @@ export const GLOSSARY: GlossEntry[] = [
     match: ["plan, do, study, act", "PDCA"],
     plain: "A repeating cycle for improving something: plan it, do it, study the result, then act on what you learned and start again.",
     from: "Deming 1986",
+  },
+  {
+    id: "sales-phase",
+    title: "Sales phase",
+    match: ["sales phase"],
+    plain: "The middle part of the customer journey: from the first booked or held conversation between a seller and a named buyer contact, up to and including the signature.",
+  },
+  {
+    id: "kpi-owner",
+    title: "KPI owner",
+    match: ["KPI owner", "owner of the KPI"],
+    plain: "The one person who can change the action behind a KPI and is expected to act when it moves the wrong way. It is not the person who only reads the number.",
+    example: "The repeat-purchase rate is moved by how existing clients are served, so a key account manager owns it. Controlling can read it but cannot change it.",
+  },
+  {
+    id: "head-of-sales",
+    title: "Head of Sales",
+    match: ["Head of Sales"],
+    plain: "The person who answers for the sales team's results and for the funnel. Coordinators and team leads usually report to this role, so it is often the person a KPI escalates to.",
+  },
+  {
+    id: "key-account-manager",
+    title: "Key account manager",
+    match: ["key account manager"],
+    plain: "A salesperson who looks after the relationship with a group of existing clients over time: regular reviews, and early contact before a contract ends.",
+  },
+  {
+    id: "head-of-account-management",
+    title: "Head of Account Management",
+    match: ["Head of Account Management"],
+    plain: "The manager of the key account managers. Answers for how well existing clients are kept.",
+  },
+  {
+    id: "crm-coordinator",
+    title: "CRM coordinator",
+    match: ["CRM coordinator"],
+    plain: "The person who runs the customer database and the booking workflow in it: reminders, follow-ups and the quality of the data.",
+  },
+  {
+    id: "head-of-delivery",
+    title: "Head of Delivery",
+    match: ["Head of Delivery"],
+    plain: "The person who answers for getting projects delivered and for support after go-live.",
+  },
+  {
+    id: "sales-team-lead",
+    title: "Sales team lead",
+    match: ["Sales team lead", "sales team lead"],
+    plain: "The person who leads a group of sellers day to day and coaches them. Smaller in scope than the Head of Sales, who answers for the whole function.",
+  },
+  {
+    id: "cco",
+    title: "Chief Customer Officer",
+    match: ["Chief Customer Officer"],
+    plain: "The senior manager who answers for how well the company keeps and grows its customers. In this case the role is combined with Sales Manager.",
   },
 ];
 

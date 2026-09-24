@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { FUNNEL, STEPS, REPEAT, WEAKEST, fmtInt, fmtPct, fmtPp } from "@/data/funnel";
 import type { StepId } from "@/data/funnel";
+import { Insight } from "@/components/materi/kit";
 import { wrap } from "@/lib/svg";
 import { useInView } from "@/lib/useInView";
 
@@ -58,7 +59,8 @@ export function FunnelInstrument() {
           const lines = wrap(s.label, 16);
           const next = FUNNEL[i + 1];
           return (
-            <g key={s.id}>
+            <g key={s.id} id={`funnel-stage-${s.id}`}>
+              <rect className="flash-rect" x={0} y={y - 6} width={W} height={BAR_H + 12} rx="6" fill="transparent" stroke="transparent" pointerEvents="none" />
               {lines.map((l, k) => (
                 <text key={k} x={146} y={y + BAR_H / 2 + 5 + (k - (lines.length - 1) / 2) * 15} textAnchor="end" fontSize="14" fill="#1F2328">
                   {l}
@@ -132,6 +134,14 @@ export function FunnelInstrument() {
           <p className="text-ash">Select an arrow (or tab to it and press Enter) to read its two counts.</p>
         )}
       </div>
+
+      <Insight>
+        {step
+          ? step.gap < 0
+            ? `At its own reference of ${fmtPct(step.bench)} this arrow would carry about ${fmtInt(Math.round((step.fromCount * step.bench) / 100))} of the ${fmtInt(step.fromCount)}; it carries ${fmtInt(step.toCount)}. Each arrow is measured against its own reference, which is why gaps can be compared across arrows while raw counts cannot: counts fall at every stage by design.`
+            : `This arrow keeps up with its own reference of ${fmtPct(step.bench)}: it carries ${fmtInt(step.toCount)} of ${fmtInt(step.fromCount)}, about what the reference would carry. A big fall in counts is normal in a funnel and is not, on its own, a gap.`
+          : `Each arrow’s gap is measured against that arrow’s own reference, so arrows can be compared even though the counts differ enormously (24,000 at the top, 4 at the bottom). Select an arrow to see what its gap means in prospects.`}
+      </Insight>
 
       <RepeatPanel seen={seen} uid={uid} />
 

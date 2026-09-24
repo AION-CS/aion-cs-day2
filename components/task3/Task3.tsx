@@ -12,7 +12,10 @@ import { SequenceBlock } from "@/components/task3/SequenceBlock";
 import { CutField, GovernanceRows, PostponedField } from "@/components/task3/MemoFields";
 import { MemoPanel } from "@/components/task3/MemoPanel";
 import { memoBody } from "@/lib/exportDoc";
-import { rubricRows } from "@/lib/answerKey";
+import { allocKey, rubricRows } from "@/lib/answerKey";
+import { allocGuide } from "@/lib/mentorGuide";
+import { AnswerKey } from "@/components/ui/AnswerKey";
+import { MentorGuide } from "@/components/ui/MentorGuide";
 import { IDS, l3Missing } from "@/lib/missing";
 import { exportName } from "@/lib/slug";
 import { COURSE } from "@/lib/routes";
@@ -75,6 +78,8 @@ export function Task3() {
           >
             <MaterialRefs refs={["C3", "C4"]} />
             <AllocationGrid />
+            <AnswerKey block={allocKey()} />
+            <MentorGuide guide={allocGuide()} />
           </AnswerBlock>
 
           <AnswerBlock

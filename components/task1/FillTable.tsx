@@ -5,6 +5,8 @@ import type { Col, RowId } from "@/data/funnel";
 import { colOf, flagsForFill, rowOf } from "@/lib/checks";
 import { IDS } from "@/lib/missing";
 import { useStore } from "@/store/useStore";
+import { MentorGuide } from "@/components/ui/MentorGuide";
+import { fillGuide } from "@/lib/mentorGuide";
 
 const HELP: Record<Col, string> = {
   actual: "The conversion printed beside the arrow, in %.",
@@ -81,6 +83,9 @@ export function FillTable() {
                   </div>
                 );
               })}
+            </div>
+            <div className="mt-3">
+              <MentorGuide guide={fillGuide(r)} />
             </div>
           </fieldset>
         ))}

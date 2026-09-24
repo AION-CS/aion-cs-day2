@@ -85,3 +85,46 @@ export const TOUCHPOINTS: Touchpoint[] = [
   },
 ];
 export const TOUCHPOINT_BY_ID = Object.fromEntries(TOUCHPOINTS.map((t) => [t.id, t])) as Record<StageId, Touchpoint>;
+
+/* ------------------------------------------------------------------ the tests behind the sort (taught in Materi A2) */
+
+/** One test question per phase, phrased so a learner can apply it to a touchpoint. Taught in A2; repeated on request in Block 1.1. */
+export const PHASE_TESTS: { phase: Phase; name: string; test: string; belongs: string; notBelongs: string }[] = [
+  {
+    phase: "pre",
+    name: "Pre-sales",
+    test: "Is a named buyer contact in a scheduled or held conversation with a seller? If not, and the contract is not signed, it is pre-sales.",
+    belongs: "Awareness and first contact: anonymous traffic, a contact-form message, a whitepaper download, a call-back request.",
+    notBelongs: "A booked or held conversation with a named contact (that is sales), and anything after the signature.",
+  },
+  {
+    phase: "sales",
+    name: "Sales",
+    test: "Is a named buyer contact in a scheduled or held conversation with a seller, and is the contract not yet signed? If yes, it is sales. The signature itself is the last sales event.",
+    belongs: "A booked or held consultation, a proposal, negotiation, and the contract up to and including its signature.",
+    notBelongs: "A person who has only left contact details, and onboarding, support and renewal.",
+  },
+  {
+    phase: "after",
+    name: "After-sales",
+    test: "Does this event come after the signature? If yes, it is after-sales.",
+    belongs: "Onboarding, support, renewal and the next project.",
+    notBelongs: "Anything up to and including the signature. A funnel that counts people up to the signature has no stage here.",
+  },
+];
+
+/** The distinguishing test for each confusable pair of phases. */
+export const PHASE_PAIR_TESTS: { pair: string; test: string }[] = [
+  {
+    pair: "Pre-sales or sales?",
+    test: "Has a name and a date been put in a seller’s plan (a booked consultation), or has the person only left details? A name and a date means sales.",
+  },
+  {
+    pair: "Sales or after-sales?",
+    test: "Is the signature part of this event, or has it already happened? The signature closes sales; only what follows it is after-sales.",
+  },
+  {
+    pair: "A phase with nothing in it",
+    test: "If no stage passes the test of a phase, that phase stays empty. A phase is a test, not a quota.",
+  },
+];

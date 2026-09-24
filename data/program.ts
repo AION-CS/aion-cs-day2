@@ -97,3 +97,89 @@ export const warningText = (from: number, to: number, first: number) =>
 export const WARNING_UNFUNDED = "No baseline KPI data exists in this window — the lever’s impact will be unmeasurable throughout.";
 
 export const OPT_NAME: Record<OptId, string> = { A: "Option A · personal account management", B: "Option B · discount", C: "Option C · value-added service" };
+
+/* ------------------------------------------------------------------ owners, cadences and pickups (taught in Materi C4) */
+
+/** What each owner option typically decides and does. A practitioner observation for a company of this kind (Case assumption). Taught in C4. */
+export const OWNER_PROFILE: Record<string, { does: string; changes: string }> = {
+  "Chief Customer Officer / Sales Manager": {
+    does: "Answers for retention and sales results across the whole company, owns the budget and is the top escalation point.",
+    changes: "Priorities and money. Not a workflow or a client relationship day to day.",
+  },
+  "Head of Sales": {
+    does: "Answers for the funnel and the sales team’s results. The escalation point above the coordinators and team leads.",
+    changes: "The sales process, targets and how the funnel is staffed.",
+  },
+  "Key account manager": {
+    does: "Runs the relationship with a group of existing clients: business reviews, early-warning contact before a renewal.",
+    changes: "How often and how the existing client is visited and served.",
+  },
+  "CRM coordinator": {
+    does: "Runs the booking system, the reminders and the data in it.",
+    changes: "The booking workflow, day to day.",
+  },
+  "Head of Delivery": {
+    does: "Answers for project delivery and for support after go-live.",
+    changes: "Staffing and service levels of delivery and support.",
+  },
+  Controlling: {
+    does: "Produces the figures and checks their quality.",
+    changes: "The reporting. Not what sales, account managers or coordinators do.",
+  },
+  "Sales team lead": {
+    does: "Leads a group of sellers day to day and runs their coaching.",
+    changes: "How the team sells and what it is coached on.",
+  },
+};
+
+/** The test questions for a governance row, in the order a learner should ask them. Taught in C4; repeated on request in Block 3.4. */
+export const GOV_TESTS: { name: string; test: string }[] = [
+  { name: "Owner", test: "Who can change the action that moves this KPI this week, without asking anyone above? The owner is that person, not the person who only reads the number." },
+  { name: "Owner · Head of Sales or team lead", test: "Does the KPI belong to the whole sales function or to one team? A function-wide KPI sits with the head; a team’s own habit sits with its lead." },
+  { name: "Owner · Controlling or the action’s owner", test: "Does the person change the number, or only report it? Only a KPI that is itself the report (reporting delivered on time) belongs to the person who produces the report." },
+  { name: "Cadence", test: "How often does the thing behind the KPI actually happen and move? Read it that often, and no more often than a change can show." },
+  { name: "Trigger", test: "Which number, read at which interval, ends the debate about whether to act? Write the threshold and the name of the person it goes to." },
+];
+
+/** The owner and cadence the model answer gives each item, with the reason. Used by the answer key and the mentor guide. */
+export const GOV_EXPECT: Record<ItemId, { owner: string; cadence: string; ownerWhy: string; cadenceWhy: string }> = {
+  lever: {
+    owner: "Key account manager",
+    cadence: "Monthly",
+    ownerWhy: "The repeat-purchase rate is moved by how existing clients are served, which is the key account manager’s work. Controlling reads it but cannot change it.",
+    cadenceWhy: "Repeat purchase moves in months, so a monthly reading avoids reacting to noise.",
+  },
+  fix: {
+    owner: "CRM coordinator",
+    cadence: "Weekly",
+    ownerWhy: "The show-up rate is moved by the booking workflow and reminders, which the coordinator runs and can change at once.",
+    cadenceWhy: "Consultations are booked every week, so a week already shows whether the reminders work.",
+  },
+  dash: {
+    owner: "Controlling",
+    cadence: "Monthly",
+    ownerWhy: "The dashboard’s own KPI is that the three KPIs are published on time. Controlling produces them, so it can change whether they are late.",
+    cadenceWhy: "The dashboard reports monthly, so its own delivery is read monthly.",
+  },
+  train: {
+    owner: "Sales team lead",
+    cadence: "Monthly",
+    ownerWhy: "The conversion from proposal to signed moves with how the team sells, which the team lead coaches. It is the team’s habit, not the whole function’s.",
+    cadenceWhy: "A selling habit shows in conversions over weeks and months, so a monthly reading is the fastest that means something.",
+  },
+};
+
+export const CADENCE_WHY: Record<string, string> = {
+  Weekly: "Right for a KPI whose event happens every week, such as bookings. Too frequent for one that moves in months: it reads noise.",
+  Fortnightly: "Between the two. Defensible for a KPI with a weekly event and a slow reaction, but it delays a fix that is not working.",
+  Monthly: "Right for a KPI that is reported monthly or moves in months (retention, conversion after coaching, the dashboard itself).",
+  Quarterly: "Too slow inside a four-month window: only one reading would fall in it, so a trigger could never fire in time.",
+};
+
+export const PICKUP_WHY: Record<string, string> = {
+  "Month 5, straight after this window": "Defensible only if the postponed item needs no baseline. Picks up before any KPI reading exists, so it cannot rest on evidence.",
+  "After three months of dashboard baseline": "The best fit when the postponed item is judged by a KPI: three months of baseline is what makes its effect readable. It is also a condition, not only a date.",
+  "Next quarter’s budget round": "A real decision point with money attached. Fine when the item needs new budget, weaker when it needs evidence first.",
+  "Next half-year": "So far away that it reads as a cut. A pickup that late is barely a pickup.",
+};
+export const PICKUP_MODEL = "After three months of dashboard baseline";

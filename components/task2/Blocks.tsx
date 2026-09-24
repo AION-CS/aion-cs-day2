@@ -1,16 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { CELL_KEYS, OPTIONS, OPT_IDS, SEGMENTS, SEG_IDS, cellKey, cellLabel } from "@/data/segments";
+import { CELL_KEYS, OPTIONS, OPT_IDS, SEGMENTS, SEG_IDS, cellFormula, cellKey, cellLabel, cellSources, parseKey } from "@/data/segments";
 import type { OptId, SegId } from "@/data/segments";
 import { flagsForGrid, lossHolds, citedGridFigures } from "@/lib/checks";
-import { recommendationKey, uniformKey } from "@/lib/answerKey";
+import { lossKey, recommendationKey, uniformKey } from "@/lib/answerKey";
+import { GRID_BUILDERS, gridPartFlags } from "@/lib/calcBuilder";
+import { scrollToAndFlash } from "@/lib/flash";
+import { cellGuide, lossGuide, recommendGuide, tradeoffGuide } from "@/lib/mentorGuide";
 import { IDS } from "@/lib/missing";
 import { useJumpTo } from "@/lib/useJumpTo";
 import { getLeakSentence, weakestLabel } from "@/store/selectors";
 import { useHydrated, useStore } from "@/store/useStore";
 import { AnswerKey } from "@/components/ui/AnswerKey";
+import { CalcDiagnosis } from "@/components/ui/CalcDiagnosis";
 import { Field } from "@/components/ui/Field";
+import { FormulaBuilder } from "@/components/ui/FormulaBuilder";
+import { MentorGuide } from "@/components/ui/MentorGuide";
+import { RevealHint } from "@/components/ui/RevealHint";
 
 const GRID_CLUE =
   "Select this option and segment in the calculator again. Which line of its working is the net impact, and does your figure match it, sign included?";
@@ -23,11 +31,27 @@ export function GridBlock() {
   const showClue = useStore((s) => s.showGridClue);
   const flagged = new Set(l2.gridFlagged);
   const filled = CELL_KEYS.filter((k) => (l2.grid[k] ?? "").trim()).length;
+  const [helpCell, setHelpCell] = useState<string | null>(null);
+
+  // A check that flags a part opens the help for that cell, so a flag never sits behind a closed panel.
+  useEffect(() => {
+    const first = l2.partFlags[0];
+    if (first) setHelpCell(first.split(".")[0]);
+  }, [l2.partFlags]);
+
+  const openHelp = (k: string) => {
+    setHelpCell(k);
+    window.setTimeout(() => scrollToAndFlash("cell-help", "ref", "start"), 60);
+  };
 
   return (
     <div className="space-y-4">
       <p className="text-caption text-ash">
         One cell per combination. Type the net impact in euros the calculator shows: a loss with a minus sign (for example −4,872). Any layout works: 4872, 4,872 or €4.872.
+      </p>
+      <p className="text-caption text-ink">
+        The method is taught in Materi B3, with a worked example on Alpenwerk&apos;s numbers. Try each cell yourself first. If you get stuck, press <strong>Help for this cell</strong> under it: it opens two helps, &ldquo;Show the formula&rdquo; (in
+        words, with a calculator that checks each part) and &ldquo;Show where the numbers are&rdquo; (the exact rows of the tables above). You are practising combining the numbers correctly.
       </p>
       <div className="grid gap-3 md:grid-cols-[minmax(0,12rem)_repeat(2,minmax(0,1fr))]">
         <div className="hidden md:block" />
@@ -57,6 +81,16 @@ export function GridBlock() {
                     aria-label={`${cellLabel(k)}, net impact in euros`}
                     placeholder="e.g. 12,345 or −1,234"
                   />
+                  {isFlag && (
+                    <CalcDiagnosis
+                      builder={GRID_BUILDERS[k]}
+                      figure={k}
+                      parts={l2.parts}
+                      partFlags={l2.partFlags}
+                      name="this cell"
+                      mismatch={(r) => `Every part of the formula is right and gives ${r}, but your entry in this cell differs. Press “Help for this cell”, open “Show the formula” and press “Use this result”, or retype the figure with its sign.`}
+                    />
+                  )}
                   {isFlag &&
                     (l2.gridClue[k] ? (
                       <p role="status" className="fade-in rounded-md border border-gold bg-accentSoft px-2 py-1 text-micro normal-case tracking-normal text-ink">
@@ -68,6 +102,9 @@ export function GridBlock() {
                         Show clue
                       </button>
                     ))}
+                  <button type="button" onClick={() => openHelp(k)} className="btn-ghost btn-sm" aria-controls="cell-help">
+                    Help for this cell
+                  </button>
                 </div>
               );
             })}
@@ -75,7 +112,7 @@ export function GridBlock() {
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-3 border-t border-line pt-3">
-        <button type="button" onClick={() => check(flagsForGrid(l2))} className="btn-primary">
+        <button type="button" onClick={() => check(flagsForGrid(l2), gridPartFlags(l2.parts))} className="btn-primary">
           Check my grid
         </button>
         <span className="text-caption text-ash">
@@ -86,8 +123,90 @@ export function GridBlock() {
       {l2.checks > 0 && (
         <p role="status" className="text-caption text-ink">
           {l2.gridFlagged.length === 0 ? "No filled cell is outlined." : `${l2.gridFlagged.length} filled ${l2.gridFlagged.length === 1 ? "cell is" : "cells are"} outlined in amber.`}
+          {l2.partFlags.length > 0 &&
+            ` ${l2.partFlags.length} ${l2.partFlags.length === 1 ? "part" : "parts"} in the formula calculators ${l2.partFlags.length === 1 ? "is" : "are"} outlined, each naming the row to read.`}
         </p>
       )}
+
+      <div id="cell-help" className="space-y-2 rounded-lg border border-line bg-paper p-3">
+        <p className="smallcaps">Help with one cell</p>
+        <div role="group" aria-label="Choose a cell" className="flex flex-wrap gap-2">
+          {CELL_KEYS.map((k) => {
+            const partFlagged = l2.partFlags.some((f) => f.startsWith(`${k}.`));
+            return (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={helpCell === k}
+                onClick={() => setHelpCell(k)}
+                className={clsx(
+                  "btn btn-sm min-h-[40px] border",
+                  partFlagged && "is-flagged",
+                  helpCell === k ? "border-accent bg-accentSoft text-ink" : "border-line bg-paper text-ash hover:border-ash",
+                )}
+              >
+                {cellLabel(k)}
+              </button>
+            );
+          })}
+        </div>
+        {helpCell ? (
+          <CellHelp key={helpCell} cell={helpCell} />
+        ) : (
+          <p className="text-caption text-ash">Choose a cell to open its formula and the list of numbers it is built from. Nothing opens until you ask.</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        {CELL_KEYS.map((k) => (
+          <MentorGuide key={k} guide={cellGuide(k)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** The two on-demand helps for one grid cell, hidden until asked for: the formula in words with the automatic calculator, and the printed rows it uses. */
+function CellHelp({ cell }: { cell: string }) {
+  const parts = useStore((s) => s.l2.parts);
+  const partFlags = useStore((s) => s.l2.partFlags);
+  const setPart = useStore((s) => s.setL2Part);
+  const setGrid = useStore((s) => s.setGrid);
+  const { opt, seg } = parseKey(cell);
+  const anyFlag = partFlags.some((k) => k.startsWith(`${cell}.`));
+  return (
+    <div className="flex flex-wrap items-start gap-2">
+      <RevealHint id={`formula-${cell}`} label="Show the formula" title={`Formula · ${cellLabel(cell)} · from Materi B3`} forceOpen={anyFlag}>
+        <p className="text-caption text-ink">{cellFormula(opt)}</p>
+        <FormulaBuilder
+          figure={cell}
+          builder={GRID_BUILDERS[cell]}
+          parts={parts}
+          partFlags={partFlags}
+          onPart={setPart}
+          onUse={(v) => setGrid(cell, String(Math.round(v * 100) / 100))}
+          unit="€ per year"
+          label={cellLabel(cell)}
+          source="the tables in the calculator above"
+        />
+      </RevealHint>
+      <RevealHint id={`src-${cell}`} label="Show where the numbers are" title="Numbers you need · click one to see it in its table">
+        <ul className="space-y-1">
+          {cellSources(opt, seg).map((src) => (
+            <li key={src.label}>
+              <button
+                type="button"
+                onClick={() => scrollToAndFlash(src.target, "ref")}
+                className="flex min-h-[36px] w-full flex-wrap items-baseline gap-x-2 rounded px-2 py-1 text-left text-caption hover:bg-accentSoft"
+              >
+                <span className="text-micro font-semibold uppercase text-ash">{src.where}</span>
+                <span className="text-ink">{src.label}:</span>
+                <span className="tnum font-semibold text-ink">{src.value}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </RevealHint>
     </div>
   );
 }
@@ -162,6 +281,8 @@ export function LossBlock() {
           {res.holds} of {CELL_KEYS.length} cells hold.
         </p>
       )}
+      <AnswerKey block={lossKey()} />
+      <MentorGuide guide={lossGuide()} />
     </div>
   );
 }
@@ -253,6 +374,7 @@ export function RecommendBlock() {
               />
             </Field>
             <AnswerKey block={recommendationKey(s)} />
+            <MentorGuide guide={recommendGuide(s)} />
           </div>
         );
       })}
@@ -309,8 +431,41 @@ export function UniformBlock() {
           onChange={(e) => setTradeoff(e.target.value)}
           placeholder="e.g. Choosing … nets … in total. In the … segment I give up … compared with …, and in the … segment …"
         />
+        <UniformHelp />
       </Field>
       <AnswerKey block={uniformKey()} />
+      <MentorGuide guide={tradeoffGuide()} />
+    </div>
+  );
+}
+
+/** Formula in words and the learner's own grid entries for Block 2.4, hidden until asked for. The method is taught in Materi B2. */
+function UniformHelp() {
+  const grid = useStore((s) => s.l2.grid);
+  return (
+    <div className="flex flex-wrap items-start gap-2">
+      <RevealHint id="formula-uniform" label="Show the formula" title="Formula · from Materi B2">
+        <p className="text-caption text-ink">
+          Total of an option = its result in project clients + its result in retainer clients. The single best option is the largest total. What it gives up = for each segment, that segment&apos;s own best result minus the chosen option&apos;s
+          result there; then add the two. Taught in Materi B2.
+        </p>
+      </RevealHint>
+      <RevealHint id="src-uniform" label="Show where the numbers are" title="Numbers you need · your own grid from Block 2.1">
+        <ul className="grid gap-1 sm:grid-cols-2">
+          {CELL_KEYS.map((k) => (
+            <li key={k}>
+              <button
+                type="button"
+                onClick={() => scrollToAndFlash(IDS.grid(k), "ref")}
+                className="flex min-h-[36px] w-full flex-wrap items-baseline gap-x-2 rounded px-2 py-1 text-left text-caption hover:bg-accentSoft"
+              >
+                <span className="text-ink">{cellLabel(k)}:</span>
+                <span className="tnum font-semibold text-ink">{(grid[k] ?? "").trim() || "not entered yet"}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </RevealHint>
     </div>
   );
 }

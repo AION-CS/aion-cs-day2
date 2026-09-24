@@ -10,6 +10,7 @@ import { useJumpTo } from "@/lib/useJumpTo";
 import { usePersisted } from "@/store/usePersisted";
 import { useHydrated, useStore } from "@/store/useStore";
 import { BudgetBar } from "@/components/ui/BudgetBar";
+import { Insight } from "@/components/materi/kit";
 
 export const LOCK_TIP_3 = "Unlocks once you've diagnosed the leak and chosen a lever in Routes 1 and 2";
 
@@ -64,6 +65,7 @@ export function AllocationGrid() {
           <Figure label={over > 0 ? "Over budget" : "Remaining"} value={fmtEuroPlain(over > 0 ? over : remaining(a))} warn={over > 0} />
         </div>
         <BudgetBar alloc={a} />
+        <Insight>{reading(a, spent, over)}</Insight>
         {lines.length > 0 && (
           <div role="alert" className="space-y-1 rounded-md border border-gold bg-accentSoft p-3 text-caption text-ink">
             <p className="font-semibold">{lines[0]}</p>
@@ -183,4 +185,19 @@ function Stop({ label, sub, tag, on, locked, onClick }: { label: string; sub: st
       {tag && <span className="mt-1 inline-block rounded border border-accent/50 bg-accentSoft px-1.5 py-0.5 text-micro font-bold uppercase text-accent">{tag}</span>}
     </button>
   );
+}
+
+/** What the current allocation demonstrates: which costs move with the choice, and what the total leaves open. */
+function reading(a: ReturnType<typeof useStore.getState>["route3"]["alloc"], spent: number, over: number): string {
+  if (spent === 0 && a.leverOpt === null) {
+    return "Nothing is funded yet. The three fixed prices never change; only the lever moves, because Options A and C are priced per client (so their cost follows the scope you pick) and the discount costs nothing upfront but is paid from margin on every repeat order, outside this budget.";
+  }
+  if (over > 0) {
+    return `${fmtEuroPlain(over)} over the budget. The funnel fix, the dashboard and the training have fixed prices, so only two moves change the total: leave an item out, or narrow the lever\u2019s scope. The message above names the moves that close the gap.`;
+  }
+  const rest = remaining(a);
+  const open = [!a.fix && "the funnel leak", !a.dash && "the KPI measurement", !a.train && "the selling behaviour", a.leverOpt === null && "repeat purchase"].filter(Boolean);
+  return `${fmtEuroPlain(spent)} of ${fmtEuroPlain(BUDGET)} is allocated and ${fmtEuroPlain(rest)} is left.${
+    a.leverOpt === "B" ? " The lever costs nothing upfront, so it fits, but the discount is paid from margin on every repeat order and that cost is outside this budget." : ""
+  }${open.length ? ` What you leave unfunded stays open (${open.join(", ")}): Block 3.3 and Block 3.5 ask you to say what that costs and when you come back to it.` : " Everything is funded, so Block 3.3 asks what you did not buy and what that leaves exposed."}`;
 }

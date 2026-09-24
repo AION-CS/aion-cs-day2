@@ -1,11 +1,18 @@
 "use client";
 
 import clsx from "clsx";
-import { CADENCES, ITEMS, ITEM_KPI, OWNERS, PICKUPS } from "@/data/program";
+import { CADENCES, GOV_TESTS, ITEMS, ITEM_KPI, OWNERS, OWNER_PROFILE, PICKUPS } from "@/data/program";
 import { IDS } from "@/lib/missing";
 import { fundedItems, hasThreshold, leftOpen } from "@/lib/program";
 import { useStore } from "@/store/useStore";
 import { Field } from "@/components/ui/Field";
+import { AnswerKey } from "@/components/ui/AnswerKey";
+import { MaterialRefs } from "@/components/ui/MaterialRefs";
+import { MentorGuide } from "@/components/ui/MentorGuide";
+import { RevealHint } from "@/components/ui/RevealHint";
+import { governanceKey, pickupKey } from "@/lib/answerKey";
+import { Gloss } from "@/lib/glossify";
+import { cutGuide, govGuide, postponedGuide } from "@/lib/mentorGuide";
 
 /** Block 3.3 — what was cut. Judged: name the item and the consequence in the material's own terms. */
 export function CutField() {
@@ -35,6 +42,7 @@ export function CutField() {
         onChange={(e) => setCut(e.target.value)}
         placeholder="e.g. I cut item … (€…). As a result … stays …"
       />
+      <MentorGuide guide={cutGuide()} />
     </Field>
   );
 }
@@ -50,6 +58,31 @@ export function GovernanceRows() {
   return (
     <div className="space-y-3">
       <p className="text-caption text-ash">One row per funded item, each governed by its own KPI. Every KPI needs an owner, a review cadence and an escalation trigger with a threshold.</p>
+      <div className="flex flex-wrap items-start gap-2">
+        <RevealHint id="gov-tests" label="Show the test questions" title="Test questions · taught in Materi C4">
+          <div className="space-y-2 text-caption text-ink">
+            <p>Ask these of every row. They repeat the tests from Materi C4; they never say which owner fits which KPI.</p>
+            <ul className="space-y-1.5">
+              {GOV_TESTS.map((t) => (
+                <li key={t.name}>
+                  <span className="font-semibold">{t.name}. </span>
+                  <Gloss>{t.test}</Gloss>
+                </li>
+              ))}
+            </ul>
+            <p className="smallcaps text-ash">What each owner option does (Case assumption)</p>
+            <ul className="space-y-1">
+              {OWNERS.map((o) => (
+                <li key={o}>
+                  <span className="font-semibold">{o}. </span>
+                  {OWNER_PROFILE[o].does} <span className="text-ash">Changes: {OWNER_PROFILE[o].changes}</span>
+                </li>
+              ))}
+            </ul>
+            <MaterialRefs refs={["C4"]} lead="Taught in" />
+          </div>
+        </RevealHint>
+      </div>
       {funded.map((id) => {
         const g = r.gov[id];
         const weak = g.trigger.trim() !== "" && !hasThreshold(g.trigger);
@@ -102,6 +135,8 @@ export function GovernanceRows() {
               <input id={`trg-${id}`} className="field" value={g.trigger} onChange={(e) => setGov(id, { trigger: e.target.value })} aria-invalid={weak} />
               {weak && <p className="text-micro text-rust">A trigger without a number is a wish. Add the threshold.</p>}
             </div>
+            <AnswerKey block={governanceKey(id)} />
+            <MentorGuide guide={govGuide(id)} />
           </fieldset>
         );
       })}
@@ -151,7 +186,9 @@ export function PostponedField() {
             </option>
           ))}
         </select>
+        <AnswerKey block={pickupKey()} />
       </Field>
+      <MentorGuide guide={postponedGuide()} />
     </div>
   );
 }

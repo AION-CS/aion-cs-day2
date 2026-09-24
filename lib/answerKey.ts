@@ -1,11 +1,11 @@
 import { STEPS, WEAKEST, fmtPct, fmtPp, STEP_BY_ID } from "@/data/funnel";
 import { PHASE_LABEL } from "@/data/funnel";
 import { TOUCHPOINTS } from "@/data/touchpoints";
-import { LOCAL_BEST, LOCAL_BEST_TOTAL, NET, OPTIONS, OPT_IDS, SEGMENTS, UNIFORM, UNIFORM_BEST, cellKey, fmtEuro, fmtEuroPlain } from "@/data/segments";
+import { CELL_KEYS, LOCAL_BEST, LOCAL_BEST_TOTAL, LOSS_CELLS, NET, OPTIONS, OPT_IDS, SEGMENTS, UNIFORM, UNIFORM_BEST, calc, cellKey, cellLabel, fmtEuro, fmtEuroPlain, parseKey } from "@/data/segments";
 import type { SegId } from "@/data/segments";
-import { KPI_LABEL } from "@/data/program";
-import { fundedItems, overBy, sequenceTruth, totalSpent, TRUE_KPI } from "@/lib/program";
-import { ITEMS } from "@/data/program";
+import { BUDGET, CADENCES, CADENCE_WHY, FIXED_COST, GOV_EXPECT, ITEMS, ITEM_KPI, KPI_LABEL, OWNERS, OWNER_PROFILE, PICKUPS, PICKUP_MODEL, PICKUP_WHY, SHOW_UP } from "@/data/program";
+import type { ItemId } from "@/data/program";
+import { fundedItems, leverCost, leverNet, overBy, sequenceTruth, totalSpent, TRUE_KPI } from "@/lib/program";
 import type { Route3State } from "@/store/useStore";
 
 /**
@@ -143,3 +143,140 @@ export function rubricRows(r: Route3State): { item: string; status: string; note
   ];
 }
 
+
+/* ------------------------------------------------------------------ Block 2.2 · loss marks */
+
+/** The six yes/no marks of Block 2.2. The learner's check only counts how many hold, so the names live here. */
+export function lossKey(): AnswerKeyBlock {
+  return {
+    title: "Block 2.2 · Which cells are a net loss",
+    expected: LOSS_CELLS.length ? LOSS_CELLS.map(cellLabel).join(" and ") : "No cell shows a loss",
+    options: CELL_KEYS.map((k) => {
+      const { opt, seg } = parseKey(k);
+      const c = calc(opt, seg);
+      const loss = c.net < 0;
+      return {
+        label: `${cellLabel(k)} marked as a loss`,
+        expected: loss,
+        why: loss
+          ? `Net ${fmtEuro(c.net)}: the cost (${fmtEuroPlain(c.cost)}) is larger than the extra gross profit (${fmtEuroPlain(c.extraGp)}).`
+          : `Net ${fmtEuro(c.net)}: the extra gross profit (${fmtEuroPlain(c.extraGp)}) is larger than the cost (${fmtEuroPlain(c.cost)}), so it is not a loss.`,
+      };
+    }),
+    teachingNote:
+      "The learner’s check reports only “k of 6 hold”, because each cell is a yes or no and naming the wrong ones would name the answer. This key is where the names live. A learner who marks the discount in project clients as a loss has usually charged it to the wrong base or dropped the extra gross profit; ask them to read the calculator’s last line for that cell, not to guess.",
+  };
+}
+
+/* ------------------------------------------------------------------ Block 3.1 · allocation */
+
+const eur = fmtEuroPlain;
+
+/** The allocation exercise: one fixed choice per line item. The model spends €138,800 of the €150,000. */
+export function allocKey(): AnswerKeyBlock {
+  const cBoth = leverCost("C", "both");
+  const aBoth = leverCost("A", "both");
+  const all = (lever: number) => lever + FIXED_COST.fix + FIXED_COST.dash + FIXED_COST.train;
+  return {
+    title: "Block 3.1 · Allocate the budget",
+    expected: `Option C for both segments (${eur(cBoth)}), the funnel fix (${eur(FIXED_COST.fix)}) and the dashboard (${eur(FIXED_COST.dash)}): ${eur(cBoth + FIXED_COST.fix + FIXED_COST.dash)} of ${eur(BUDGET)}. The sales training (${eur(FIXED_COST.train)}) stays out.`,
+    options: [
+      {
+        label: "Lever · Option C, both segments",
+        expected: true,
+        why: `Costs ${eur(cBoth)} (38 clients × ${eur(OPTIONS.C.costPerClient ?? 0)}) and nets ${fmtEuro(leverNet("C", "both"))} a year, the best single option from Route 2.`,
+      },
+      {
+        label: "Lever · Option A, both segments",
+        expected: false,
+        why: `Costs ${eur(aBoth)} and nets ${fmtEuro(leverNet("A", "both"))}. With the fix and the dashboard that is ${eur(aBoth + FIXED_COST.fix + FIXED_COST.dash)}, already ${eur(aBoth + FIXED_COST.fix + FIXED_COST.dash - BUDGET)} over the budget; A only fits if it is narrowed to one segment or another item is cut.`,
+      },
+      {
+        label: "Lever · Option B, both segments",
+        expected: false,
+        why: `Costs nothing upfront (paid from margin on every repeat order) and nets ${fmtEuro(leverNet("B", "both"))}, the least. All four items then cost ${eur(all(0))}, so nothing has to be cut on cost. That is why B is tempting and why it is weak: the margin it gives away is paid outside this budget.`,
+      },
+      {
+        label: "Lever · Option C, one segment only",
+        expected: false,
+        why: `Narrowing C to retainer clients costs ${eur(leverCost("C", "R"))} and nets ${fmtEuro(leverNet("C", "R"))}; to project clients ${eur(leverCost("C", "P"))} and ${fmtEuro(leverNet("C", "P"))}. Descoping is a real tool, but it is only needed when the budget forces it, and here it does not.`,
+      },
+      {
+        label: "Lever · not funded",
+        expected: false,
+        why: "Repeat purchase stays untreated in both segments. Nothing in the budget forces that.",
+      },
+      {
+        label: "Funnel fix · funded",
+        expected: true,
+        why: `${eur(FIXED_COST.fix)}. Lifts the show-up rate from ${SHOW_UP.before}% to ${SHOW_UP.after}% and leaves ${SHOW_UP.benchmark - SHOW_UP.after} pp of the gap to the benchmark open.`,
+      },
+      {
+        label: "Dashboard · funded",
+        expected: true,
+        why: `${eur(FIXED_COST.dash)}. It produces the baseline every other KPI needs; without it the sequencing warning always applies and no KPI can be governed.`,
+      },
+      {
+        label: "Sales training · not funded",
+        expected: true,
+        why: `${eur(FIXED_COST.train)} and its effect is not quantified in the case. With Option C the four items total ${eur(all(cBoth))}, ${eur(all(cBoth) - BUDGET)} over the budget, so this is the item to leave out: the weakest evidence is cut first (C3).`,
+      },
+      {
+        label: "Sales training · funded",
+        expected: false,
+        why: `Only fits if the lever is narrowed or B is chosen. With C for both segments it puts the total ${eur(all(cBoth) - BUDGET)} over the ${eur(BUDGET)}.`,
+      },
+    ],
+    teachingNote: `More than one allocation defends. Option B fits with everything funded (${eur(all(0))}), leaving ${eur(BUDGET - all(0))} unspent; a learner who chooses it should say what the discount costs in margin outside the budget and that Route 2 showed it nets the least across both segments. The objective test is only that the total stays within ${eur(BUDGET)} and every funded item gets a start month.`,
+  };
+}
+
+/* ------------------------------------------------------------------ Block 3.4 · governance */
+
+/** Owner and cadence for one funded item. Every owner option gets a reason, including why it is not the owner. */
+export function governanceKey(item: ItemId): AnswerKeyBlock {
+  const g = GOV_EXPECT[item];
+  const kpi = ITEM_KPI[item];
+  const ownerOptions = OWNERS.map((o) => {
+    const p = OWNER_PROFILE[o];
+    const yes = o === g.owner;
+    const why = yes
+      ? g.ownerWhy
+      : o === "Controlling"
+        ? `${p.does} It reads the number but cannot change what moves it, so it is not the owner of ${kpi}.`
+        : o === "Chief Customer Officer / Sales Manager" || o === "Head of Sales"
+          ? `${p.does} Better placed as the person the trigger escalates to than as the owner: the owner needs someone above to escalate to.`
+          : `${p.does} Not the person closest to the action behind ${kpi}.`;
+    return { label: `Owner · ${o}`, expected: yes, why };
+  });
+  const cadenceOptions = CADENCES.map((c) => ({
+    label: `Cadence · ${c}`,
+    expected: c === g.cadence,
+    why: c === g.cadence ? g.cadenceWhy : CADENCE_WHY[c],
+  }));
+  return {
+    title: `Block 3.4 · ${ITEMS[item].short}`,
+    expected: `Owner: ${g.owner}. Cadence: ${g.cadence}. The trigger is free text (see the worked answer).`,
+    options: [...ownerOptions, ...cadenceOptions],
+    teachingNote:
+      item === "lever"
+        ? "The Chief Customer Officer or the Head of Sales can be defended as owner if the learner says the key account manager reports to them and names who the trigger escalates to. A KPI owned by the person it escalates to has nobody above to escalate to."
+        : item === "dash"
+          ? "Here Controlling is right because the KPI is the report itself. The same role would be wrong for the repeat-purchase rate, which is why the rule is “who can change what moves it”, not “who reads the number”."
+          : item === "fix"
+            ? "The Head of Sales is a defensible owner if the learner says the coordinator only executes. Then the weekly cadence still holds, and the trigger should name the Head of Sales as the one who acts."
+            : "This item is left out of the model allocation, so no governance row is expected for it. If a learner funds it, the sales team lead or the Head of Sales are the defensible owners depending on whether the KPI is one team’s habit or the function’s.",
+  };
+}
+
+/* ------------------------------------------------------------------ Block 3.5 · pickup */
+
+export function pickupKey(): AnswerKeyBlock {
+  return {
+    title: "Block 3.5 · Pickup point of the postponed measure",
+    expected: PICKUP_MODEL,
+    options: PICKUPS.map((p) => ({ label: p, expected: p === PICKUP_MODEL, why: PICKUP_WHY[p] })),
+    teachingNote:
+      "The pickup has to fit what was postponed. A measure judged by a KPI (the training, judged by proposal → signed conversion) belongs after a baseline exists; a measure that only needs money can wait for a budget round. Check that the pickup and the postponed text tell the same story.",
+  };
+}

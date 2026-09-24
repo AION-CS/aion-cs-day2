@@ -4,12 +4,15 @@ import { useState } from "react";
 import clsx from "clsx";
 import { PHASES } from "@/data/funnel";
 import type { Phase, StageId } from "@/data/funnel";
-import { TOUCHPOINTS, TOUCHPOINT_BY_ID } from "@/data/touchpoints";
+import { PHASE_PAIR_TESTS, PHASE_TESTS, TOUCHPOINTS, TOUCHPOINT_BY_ID } from "@/data/touchpoints";
 import { sortHolds } from "@/lib/checks";
 import { sortKey } from "@/lib/answerKey";
 import { IDS } from "@/lib/missing";
 import { useStore } from "@/store/useStore";
 import { AnswerKey } from "@/components/ui/AnswerKey";
+import { RevealHint } from "@/components/ui/RevealHint";
+import { MaterialRefs } from "@/components/ui/MaterialRefs";
+import { Gloss } from "@/lib/glossify";
 import { UndoRedoControls } from "@/components/ui/UndoRedoControls";
 
 function Chip({
@@ -171,6 +174,32 @@ export function SortBoard() {
             </div>
           );
         })}
+      </div>
+
+      <div className="flex flex-wrap items-start gap-2">
+        <RevealHint id="sort-tests" label="Show the test questions" title="Test questions · taught in Materi A2">
+          <div className="space-y-2 text-caption text-ink">
+            <p>Ask these of every touchpoint. They repeat the tests from Materi A2; they never say which touchpoint goes where.</p>
+            <ul className="space-y-1.5">
+              {PHASE_TESTS.map((t) => (
+                <li key={t.phase}>
+                  <span className="font-semibold">{t.name}. </span>
+                  <Gloss>{t.test}</Gloss>
+                </li>
+              ))}
+            </ul>
+            <p className="smallcaps text-ash">When two phases both seem to fit</p>
+            <ul className="space-y-1.5">
+              {PHASE_PAIR_TESTS.map((t) => (
+                <li key={t.pair}>
+                  <span className="font-semibold">{t.pair} </span>
+                  <Gloss>{t.test}</Gloss>
+                </li>
+              ))}
+            </ul>
+            <MaterialRefs refs={["A2"]} lead="Taught in" />
+          </div>
+        </RevealHint>
       </div>
 
       <div className="space-y-3 border-t border-line pt-3">

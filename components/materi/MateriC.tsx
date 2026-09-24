@@ -1,8 +1,9 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Callout, MaterialCard } from "@/components/ui/MaterialCard";
+import { Callout, DataTable, MaterialCard } from "@/components/ui/MaterialCard";
 import { Bul, Diagram, Insight } from "@/components/materi/kit";
+import { GOV_TESTS, OWNERS, OWNER_PROFILE } from "@/data/program";
 
 const eur = (n: number) => `€${Math.round(n).toLocaleString("en-US")}`;
 
@@ -327,9 +328,39 @@ export function CardC3() {
 /* ------------------------------------------------------------------ C4 */
 
 const GOV = [
-  { id: "repeat", kpi: "Repeat-purchase rate", owner: "Head of Account Management", cadence: "Monthly", trigger: "Below 28% for two months", to: "Managing director", why: "A retention KPI moves slowly, so a monthly reading and a two-month rule avoid reacting to noise." },
-  { id: "showup", kpi: "Show-up rate", owner: "CRM coordinator", cadence: "Weekly", trigger: "Below 60% two weeks running", to: "Head of Sales", why: "A funnel step that is booked every week can be read every week, and a fix that is not working shows quickly." },
-  { id: "dash", kpi: "Dashboard reporting", owner: "Controlling", cadence: "Monthly", trigger: "A KPI more than 5 working days late", to: "Chief Financial Officer", why: "The dashboard’s own KPI is that it delivers. If it is late, every other KPI is late." },
+  {
+    id: "repeat",
+    kpi: "Repeat-purchase rate",
+    owner: "Head of Account Management",
+    cadence: "Monthly",
+    trigger: "Below 28% for two months",
+    to: "Managing director",
+    ownerWhy: "The repeat-purchase rate is moved by how existing clients are served, and account management runs that. Controlling could read the same number but could not change it.",
+    cadenceWhy: "A retention KPI moves slowly, so a monthly reading and a two-month rule avoid reacting to noise.",
+    triggerWhy: "“Below 28% for two months” names a number and a length of time, so nobody has to argue whether a dip is noise. It goes to the managing director because only they can re-fund or stop the lever.",
+  },
+  {
+    id: "showup",
+    kpi: "Show-up rate",
+    owner: "CRM coordinator",
+    cadence: "Weekly",
+    trigger: "Below 60% two weeks running",
+    to: "Head of Sales",
+    ownerWhy: "The show-up rate is moved by the booking workflow and its reminders, which the coordinator runs and can change at once.",
+    cadenceWhy: "A funnel step that is booked every week can be read every week, and a fix that is not working shows quickly.",
+    triggerWhy: "“Below 60% two weeks running” is a number and a length of time. It goes to the Head of Sales, who can change the process the coordinator cannot.",
+  },
+  {
+    id: "dash",
+    kpi: "Dashboard reporting",
+    owner: "Controlling",
+    cadence: "Monthly",
+    trigger: "A KPI more than 5 working days late",
+    to: "Chief Financial Officer",
+    ownerWhy: "Here the KPI is the reporting itself, and Controlling produces the reports. It is the one case where the person who reads the numbers is the right owner.",
+    cadenceWhy: "The dashboard’s own KPI is that it delivers. If it is late, every other KPI is late.",
+    triggerWhy: "“More than 5 working days late” is a number a calendar can check. It goes to the Chief Financial Officer because late reporting is a failure of the finance process.",
+  },
 ] as const;
 
 function GovTable() {
@@ -379,10 +410,25 @@ function GovTable() {
       </svg>
       <div aria-live="polite" className="space-y-1 rounded-lg border border-line bg-paper p-4 text-caption">
         <p className="smallcaps">{g.kpi} · escalates to {g.to}</p>
-        <p className="text-ink">{g.why}</p>
+        <p className="text-ink">
+          <span className="font-semibold">Why this owner. </span>
+          {g.ownerWhy}
+        </p>
+        <p className="text-ink">
+          <span className="font-semibold">Why this cadence. </span>
+          {g.cadenceWhy}
+        </p>
+        <p className="text-ink">
+          <span className="font-semibold">Why this trigger. </span>
+          {g.triggerWhy}
+        </p>
       </div>
       <Insight>
-        The three rows share the same three columns, but the cadence tracks how fast each KPI can actually move: the show-up rate is read weekly because a week of bookings is already a signal, while the repeat-purchase rate needs two full months before a dip means more than noise. Match the cadence to the KPI&apos;s own speed, not to a single company-wide rhythm.
+        {g.id === "dash"
+          ? "Controlling owns this row because the KPI is the report itself. The same role would be the wrong owner of the repeat-purchase row: the owner is the person who can change what moves the KPI, not the person who reads the number."
+          : g.id === "showup"
+            ? "The owner is the coordinator because the workflow is theirs to change; the cadence is weekly because bookings happen every week; and the trigger escalates to the person with authority the coordinator lacks. Owner, cadence and trigger each answer their own question."
+            : "The owner is the person who can change how clients are served; the cadence is monthly because retention moves in months; and the trigger names a number and a length of time. Match the cadence to the KPI's own speed, not to one company-wide rhythm."}
       </Insight>
     </div>
   );
@@ -396,6 +442,8 @@ export function CardC4() {
       sources={["betrvg87", "kaplan1992", "doran1981"]}
       reasoning={[
         "Give every funded KPI three things: one owner (a role, not a team), a review cadence, and an escalation trigger with a threshold (a number) and a named person it goes to. “We will monitor it” names none of the three.",
+        "Pick the owner with the owner test: who can change the action that moves this KPI this week, without asking anyone above? That is the owner, not the person who only reads the number. Controlling owns the dashboard’s own KPI because it produces the reports; it does not own the repeat-purchase rate, which it can read but not change.",
+        "Between a head and a team lead, ask whether the KPI belongs to the whole function or to one team’s habit. The owner sits close to the action, and the person the trigger escalates to sits above it, so a KPI is never owned by the person it escalates to.",
         "Choose the cadence by how fast the KPI moves: a weekly funnel step can be read weekly; a retention rate moves in months. Choose the threshold from a baseline you actually have: without the dashboard there is none, and the trigger cannot be written.",
         "Tie governance to what you funded. A plan that names KPIs for an item you cut is not neutral: it hides the cut. Write who owns what you kept, and say what is unowned because you cut it.",
         "When you cut, state the consequence in the material’s terms: which KPI stays unmeasured, which segment’s lever is delayed, which leak stays partly open. “We will do less” is not a consequence.",
@@ -413,6 +461,20 @@ export function CardC4() {
           <><strong>Postponing is a decision, not an omission.</strong> A postponed measure has a name, a reason and a pickup point. Without the pickup it is a cut.</>,
         ]}
       />
+      <DataTable
+        caption="What each owner role typically does and can change (practitioner observation, Case assumption)"
+        head={["Owner role (Case assumption)", "Typically", "Can change"]}
+        rows={OWNERS.map((o) => [o, OWNER_PROFILE[o].does, OWNER_PROFILE[o].changes])}
+      />
+      <Callout label="The test questions for a governance row">
+        <ul className="list-disc space-y-1 pl-5">
+          {GOV_TESTS.map((t) => (
+            <li key={t.name}>
+              <strong>{t.name}.</strong> {t.test}
+            </li>
+          ))}
+        </ul>
+      </Callout>
       <Callout label="German constraint to remember" tone="rust">
         <p>
           A KPI that can be traced to an individual salesperson, such as a per-person conversion rate, is a technical device that monitors performance. Under § 87(1) no. 6 BetrVG the works council (Betriebsrat) co-determines its introduction. Decide whether the dashboard reports per team or per person before it goes live, and involve the works council in the second case.

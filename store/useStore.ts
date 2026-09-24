@@ -10,6 +10,7 @@ import type { OptId, SegId } from "@/data/segments";
 import { KEY_L1, KEY_L2, KEY_L3 } from "@/data/mentorKey";
 import { ITEM_IDS } from "@/data/program";
 import type { ItemId, KpiId, Scope } from "@/data/program";
+import { COST_FIGURE, GRID_BUILDERS, costBuilder, modelParts } from "@/lib/calcBuilder";
 
 export const STORAGE_KEY = "cs-d2-v1";
 const HISTORY_CAP = 100;
@@ -40,6 +41,10 @@ export type L1State = {
   sentence: string;
   sentenceFlagged: boolean;
   sentenceClue: boolean;
+  /** The Block 1.4 formula calculator's parts, keyed "COST.above". */
+  parts: Record<string, string>;
+  /** Part keys flagged by the last check. */
+  partFlags: string[];
   /** Every check requested in Route 1, printed in the export footer. */
   checks: number;
 };
@@ -65,6 +70,10 @@ export type L2State = {
   uniformFlagged: boolean;
   uniformClue: boolean;
   tradeoff: string;
+  /** The formula calculators' parts under each grid cell, keyed "A-P.clients". */
+  parts: Record<string, string>;
+  /** Part keys flagged by the last check. */
+  partFlags: string[];
   checks: number;
 };
 
@@ -124,13 +133,15 @@ type Actions = {
   checkWeakest: (flagged: boolean) => void;
   showWeakestClue: () => void;
   setSentence: (t: string) => void;
-  checkSentence: (flagged: boolean) => void;
+  checkSentence: (flagged: boolean, partFlags: string[]) => void;
   showSentenceClue: () => void;
+  setL1Part: (key: string, value: string) => void;
 
   // Route 2
   selectCalc: (patch: Partial<L2State["calcSel"]>) => void;
   setGrid: (key: string, value: string) => void;
-  checkGrid: (flagged: string[]) => void;
+  checkGrid: (flagged: string[], partFlags: string[]) => void;
+  setL2Part: (key: string, value: string) => void;
   showGridClue: (key: string) => void;
   toggleLoss: (key: string) => void;
   setLossNone: (v: boolean) => void;
@@ -181,6 +192,8 @@ const emptyL1 = (): L1State => ({
   sentence: "",
   sentenceFlagged: false,
   sentenceClue: false,
+  parts: {},
+  partFlags: [],
   checks: 0,
 });
 
@@ -199,6 +212,8 @@ const emptyL2 = (): L2State => ({
   uniformFlagged: false,
   uniformClue: false,
   tradeoff: "",
+  parts: {},
+  partFlags: [],
   checks: 0,
 });
 
@@ -285,20 +300,26 @@ export const useStore = create<Persisted & Session & Actions>()(
         })),
       checkFill: (flagged) => set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, fillFlagged: flagged, fillClue: {} } })),
       showFillClue: (cell) => set((s) => ({ l1: { ...s.l1, fillClue: { ...s.l1.fillClue, [cell]: true } } })),
-      setWeakest: (id) => set((s) => ({ l1: { ...s.l1, weakest: id, weakestFlagged: false, weakestClue: false } })),
+      // A different stage changes what the Block 1.4 calculator expects, so its part flags no longer apply.
+      setWeakest: (id) => set((s) => ({ l1: { ...s.l1, weakest: id, weakestFlagged: false, weakestClue: false, partFlags: [] } })),
       checkWeakest: (flagged) =>
         set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, weakestFlagged: flagged, weakestClue: false } })),
       showWeakestClue: () => set((s) => ({ l1: { ...s.l1, weakestClue: true } })),
       setSentence: (t) => set((s) => ({ l1: { ...s.l1, sentence: t, sentenceFlagged: false } })),
-      checkSentence: (flagged) =>
-        set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, sentenceFlagged: flagged, sentenceClue: false } })),
+      checkSentence: (flagged, partFlags) =>
+        set((s) => ({ l1: { ...s.l1, checks: s.l1.checks + 1, sentenceFlagged: flagged, partFlags, sentenceClue: false } })),
       showSentenceClue: () => set((s) => ({ l1: { ...s.l1, sentenceClue: true } })),
+      setL1Part: (key, value) =>
+        set((s) => ({ l1: { ...s.l1, parts: { ...s.l1.parts, [key]: value }, partFlags: s.l1.partFlags.filter((f) => f !== key) } })),
 
       // --- Route 2 · Task 2 --------------------------------------------------
       selectCalc: (patch) => set((s) => ({ l2: { ...s.l2, calcSel: { ...s.l2.calcSel, ...patch } } })),
       setGrid: (key, value) =>
         set((s) => ({ l2: { ...s.l2, grid: { ...s.l2.grid, [key]: value }, gridFlagged: s.l2.gridFlagged.filter((f) => f !== key) } })),
-      checkGrid: (flagged) => set((s) => ({ l2: { ...s.l2, checks: s.l2.checks + 1, gridFlagged: flagged, gridClue: {} } })),
+      checkGrid: (flagged, partFlags) =>
+        set((s) => ({ l2: { ...s.l2, checks: s.l2.checks + 1, gridFlagged: flagged, partFlags, gridClue: {} } })),
+      setL2Part: (key, value) =>
+        set((s) => ({ l2: { ...s.l2, parts: { ...s.l2.parts, [key]: value }, partFlags: s.l2.partFlags.filter((f) => f !== key) } })),
       showGridClue: (key) => set((s) => ({ l2: { ...s.l2, gridClue: { ...s.l2.gridClue, [key]: true } } })),
       toggleLoss: (key) =>
         set((s) => ({
@@ -359,8 +380,10 @@ export const useStore = create<Persisted & Session & Actions>()(
           l1.fill = { ...KEY_L1.fill };
           l1.weakest = KEY_L1.weakest;
           l1.sentence = KEY_L1.sentence;
+          l1.parts = modelParts({ [COST_FIGURE]: costBuilder(KEY_L1.weakest) });
           const l2 = emptyL2();
           l2.grid = { ...KEY_L2.grid };
+          l2.parts = modelParts(GRID_BUILDERS);
           l2.loss = { ...KEY_L2.loss };
           l2.rec = { ...KEY_L2.rec };
           l2.just = { ...KEY_L2.just };
@@ -400,7 +423,7 @@ export const useStore = create<Persisted & Session & Actions>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
+      version: 4,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       // Session-only flags (mentor unlock, reset counter) never persist.
@@ -409,6 +432,8 @@ export const useStore = create<Persisted & Session & Actions>()(
       // every field an older blob lacks from the defaults. v1 -> v2: Route 3 (the Decision Memo) gained its
       // state; a v1 blob carries an empty route3, which merge fills from the defaults. v2 -> v3: the typed
       // participant number was dropped (the file number now comes from the route), so it is removed here.
+      // v3 -> v4: the formula calculators' parts and part flags were added to l1 (Block 1.4) and l2 (Block 2.1);
+      // merge fills them from the defaults for an older blob.
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<Persisted> & { participant?: { no?: string; name?: string } };
         return { ...p, participant: { name: p.participant?.name ?? "" } } as Persisted;
@@ -433,6 +458,8 @@ export const useStore = create<Persisted & Session & Actions>()(
             future: Array.isArray(p.l1?.future) ? p.l1.future : [],
             fillFlagged: Array.isArray(p.l1?.fillFlagged) ? p.l1.fillFlagged : [],
             fillClue: { ...p.l1?.fillClue },
+            parts: { ...base.l1.parts, ...p.l1?.parts },
+            partFlags: Array.isArray(p.l1?.partFlags) ? p.l1.partFlags : [],
           },
           l2: {
             ...base.l2,
@@ -444,6 +471,8 @@ export const useStore = create<Persisted & Session & Actions>()(
             just: { ...base.l2.just, ...p.l2?.just },
             gridFlagged: Array.isArray(p.l2?.gridFlagged) ? p.l2.gridFlagged : [],
             gridClue: { ...p.l2?.gridClue },
+            parts: { ...base.l2.parts, ...p.l2?.parts },
+            partFlags: Array.isArray(p.l2?.partFlags) ? p.l2.partFlags : [],
           },
           route3: {
             ...base.route3,

@@ -1,8 +1,11 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Callout, MaterialCard } from "@/components/ui/MaterialCard";
+import { Callout, DataTable, MaterialCard } from "@/components/ui/MaterialCard";
 import { Bul, Diagram, Insight } from "@/components/materi/kit";
+import { PHASE_PAIR_TESTS, PHASE_TESTS } from "@/data/touchpoints";
+import type { Phase } from "@/data/funnel";
+import { Gloss } from "@/lib/glossify";
 import { wrap } from "@/lib/svg";
 
 /* ------------------------------------------------------------------ A1 */
@@ -249,6 +252,105 @@ function JourneyPhases() {
   );
 }
 
+/* A2 worked sort: a different company's stages, sorted with the tests the task uses. Read-only, Case assumption. */
+
+const SORT_EXAMPLE: { id: string; label: string; phase: Phase; why: string; insight: string }[] = [
+  {
+    id: "fair",
+    label: "Trade-fair visitors",
+    phase: "pre",
+    why: "Anonymous traffic at a stand. Nobody has told a seller who they are, and no conversation is booked.",
+    insight: "Nobody has a name and a date yet, so neither part of the sales test is met.",
+  },
+  {
+    id: "brochure",
+    label: "Brochure download with an e-mail address",
+    phase: "pre",
+    why: "A named person now exists, but no seller has booked or held a conversation with them.",
+    insight: "A name alone is not enough: the sales test also needs a booked or held conversation. Compare it with “Workshop date fixed”, where a date exists.",
+  },
+  {
+    id: "datefixed",
+    label: "Workshop date fixed with a named contact",
+    phase: "sales",
+    why: "A name and a date are now in a seller's plan. The sales test is met even though the workshop has not happened yet.",
+    insight: "This is the boundary case. What moved it from pre-sales is the date in a seller's plan, not how interested the buyer feels.",
+  },
+  {
+    id: "held",
+    label: "Workshop held",
+    phase: "sales",
+    why: "The seller and the named contact have actually met, and no offer has been made yet.",
+    insight: "Still sales: a conversation is held and the contract is not signed.",
+  },
+  {
+    id: "quote",
+    label: "Quote in negotiation",
+    phase: "sales",
+    why: "The buyer is deciding. The contract is not signed.",
+    insight: "The buyer's conversation with a seller continues, and the signature has not happened. Both parts of the sales test hold.",
+  },
+  {
+    id: "signed",
+    label: "Order signed",
+    phase: "sales",
+    why: "The signature is the last sales event. Sales ends here; it does not open after-sales.",
+    insight: "The boundary sits after the signature, so the signature itself belongs to sales. Only what follows it is after-sales.",
+  },
+  {
+    id: "kickoff",
+    label: "Onboarding kick-off",
+    phase: "after",
+    why: "The signature has already happened. Getting the client started is delivery, which is after-sales.",
+    insight: "The only after-sales test is \u201Cdoes it come after the signature?\u201D. Here the answer is yes.",
+  },
+];
+
+function SortExample() {
+  const [sel, setSel] = useState<string>("datefixed");
+  const item = SORT_EXAMPLE.find((x) => x.id === sel)!;
+  const test = PHASE_TESTS.find((t) => t.phase === item.phase)!;
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-2 md:grid-cols-3">
+        {PHASE_TESTS.map((ph) => (
+          <div key={ph.phase} className="space-y-1.5 rounded-lg border border-line bg-paper p-2.5">
+            <p className="smallcaps">{ph.name}</p>
+            {SORT_EXAMPLE.filter((x) => x.phase === ph.phase).map((x) => (
+              <button
+                key={x.id}
+                type="button"
+                aria-pressed={sel === x.id}
+                onClick={() => setSel(x.id)}
+                className={
+                  "min-h-[40px] w-full rounded-md border px-2.5 py-1.5 text-left text-caption font-semibold transition-colors " +
+                  (sel === x.id ? "border-accent bg-accentSoft text-ink" : "border-line bg-canvas text-ash hover:border-ash")
+                }
+              >
+                {x.label}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div aria-live="polite" className="space-y-1 rounded-lg border border-line bg-paper p-4 text-caption">
+        <p className="smallcaps">
+          Alpenwerk · {item.label} → {test.name}
+        </p>
+        <p className="text-ink">
+          <span className="font-semibold">Why it sits here. </span>
+          <Gloss>{item.why}</Gloss>
+        </p>
+        <p className="text-ink">
+          <span className="font-semibold">The test that decides it. </span>
+          <Gloss>{test.test}</Gloss>
+        </p>
+      </div>
+      <Insight>{item.insight}</Insight>
+    </div>
+  );
+}
+
 export function CardA2() {
   return (
     <MaterialCard
@@ -261,10 +363,22 @@ export function CardA2() {
         "Contact details or a download are first contact but still pre-sales: nobody has spoken to the person yet.",
         "The signature is the last sales event, not the first after-sales one. Onboarding, support and renewal are after-sales, and they come after it.",
         "A phase can be empty in a funnel. A funnel counts people up to the signature, so after-sales never appears as a stage; it shows in other numbers, such as the repeat-purchase rate.",
+        ...PHASE_PAIR_TESTS.slice(0, 2).map((t) => `${t.pair} ${t.test}`),
       ]}
     >
       <Diagram label="Customer journey map" caption="Eight touchpoints, three phases and the two boundaries used in this course. Select a touchpoint to read what it covers.">
         <JourneyPhases />
+      </Diagram>
+      <DataTable
+        caption="One test question per phase, and what belongs in it"
+        head={["Phase", "The test question", "What belongs", "What does not"]}
+        rows={PHASE_TESTS.map((t) => [t.name, t.test, t.belongs, t.notBelongs])}
+      />
+      <Diagram
+        label="Worked sort · Alpenwerk GmbH (Case assumption, illustrative, read-only)"
+        caption="A different company's stages, sorted with the same tests you will use in Task 1. Select a stage to read why it sits in its phase."
+      >
+        <SortExample />
       </Diagram>
       <Bul
         items={[
