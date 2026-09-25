@@ -1,5 +1,5 @@
 /**
- * The home page's day intro (Friday day, CLAUDE.md #29: one capstone route of two hours; three stages of one case): what the day is about, the story that runs through the three routes, and
+ * The home page's day intro (Friday day, CLAUDE.md #29: one capstone route of under two hours; one task in three parts): what the day is about, the story that runs through the three routes, and
  * "What's in it for you" (WIIFM), the personal pay-off of each skill. Only facts the day's own material and
  * cases state (DigitalIT Solutions, its funnel of 24,000 visitors and 4 signed contracts, its 38 clients, the
  * €150,000 budget over four months).

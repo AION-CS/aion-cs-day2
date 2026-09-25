@@ -7,20 +7,34 @@ import { IDS } from "@/lib/missing";
 import { useStore } from "@/store/useStore";
 import { MentorGuide } from "@/components/ui/MentorGuide";
 import { fillGuide } from "@/lib/mentorGuide";
+import { tt } from "@/lib/lang";
 
-const HELP: Record<Col, string> = {
-  actual: "The conversion printed beside the arrow, in %.",
-  bench: "The number after “ref” beside the arrow, in %.",
-  gap: "Actual minus benchmark, in percentage points, with its sign.",
-};
+const HELP = (): Record<Col, string> => ({
+  actual: tt("The conversion printed beside the arrow, in %.", "Die Konversion neben dem Pfeil, in %."),
+  bench: tt("The number after “ref” beside the arrow, in %.", "Die Zahl nach „ref“ neben dem Pfeil, in %."),
+  gap: tt("Actual minus benchmark, in percentage points, with its sign.", "Ist minus Benchmark, in Prozentpunkten, mit Vorzeichen."),
+});
 
 const CLUE = (row: RowId, col: Col): string => {
   if (col === "actual")
     return row === "repeat"
-      ? "The rate is printed on the bar beneath the funnel. Which number sits at the left end of the filled bar?"
-      : "Divide the count at this stage by the count at the stage above it. Which two counts does this arrow join?";
-  if (col === "bench") return "The reference is printed in grey after “ref”, next to the actual figure. Which number follows “ref” on this arrow?";
-  return "The gap is the actual minus the benchmark. Which of the two is larger here, and does the sign in your cell say so?";
+      ? tt(
+          "The rate is printed on the bar beneath the funnel. Which number sits at the left end of the filled bar?",
+          "Die Rate steht auf dem Balken unter dem Trichter. Welche Zahl steht am linken Ende des gefüllten Balkens?",
+        )
+      : tt(
+          "Divide the count at this stage by the count at the stage above it. Which two counts does this arrow join?",
+          "Teilen Sie die Zahl dieser Stufe durch die Zahl der Stufe darüber. Welche zwei Zahlen verbindet dieser Pfeil?",
+        );
+  if (col === "bench")
+    return tt(
+      "The reference is printed in grey after “ref”, next to the actual figure. Which number follows “ref” on this arrow?",
+      "Der Referenzwert steht grau nach „ref“, neben dem Ist-Wert. Welche Zahl folgt auf diesem Pfeil auf „ref“?",
+    );
+  return tt(
+    "The gap is the actual minus the benchmark. Which of the two is larger here, and does the sign in your cell say so?",
+    "Die Abweichung ist Ist minus Benchmark. Welcher von beiden ist hier größer, und sagt das das Vorzeichen in Ihrer Zelle?",
+  );
 };
 
 /**
@@ -41,7 +55,7 @@ export function FillTable() {
         {COLS.map((c) => (
           <div key={c}>
             <dt className="font-semibold text-ink">{COL_LABEL[c]}</dt>
-            <dd>{HELP[c]}</dd>
+            <dd>{HELP()[c]}</dd>
           </div>
         ))}
       </dl>
@@ -67,17 +81,17 @@ export function FillTable() {
                       value={l1.fill[id] ?? ""}
                       onChange={(e) => setFill(id, e.target.value)}
                       aria-label={`${ROW_LABEL[r]}, ${COL_LABEL[c]}`}
-                      placeholder={c === "gap" ? "e.g. −4.5" : "e.g. 12.3"}
+                      placeholder={c === "gap" ? tt("e.g. −4.5", "z. B. −4,5") : tt("e.g. 12.3", "z. B. 12,3")}
                     />
                     {flagged &&
                       (l1.fillClue[id] ? (
                         <p role="status" className="fade-in rounded-md border border-gold bg-accentSoft px-2 py-1 text-micro normal-case tracking-normal text-ink">
-                          <span className="smallcaps mr-1 text-accent">Clue</span>
+                          <span className="smallcaps mr-1 text-accent">{tt("Clue", "Hinweis")}</span>
                           {CLUE(rowOf(id), colOf(id))}
                         </p>
                       ) : (
                         <button type="button" onClick={() => showClue(id)} className="btn-ghost btn-sm border-gold">
-                          Show clue
+                          {tt("Show clue", "Hinweis anzeigen")}
                         </button>
                       ))}
                   </div>
@@ -93,16 +107,22 @@ export function FillTable() {
 
       <div className="flex flex-wrap items-center gap-3 border-t border-line pt-3">
         <button type="button" onClick={() => checkFill(flagsForFill(l1.fill))} className="btn-primary">
-          Check my table
+          {tt("Check my table", "Meine Tabelle prüfen")}
         </button>
         <span className="text-caption text-ash">
-          {filled} of {ROW_IDS.length * COLS.length} cells filled · Checks requested: <span className="tnum font-semibold text-ink">{l1.checks}</span>
+          {tt(`${filled} of ${ROW_IDS.length * COLS.length} cells filled · Checks requested:`, `${filled} von ${ROW_IDS.length * COLS.length} Zellen ausgefüllt · Angeforderte Prüfungen:`)}{" "}
+          <span className="tnum font-semibold text-ink">{l1.checks}</span>
         </span>
-        <span className="text-caption text-ash">A check outlines in amber; it never gives the number.</span>
+        <span className="text-caption text-ash">{tt("A check outlines in amber; it never gives the number.", "Eine Prüfung umrandet bernsteinfarben; sie nennt nie die Zahl.")}</span>
       </div>
       {l1.checks > 0 && (
         <p role="status" className="text-caption text-ink">
-          {l1.fillFlagged.length === 0 ? "No filled cell is outlined." : `${l1.fillFlagged.length} filled ${l1.fillFlagged.length === 1 ? "cell is" : "cells are"} outlined in amber.`}
+          {l1.fillFlagged.length === 0
+            ? tt("No filled cell is outlined.", "Keine ausgefüllte Zelle ist umrandet.")
+            : tt(
+                `${l1.fillFlagged.length} filled ${l1.fillFlagged.length === 1 ? "cell is" : "cells are"} outlined in amber.`,
+                `${l1.fillFlagged.length} ausgefüllte ${l1.fillFlagged.length === 1 ? "Zelle ist" : "Zellen sind"} bernsteinfarben umrandet.`,
+              )}
         </p>
       )}
     </div>

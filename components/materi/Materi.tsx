@@ -1,6 +1,9 @@
+"use client";
+
 import { ReferencesAccordion } from "@/components/ui/ReferencesAccordion";
 import { MATERIALS } from "@/data/materialIndex";
 import type { RefKey } from "@/data/references";
+import { tt } from "@/lib/lang";
 import { CardA1, CardA2, CardA3, CardA4, CardA5, CardA6 } from "@/components/materi/CapstoneCards";
 import { CardB1, CardB2, CardB3, CardB4 } from "@/components/materi/MateriB";
 import { CardC1, CardC2, CardC3, CardC4 } from "@/components/materi/MateriC";
@@ -24,11 +27,15 @@ export function MateriA() {
   return (
     <section id="materi-a" className="space-y-4">
       <header className="space-y-1">
-        <p className="smallcaps text-accent">Materi A · Levels 1 to 3 · {minutes("A")} min</p>
-        <h2 className="text-h1">The whole case in six cards</h2>
+        <p className="smallcaps text-accent">
+          {tt("Materi A · Levels 1 to 3", "Materi A · Level 1 bis 3")} · {minutes("A")} {tt("min", "Min.")}
+        </p>
+        <h2 className="text-h1">{tt("The whole case in six cards", "Der ganze Fall in sechs Karten")}</h2>
         <p className="max-w-prose text-body text-ash">
-          Six short cards, two per level ({minutes("A")} min, facilitator-led). Level 1 (A1, A2): why a buyer acts, and where a funnel leaks. Level 2 (A3, A4): what a retention lever nets in euros, and why segments differ.
-          Level 3 (A5, A6): how to govern what you fund under a budget that does not cover everything. Each card holds the tests you need for the Case File below; the full Level 2 and Level 3 material is kept as optional Routes 2 and 3.
+          {tt(
+            `Six short cards, two per level (${minutes("A")} min, facilitator-led). Level 1 (A1, A2): why a buyer acts, and where a funnel leaks. Level 2 (A3, A4): what a retention lever nets in euros, and why segments differ. Level 3 (A5, A6): how to govern what you fund under a budget that does not cover everything. Each card holds the tests you need for the Case File below; the full Level 2 and Level 3 material is kept as optional Routes 2 and 3.`,
+            `Sechs kurze Karten, zwei pro Level (${minutes("A")} Min., von der Moderation geleitet). Level 1 (A1, A2): warum ein Käufer handelt und wo ein Trichter leckt. Level 2 (A3, A4): was ein Bindungshebel in Euro netto bringt und warum Segmente sich unterscheiden. Level 3 (A5, A6): wie Sie steuern, was Sie finanzieren, wenn das Budget nicht für alles reicht. Jede Karte enthält die Tests, die Sie für die Fallakte unten brauchen; das vollständige Material zu Level 2 und Level 3 bleibt als optionale Routen 2 und 3 erhalten.`,
+          )}
         </p>
       </header>
       <CardA1 />

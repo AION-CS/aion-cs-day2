@@ -1145,6 +1145,9 @@ export const GLOSSARY: GlossEntry[] = [
   },
 ];
 
+import { GLOSSARY_DE } from "@/data/glossaryDe";
+import { getLang } from "@/lib/lang";
+
 // --- lookup ---------------------------------------------------------------------
 
 export const GLOSS_BY_ID: Record<string, GlossEntry> = Object.fromEntries(GLOSSARY.map((g) => [g.id, g]));
@@ -1167,3 +1170,24 @@ export const GLOSS_RE = new RegExp(
     .join("|")})(?![\\p{L}\\p{N}_])`,
   "giu",
 );
+
+/** The German written forms, for Route 1 in German. An entry without a German version is simply not linked there. */
+export const GLOSS_LOOKUP_DE = new Map<string, { entry: GlossEntry; exact: string | null }>();
+for (const [id, d] of Object.entries(GLOSSARY_DE)) {
+  const entry = GLOSS_BY_ID[id];
+  if (!entry) continue;
+  for (const m of d.match) GLOSS_LOOKUP_DE.set(m.toLowerCase(), { entry, exact: d.exactCase || isAcronym(m) ? m : null });
+}
+export const GLOSS_RE_DE = new RegExp(
+  `(?<![\\p{L}\\p{N}_])(${[...GLOSS_LOOKUP_DE.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRe)
+    .join("|")})(?![\\p{L}\\p{N}_])`,
+  "giu",
+);
+
+/** The title, explanation, example and source of an entry in the active language (English when there is no German version). */
+export function glossText(entry: GlossEntry): { title: string; plain: string; example?: string; from?: string } {
+  const de = getLang() === "de" ? GLOSSARY_DE[entry.id] : undefined;
+  return de ? { title: de.title, plain: de.plain, example: de.example, from: de.from } : { title: entry.title, plain: entry.plain, example: entry.example, from: entry.from };
+}

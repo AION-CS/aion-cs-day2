@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
+import { tt } from "@/lib/lang";
+
 
 /**
  * Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z and Ctrl+Y for one placement exercise.
@@ -45,19 +47,19 @@ export function UndoRedoControls({
     <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
-        onClick={() => (undoCount ? onUndo() : say("Nothing to undo yet."))}
+        onClick={() => (undoCount ? onUndo() : say(tt("Nothing to undo yet.", "Noch nichts zum Rückgängigmachen.")))}
         aria-keyshortcuts="Control+Z Meta+Z"
         className="btn-ghost btn-sm"
       >
-        ↶ Undo <span className="tnum text-ash">({undoCount})</span>
+        ↶ {tt("Undo", "Rückgängig")} <span className="tnum text-ash">({undoCount})</span>
       </button>
       <button
         type="button"
-        onClick={() => (redoCount ? onRedo() : say("Nothing to redo."))}
+        onClick={() => (redoCount ? onRedo() : say(tt("Nothing to redo.", "Nichts zum Wiederherstellen.")))}
         aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
         className="btn-ghost btn-sm"
       >
-        ↷ Redo <span className="tnum text-ash">({redoCount})</span>
+        ↷ {tt("Redo", "Wiederholen")} <span className="tnum text-ash">({redoCount})</span>
       </button>
       <span aria-live="polite" className="min-w-[8rem] text-micro text-ash">
         {note ?? <span className="hidden sm:inline">Ctrl/⌘+Z · Ctrl/⌘+Shift+Z</span>}

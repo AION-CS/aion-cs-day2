@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import clsx from "clsx";
 import { glossify } from "@/lib/glossify";
+import { tt } from "@/lib/lang";
+
 
 /** Short bullet list used inside cards. */
 export function Bul({ items }: { items: ReactNode[] }) {
@@ -64,7 +66,7 @@ export function Toggles<T extends string>({
 
 /** Exploratory marker — ungraded and never exported. */
 export function Exploratory() {
-  return <span className="pill border-line bg-mist text-ash">Exploratory · not graded</span>;
+  return <span className="pill border-line bg-mist text-ash">{tt("Exploratory · not graded", "Erkundend · nicht bewertet")}</span>;
 }
 
 /**
@@ -74,7 +76,7 @@ export function Exploratory() {
 export function Insight({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <p aria-live="polite" className={clsx("insight rounded-md bg-mist px-3 py-2 text-caption text-ink", className)}>
-      <span className="smallcaps mr-1.5 text-ash">What this shows</span>
+      <span className="smallcaps mr-1.5 text-ash">{tt("What this shows", "Was das zeigt")}</span>
       {children}
     </p>
   );

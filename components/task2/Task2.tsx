@@ -13,17 +13,21 @@ import { IDS, l2Missing } from "@/lib/missing";
 import { exportName } from "@/lib/slug";
 import { COURSE } from "@/lib/routes";
 import { usePersisted } from "@/store/usePersisted";
+import { tt } from "@/lib/lang";
+import { useCapstone } from "@/lib/materiAlias";
 
 type T2 = "2.1" | "2.2" | "2.3" | "2.4";
 
-/** Stage 2 · Calculate: the read-only calculator and the four answer blocks of Task 2. */
+/** Part 2 · Calculate: the read-only calculator and the four answer blocks of Task 2. */
 export function Task2Workspace({ tiers, where = "Route 2 → Task 2" }: { tiers?: Partial<Record<T2, Tier>>; where?: string }) {
+  // The Route 1 Case File stops at 2.3: the segment-by-segment choice. Block 2.4 (one option for both) belongs to Route 2.
+  const capstone = useCapstone();
   return (
     <>
       <section id="lever-calculator" className="card space-y-3 p-4 md:p-5" aria-labelledby="calc-h">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 id="calc-h">Retention lever calculator</h3>
-          <span className="text-caption text-ash">The given data is read-only</span>
+          <h3 id="calc-h">{tt("Retention lever calculator", "Rechner für Bindungshebel")}</h3>
+          <span className="text-caption text-ash">{tt("The given data is read-only", "Die vorgegebenen Daten sind nur lesbar")}</span>
         </div>
         <LeverCalculator />
       </section>
@@ -31,9 +35,12 @@ export function Task2Workspace({ tiers, where = "Route 2 → Task 2" }: { tiers?
       <AnswerBlock
         tier={tiers?.["2.1"]}
         id="block-2-1"
-        title="Block 2.1 · Net impact of every option in every segment"
+        title={tt("Block 2.1 · Net impact of every option in every segment", "Block 2.1 · Nettoeffekt jeder Option in jedem Segment")}
         kind="OBJECTIVE"
-        findIt={`${where} → “Retention lever calculator” → select an option, then a segment. Read the last line of its working. Answer in the grid below.`}
+        findIt={tt(
+          `${where} → “Retention lever calculator” → select an option, then a segment. Read the last line of its working. Answer in the grid below.`,
+          `${where} → „Rechner für Bindungshebel“ → wählen Sie eine Option, dann ein Segment. Lesen Sie die letzte Zeile der Rechnung. Antworten Sie im Raster unten.`,
+        )}
       >
         <MaterialRefs refs={["B3", "B4"]} />
         <GridBlock />
@@ -42,9 +49,12 @@ export function Task2Workspace({ tiers, where = "Route 2 → Task 2" }: { tiers?
       <AnswerBlock
         tier={tiers?.["2.2"]}
         id="block-2-2"
-        title="Block 2.2 · Which cells are a net loss?"
+        title={tt("Block 2.2 · Which cells are a net loss?", "Block 2.2 · Welche Zellen sind ein Nettoverlust?")}
         kind="OBJECTIVE"
-        findIt={`${where} → “Retention lever calculator” → the working of each combination: the line that reads “Net loss”. Answer below.`}
+        findIt={tt(
+          `${where} → “Retention lever calculator” → the working of each combination: the line that reads “Net loss”. Answer below.`,
+          `${where} → „Rechner für Bindungshebel“ → die Rechnung jeder Kombination: die Zeile mit „Nettoverlust“. Antworten Sie unten.`,
+        )}
       >
         <MaterialRefs refs={["B3"]} />
         <LossBlock />
@@ -53,24 +63,32 @@ export function Task2Workspace({ tiers, where = "Route 2 → Task 2" }: { tiers?
       <AnswerBlock
         tier={tiers?.["2.3"]}
         id="block-2-3"
-        title="Block 2.3 · Recommend one option per segment"
+        title={tt("Block 2.3 · Recommend one option per segment", "Block 2.3 · Empfehlen Sie eine Option je Segment")}
         kind="JUDGED"
-        findIt={`${where} → your grid in Block 2.1, and “Retention lever calculator” for the working behind each figure. Answer below.`}
+        findIt={tt(
+          `${where} → your grid in Block 2.1, and “Retention lever calculator” for the working behind each figure. Answer below.`,
+          `${where} → Ihr Raster in Block 2.1 und „Rechner für Bindungshebel“ für die Rechnung hinter jeder Zahl. Antworten Sie unten.`,
+        )}
       >
         <MaterialRefs refs={["B1", "B2", "B4"]} />
         <RecommendBlock />
       </AnswerBlock>
 
-      <AnswerBlock
-        tier={tiers?.["2.4"]}
-        id="block-2-4"
-        title="Block 2.4 · One option for both segments"
-        kind="OBJECTIVE + JUDGED"
-        findIt={`${where} → your grid in Block 2.1: add the two segment results of each option. Answer below.`}
-      >
-        <MaterialRefs refs={["B2", "B4"]} />
-        <UniformBlock />
-      </AnswerBlock>
+      {!capstone && (
+        <AnswerBlock
+          tier={tiers?.["2.4"]}
+          id="block-2-4"
+          title={tt("Block 2.4 · One option for both segments", "Block 2.4 · Eine Option für beide Segmente")}
+          kind="OBJECTIVE + JUDGED"
+          findIt={tt(
+            `${where} → your grid in Block 2.1: add the two segment results of each option. Answer below.`,
+            `${where} → Ihr Raster in Block 2.1: Addieren Sie die beiden Segmentergebnisse jeder Option. Antworten Sie unten.`,
+          )}
+        >
+          <MaterialRefs refs={["B2", "B4"]} />
+          <UniformBlock />
+        </AnswerBlock>
+      )}
     </>
   );
 }

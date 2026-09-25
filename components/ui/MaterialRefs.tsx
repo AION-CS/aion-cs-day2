@@ -4,19 +4,21 @@ import { scrollToAndFlash } from "@/lib/flash";
 import { MATERIAL_BY_ID, materialAnchorId } from "@/data/materialIndex";
 import type { MaterialId } from "@/data/materialIndex";
 import { useMateri } from "@/lib/materiAlias";
+import { tt } from "@/lib/lang";
+
 
 /**
  * "Draws on" chips under a task step. Each scrolls to the material card the
  * step's reasoning was taught in and flashes it in the amber accent — never the
  * rust missing-item flash: arriving somewhere you asked to go is not a warning.
  */
-export function MaterialRefs({ refs: raw, lead = "Draws on" }: { refs: MaterialId[]; lead?: string }) {
+export function MaterialRefs({ refs: raw, lead }: { refs: MaterialId[]; lead?: string }) {
   const m = useMateri();
   const refs = [...new Set(raw.map((r) => m.id(r)))];
   if (refs.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-micro font-semibold uppercase text-ash">{lead}</span>
+      <span className="text-micro font-semibold uppercase text-ash">{lead ?? tt("Draws on", "Bezieht sich auf")}</span>
       {refs.map((id) => (
         <button
           key={id}

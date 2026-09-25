@@ -45,7 +45,7 @@ export type L1State = {
   parts: Record<string, string>;
   /** Part keys flagged by the last check. */
   partFlags: string[];
-  /** The Stage 1 handover (weakest stage, cost sentence) was filled from the labelled reference position, not by the learner. */
+  /** Kept in the persisted shape from the earlier three-stage Case File (reference positions); no longer written. */
   refPosition: boolean;
   /** Every check requested in Route 1, printed in the export footer. */
   checks: number;
@@ -76,7 +76,7 @@ export type L2State = {
   parts: Record<string, string>;
   /** Part keys flagged by the last check. */
   partFlags: string[];
-  /** The Stage 2 handover (grid, single option, trade-off) was filled from the labelled reference position, not by the learner. */
+  /** Kept in the persisted shape from the earlier three-stage Case File (reference positions); no longer written. */
   refPosition: boolean;
   checks: number;
 };
@@ -111,6 +111,8 @@ export type Persisted = {
     sectionsRead: Record<string, boolean>;
     /** Routes 2 and 3 are optional on this day (CLAUDE.md #29): listed only once the learner asks. Never a lock. */
     optionalRoutesShown: boolean;
+    /** The language of Route 1 (German is available on Route 1 only). */
+    lang: "en" | "de";
   };
   l1: L1State;
   l2: L2State;
@@ -127,8 +129,7 @@ type Actions = {
   setParticipant: (patch: Partial<Persisted["participant"]>) => void;
   dismissBanner: (routeKey: string) => void;
   setOptionalRoutes: (v: boolean) => void;
-  /** Fills what an earlier stage has not produced from the labelled reference position. Never overwrites a learner's answer. */
-  applyReference: (stage: 2 | 3) => void;
+  setLang: (l: "en" | "de") => void;
   toggleRead: (cardId: string, value?: boolean) => void;
 
   // Route 1
@@ -250,7 +251,7 @@ const emptyRoute3 = (): Route3State => ({
 
 const emptyPersisted = (): Persisted => ({
   participant: { name: "" },
-  ui: { bannerDismissed: {}, sectionsRead: {}, optionalRoutesShown: false },
+  ui: { bannerDismissed: {}, sectionsRead: {}, optionalRoutesShown: false, lang: "en" },
   l1: emptyL1(),
   l2: emptyL2(),
   route3: emptyRoute3(),
@@ -267,41 +268,7 @@ export const useStore = create<Persisted & Session & Actions>()(
 
       setParticipant: (patch) => set((s) => ({ participant: { ...s.participant, ...patch } })),
       setOptionalRoutes: (v) => set((s) => ({ ui: { ...s.ui, optionalRoutesShown: v } })),
-      applyReference: (stage) =>
-        set((s) => {
-          const l1 = { ...s.l1 };
-          let l1Used = false;
-          if (!l1.weakest) {
-            l1.weakest = KEY_L1.weakest;
-            l1Used = true;
-          }
-          if (!l1.sentence.trim()) {
-            l1.sentence = KEY_L1.sentence;
-            l1Used = true;
-          }
-          if (l1Used) l1.refPosition = true;
-          let l2 = s.l2;
-          if (stage === 3) {
-            l2 = { ...s.l2, grid: { ...s.l2.grid } };
-            let l2Used = false;
-            for (const k of CELL_KEYS) {
-              if (!(l2.grid[k] ?? "").trim()) {
-                l2.grid[k] = KEY_L2.grid[k];
-                l2Used = true;
-              }
-            }
-            if (!l2.uniform) {
-              l2.uniform = KEY_L2.uniform;
-              l2Used = true;
-            }
-            if (!l2.tradeoff.trim()) {
-              l2.tradeoff = KEY_L2.tradeoff;
-              l2Used = true;
-            }
-            if (l2Used) l2.refPosition = true;
-          }
-          return { l1, l2 };
-        }),
+      setLang: (l) => set((s) => ({ ui: { ...s.ui, lang: l } })),
       dismissBanner: (routeKey) =>
         set((s) => ({ ui: { ...s.ui, bannerDismissed: { ...s.ui.bannerDismissed, [routeKey]: true } } })),
       toggleRead: (cardId, value) =>
@@ -467,14 +434,14 @@ export const useStore = create<Persisted & Session & Actions>()(
             l1: route === null || route === 1 ? emptyL1() : s.l1,
             l2: route === null || route === 1 || route === 2 ? emptyL2() : s.l2,
             route3: route === null || route === 1 || route === 3 ? emptyRoute3() : s.route3,
-            ui: { bannerDismissed, sectionsRead, optionalRoutesShown: s.ui.optionalRoutesShown },
+            ui: { bannerDismissed, sectionsRead, optionalRoutesShown: s.ui.optionalRoutesShown, lang: s.ui.lang },
             resetCount: s.resetCount + 1,
           };
         }),
     }),
     {
       name: STORAGE_KEY,
-      version: 5,
+      version: 6,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       // Session-only flags (mentor unlock, reset counter) never persist.
@@ -485,7 +452,8 @@ export const useStore = create<Persisted & Session & Actions>()(
       // participant number was dropped (the file number now comes from the route), so it is removed here.
       // v3 -> v4: the formula calculators' parts and part flags were added to l1 (Block 1.4) and l2 (Block 2.1);
       // merge fills them from the defaults for an older blob. v4 -> v5: `ui.optionalRoutesShown` and the two reference-position
-      // flags (l1, l2) were added for the Friday capstone; merge fills them from the defaults.
+      // flags (l1, l2) were added for the Friday capstone; merge fills them from the defaults. v5 -> v6: `ui.lang` (the German
+      // version of Route 1); merge defaults it to "en".
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<Persisted> & { participant?: { no?: string; name?: string } };
         return { ...p, participant: { name: p.participant?.name ?? "" } } as Persisted;
@@ -499,6 +467,7 @@ export const useStore = create<Persisted & Session & Actions>()(
           ui: {
             sectionsRead: { ...base.ui.sectionsRead, ...p.ui?.sectionsRead },
             optionalRoutesShown: p.ui?.optionalRoutesShown === true,
+            lang: p.ui?.lang === "de" ? "de" : "en",
             bannerDismissed:
               p.ui && typeof p.ui.bannerDismissed === "object" && p.ui.bannerDismissed !== null ? { ...p.ui.bannerDismissed } : {},
           },

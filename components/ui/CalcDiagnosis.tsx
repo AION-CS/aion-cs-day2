@@ -2,6 +2,7 @@
 
 import type { CalcBuilder } from "@/lib/calcBuilder";
 import { allPartsRight, builderResult, partKey, partValues } from "@/lib/calcBuilder";
+import { num, tt } from "@/lib/lang";
 
 /**
  * After a check flags an answer, say specifically what to look at instead of a bare "wrong": whether the formula
@@ -32,20 +33,28 @@ export function CalcDiagnosis({
   let text: string;
   if (allPartsRight(builder, figure, parts)) {
     const r = builderResult(builder, figure, parts);
-    text = mismatch(r === null ? "" : r.toLocaleString("en-US", { maximumFractionDigits: 2 }));
+    text = mismatch(r === null ? "" : num(r, { maximumFractionDigits: 2 }));
   } else if (wrong.length > 0) {
-    text = `The outlined ${wrong.length === 1 ? "part" : "parts"} in the formula calculator ${wrong.length === 1 ? "holds" : "hold"} a number from the wrong place: ${wrong
-      .map((p) => p.label)
-      .join(", ")}. Each names the row to read.`;
+    const names = wrong.map((p) => p.label).join(", ");
+    text = tt(
+      `The outlined ${wrong.length === 1 ? "part" : "parts"} in the formula calculator ${wrong.length === 1 ? "holds" : "hold"} a number from the wrong place: ${names}. Each names the row to read.`,
+      `${wrong.length === 1 ? "Der umrandete Teil" : "Die umrandeten Teile"} im Formelrechner ${wrong.length === 1 ? "enthält" : "enthalten"} eine Zahl von der falschen Stelle: ${names}. Jeder nennt die Zeile, die Sie lesen sollen.`,
+    );
   } else if (filledCount === 0) {
-    text = `To see exactly where it goes wrong, open “Show the formula” and fill its ${builder.parts.length} parts. The next check marks each part that holds the wrong number and names the row to read.`;
+    text = tt(
+      `To see exactly where it goes wrong, open “Show the formula” and fill its ${builder.parts.length} parts. The next check marks each part that holds the wrong number and names the row to read.`,
+      `Um genau zu sehen, wo es schiefgeht, öffnen Sie „Formel anzeigen“ und füllen Sie die ${builder.parts.length} Teile aus. Die nächste Prüfung markiert jeden Teil mit der falschen Zahl und nennt die Zeile, die Sie lesen sollen.`,
+    );
   } else {
     const left = builder.parts.length - filledCount;
-    text = `The parts you filled are right; ${left} ${left === 1 ? "part is" : "parts are"} still empty in the formula calculator. Fill ${left === 1 ? "it" : "them"} to see which step changes ${name}.`;
+    text = tt(
+      `The parts you filled are right; ${left} ${left === 1 ? "part is" : "parts are"} still empty in the formula calculator. Fill ${left === 1 ? "it" : "them"} to see which step changes ${name}.`,
+      `Die Teile, die Sie ausgefüllt haben, stimmen; ${left} ${left === 1 ? "Teil ist" : "Teile sind"} im Formelrechner noch leer. Füllen Sie ${left === 1 ? "ihn" : "sie"} aus, um zu sehen, welcher Schritt ${name} verändert.`,
+    );
   }
   return (
     <p role="status" className="rounded-md border border-gold bg-accentSoft px-2.5 py-1.5 text-micro normal-case tracking-normal text-ink">
-      <span className="smallcaps mr-1 text-accent">What to check</span>
+      <span className="smallcaps mr-1 text-accent">{tt("What to check", "Was zu prüfen ist")}</span>
       {text}
     </p>
   );

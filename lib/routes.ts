@@ -29,10 +29,10 @@ export const ROUTES: RouteInfo[] = [
     title: "Route 1 · Capstone",
     level: "Levels 1 to 3 · one case",
     blurb:
-      "One complete case in two hours: find where DigitalIT Solutions loses prospects, put a euro figure on three ways to keep clients, and decide how a €150,000 budget is spent. Study material, then a Case File in three stages.",
+      "One complete case in under two hours: find where DigitalIT Solutions loses prospects, put a euro figure on three ways to keep clients, and decide how a €150,000 budget is spent. Study material, then one task that ends in a Case File.",
     plan: [
       { label: "Materi A · six cards, Levels 1 to 3", minutes: 60 },
-      { label: "Task · Case File in three stages", minutes: 60 },
+      { label: "Task · Case File, one task", minutes: 50 },
     ],
     built: true,
   },

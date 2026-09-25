@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import clsx from "clsx";
 import { glossify } from "@/lib/glossify";
+import { tt } from "@/lib/lang";
+
 
 /**
  * A labelled field. The instruction lives under the label and stays visible —
@@ -49,12 +51,12 @@ export function Field({
         <div className="fade-in text-caption">
           {clueShown ? (
             <p role="status" className="rounded-md border border-gold bg-accentSoft px-3 py-2 text-ink">
-              <span className="smallcaps mr-1 text-accent">Clue</span>
+              <span className="smallcaps mr-1 text-accent">{tt("Clue", "Hinweis")}</span>
               {clue}
             </p>
           ) : (
             <button type="button" onClick={onShowClue} className="btn-ghost btn-sm border-gold">
-              Show clue
+              {tt("Show clue", "Hinweis anzeigen")}
             </button>
           )}
         </div>

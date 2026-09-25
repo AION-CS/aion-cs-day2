@@ -31,9 +31,9 @@ export default function Home() {
             {DAY_INTRO.story.map((st) => {
               return (
                 <li key={st.stage}>
-                  <Link href={`/route-1/#stage-${st.stage}`} className="block h-full space-y-1.5 rounded-lg border border-line bg-canvas p-3 transition-colors hover:border-accent">
+                  <Link href={`/route-1/#part-${st.stage}`} className="block h-full space-y-1.5 rounded-lg border border-line bg-canvas p-3 transition-colors hover:border-accent">
                     <p className="smallcaps text-accent">
-                      Stage {st.stage} · {st.verb}
+                      Part {st.stage} · {st.verb}
                     </p>
                     <p className="text-body text-ink">
                       <Gloss>{st.question}</Gloss>
@@ -64,7 +64,7 @@ export default function Home() {
             <li key={w.skill} className="space-y-1 rounded-lg border border-line bg-paper p-3">
               <p className="flex flex-wrap items-baseline justify-between gap-x-2">
                 <span className="font-semibold text-ink">{w.skill}</span>
-                <span className="text-micro font-semibold uppercase text-ash">Stage {w.stage}</span>
+                <span className="text-micro font-semibold uppercase text-ash">Part {w.stage}</span>
               </p>
               <p className="text-caption text-ink">
                 <Gloss>{w.payoff}</Gloss>

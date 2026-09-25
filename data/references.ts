@@ -2,6 +2,8 @@
  * Day 2 reference list. Cards cite by key; each `References` accordion shows the union of what its own
  * cards cite. `chip` is the short "Author Year" label a Source chip prints.
  */
+import { getLang } from "@/lib/lang";
+
 export type RefKey =
   | "reichheld1990"
   | "lemon2016"
@@ -176,6 +178,47 @@ export const REFERENCES: Record<RefKey, Reference> = {
     full: "§ 87(1) no. 6 BetrVG (Betriebsverfassungsgesetz): the works council co-determines the introduction of technical devices designed to monitor the behaviour or performance of employees.",
   },
 };
+
+/**
+ * The German reading of a reference. Only the explanatory part is translated (the bibliographic part is the same in
+ * every language): a note replaces the closing parenthesis of the English entry, and the statutory entries, which are
+ * one explanatory sentence, are given whole.
+ */
+const NOTE_DE: Partial<Record<RefKey, string>> = {
+  reichheld1990: "(Eine um 5 % geringere Abwanderung steigerte die Gewinne in den untersuchten Dienstleistungsbranchen um 25 % bis 85 %.)",
+  lemon2016: "(Customer Journey und Kontaktpunkte über die Phasen vor dem Kauf, beim Kauf und nach dem Kauf.)",
+  gartner2017: "(Käufer verbringen etwa 17 % ihrer Kaufzeit mit Treffen mit Lieferanten; die mittlere Einkaufsgruppe für eine komplexe Lösung hat 6–10 Entscheider.)",
+  bauer1960: "(Wahrgenommenes Risiko.)",
+  mayer1995: "(Vertrauen beruht auf Fähigkeit, Wohlwollen und Integrität.)",
+  burnham2003: "(Prozedurale, finanzielle und beziehungsbezogene Wechselkosten.)",
+  cialdini2021: "(Bindung und Konsistenz.)",
+  gupta2003: "(Kundenwert aus Marge, Bindung und Abzinsungssatz.)",
+  fader2005: "(Recency, Frequency und Monetary Value.)",
+  nagle2018: "(Break-even-Menge bei einer Preisänderung.)",
+  kahneman1979: "(Verlustaversion.)",
+  gustafsson2005: "(Trennt affektive von kalkulatorischer Bindung.)",
+  kaplan1992: "(Ziele, Kennzahlen, Vorgaben und Initiativen in einer Sichtlinie.)",
+  doran1981: "(Spezifisch, messbar, zuweisbar, realistisch, terminiert.)",
+  deming1986: "(Plan, Do, Study, Act: ein gemessener Zyklus statt einer einmaligen Korrektur.)",
+  brealey2020: "(Opportunitätskosten und Kapitalrationierung.)",
+};
+const FULL_DE: Partial<Record<RefKey, string>> = {
+  gdpr: "Verordnung (EU) 2016/679 (DSGVO), Art. 6 Abs. 1 lit. a und f (Rechtsgrundlage), Art. 7 (Bedingungen für die Einwilligung), Art. 28 (Auftragsverarbeiter: der Auftragsverarbeitungsvertrag, AVV).",
+  tdddg25: "§ 25 TDDDG (Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz, früher TTDSG): Das Speichern oder Auslesen von Informationen auf dem Endgerät eines Nutzers (Cookies, Tracking) braucht eine Einwilligung, es sei denn, es ist unbedingt erforderlich.",
+  uwg7: "§ 7 UWG (Gesetz gegen den unlauteren Wettbewerb): unzumutbare Belästigung. Werbung per E-Mail braucht eine vorherige Einwilligung, per Telefon mindestens die mutmaßliche Einwilligung eines geschäftlichen Ansprechpartners.",
+  betrvg87: "§ 87 Abs. 1 Nr. 6 BetrVG (Betriebsverfassungsgesetz): Der Betriebsrat bestimmt bei der Einführung technischer Einrichtungen mit, die dazu bestimmt sind, das Verhalten oder die Leistung der Arbeitnehmer zu überwachen.",
+};
+
+/** The full reference text in the language the site is showing. */
+export function refFull(key: RefKey): string {
+  const en = REFERENCES[key].full;
+  if (getLang() !== "de") return en;
+  if (FULL_DE[key]) return FULL_DE[key]!;
+  const note = NOTE_DE[key];
+  if (!note) return en;
+  const i = en.lastIndexOf(" (");
+  return i < 0 ? en : en.slice(0, i) + " " + note;
+}
 
 /** Print order of the accordion. */
 export const REFERENCE_ORDER: RefKey[] = Object.keys(REFERENCES) as RefKey[];

@@ -5,9 +5,12 @@ import clsx from "clsx";
 import { PAGE_NAV } from "@/data/pageNav";
 import type { NavItem } from "@/data/pageNav";
 import { scrollToAndFlash } from "@/lib/flash";
+import { openOptionalBlock } from "@/store/useOptionalOpen";
 import { taskBlocks } from "@/lib/progress";
 import { useHydrated } from "@/store/useStore";
 import { usePersisted } from "@/store/usePersisted";
+import { tt } from "@/lib/lang";
+
 
 /**
  * The page map: every material card and task block of the route, in page order. On wide screens a slim
@@ -17,7 +20,9 @@ import { usePersisted } from "@/store/usePersisted";
  * never "correct"). A click scrolls to the part and flashes it with the amber reference flash.
  */
 export function PageNav({ route }: { route: 1 | 2 | 3 }) {
-  const groups = PAGE_NAV[route];
+  // Built once per language: switching language remounts the page.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const groups = useMemo(() => PAGE_NAV[route], [route]);
   const items = useMemo(() => groups.flatMap((g) => g.items), [groups]);
   const hydrated = useHydrated();
   const p = usePersisted();
@@ -67,7 +72,9 @@ export function PageNav({ route }: { route: 1 | 2 | 3 }) {
   const go = (id: string) => {
     setOpen(false);
     setActive(id);
-    scrollToAndFlash(id, "ref", "start");
+    // An Optional block is collapsed until asked for: open it first, then land on it.
+    openOptionalBlock(id);
+    window.setTimeout(() => scrollToAndFlash(id, "ref", "start"), 60);
   };
   const activeItem = items.find((i) => i.id === active);
 
@@ -75,7 +82,7 @@ export function PageNav({ route }: { route: 1 | 2 | 3 }) {
     <>
       {/* Wide screens: fixed column on the right edge, outside the 1100 px content column. */}
       <nav
-        aria-label={`Route ${route} page map`}
+        aria-label={tt(`Route ${route} page map`, `Seitenübersicht Route ${route}`)}
         className="fixed right-3 top-1/2 z-30 hidden max-h-[calc(100vh-7rem)] -translate-y-1/2 overflow-y-auto py-1 xl:block print:hidden"
       >
         <ol className="flex flex-col items-end gap-2">
@@ -92,7 +99,7 @@ export function PageNav({ route }: { route: 1 | 2 | 3 }) {
                         type="button"
                         onClick={() => go(it.id)}
                         aria-current={on ? "location" : undefined}
-                        aria-label={`${it.short} · ${it.title}${done ? " — done" : ""}`}
+                        aria-label={`${it.short} · ${it.title}${done ? tt(" — done", " — erledigt") : ""}`}
                         className={clsx(
                           "relative flex h-7 min-w-[3.25rem] items-center justify-center rounded-full border px-2.5 text-micro font-bold transition-colors",
                           on ? "border-ink bg-ink text-paper" : "border-line bg-paper text-ash hover:border-accent hover:text-ink",
@@ -124,7 +131,7 @@ export function PageNav({ route }: { route: 1 | 2 | 3 }) {
           <div
             id={`pagemap-${route}`}
             role="dialog"
-            aria-label={`Route ${route} page map`}
+            aria-label={tt(`Route ${route} page map`, `Seitenübersicht Route ${route}`)}
             className="fade-in absolute bottom-full right-0 mb-2 max-h-[65vh] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-line bg-paper p-3 shadow-lg"
           >
             {groups.map((g) => (
@@ -150,7 +157,7 @@ export function PageNav({ route }: { route: 1 | 2 | 3 }) {
                           {done && (
                             <span className={clsx("text-micro font-semibold", on ? "text-paper" : "text-signal")}>
                               <span aria-hidden>● </span>
-                              {it.done && "card" in it.done ? "read" : "done"}
+                              {it.done && "card" in it.done ? tt("read", "gelesen") : tt("done", "erledigt")}
                             </span>
                           )}
                         </button>
@@ -170,7 +177,8 @@ export function PageNav({ route }: { route: 1 | 2 | 3 }) {
           className="flex min-h-[44px] items-center gap-2 rounded-full border border-ink bg-ink px-4 text-caption font-semibold text-paper shadow-md"
         >
           <span aria-hidden>☰</span>
-          Jump to{activeItem ? ` · ${activeItem.short}` : ""}
+          {tt("Jump to", "Springen zu")}
+          {activeItem ? ` · ${activeItem.short}` : ""}
           <span className="tnum font-normal opacity-80">
             {doneCount}/{trackable}
           </span>

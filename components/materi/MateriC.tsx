@@ -4,45 +4,65 @@ import { useId, useState } from "react";
 import { Callout, DataTable, MaterialCard } from "@/components/ui/MaterialCard";
 import { Bul, Diagram, Insight } from "@/components/materi/kit";
 import { GOV_TESTS, OWNERS, OWNER_PROFILE } from "@/data/program";
+import { d1, euro, tt } from "@/lib/lang";
 
-const eur = (n: number) => `€${Math.round(n).toLocaleString("en-US")}`;
+const eur = (n: number) => euro(n);
 
 /* ------------------------------------------------------------------ C1 */
 
-const CHAINS = [
-  {
-    id: "repeat",
-    goal: "Raise repeat purchase from 30% to 35% in 18 months",
-    action: "A value-added service for retainer clients",
-    kpi: "Repeat-purchase rate",
-    note: "The goal names a number and a date. The KPI is the same number the goal is written in, so the action can be judged by it.",
-  },
-  {
-    id: "showup",
-    goal: "Halve the gap between booked and held consultations",
-    action: "A reminder workflow and one coordinator",
-    kpi: "Show-up rate (held ÷ booked)",
-    note: "The KPI is a funnel step the buyer has already shown the gap in. Without a baseline you cannot say the gap halved.",
-  },
-  {
-    id: "selling",
-    goal: "Sell on the buyer’s motive at the proposal stage",
-    action: "A workshop and a month of coaching",
-    kpi: "Conversion, proposal → signed",
-    note: "A behaviour is hard to measure directly, so it is tied to the conversion it should move. The effect is slow and easy to over-claim.",
-  },
-] as const;
+const chains = () =>
+  [
+    {
+      id: "repeat",
+      goal: tt("Raise repeat purchase from 30% to 35% in 18 months", "Die Wiederkaufsrate in 18 Monaten von 30 % auf 35 % steigern"),
+      action: tt("A value-added service for retainer clients", "Eine Zusatzleistung für Retainer-Kunden"),
+      kpi: tt("Repeat-purchase rate", "Wiederkaufsrate"),
+      note: tt(
+        "The goal names a number and a date. The KPI is the same number the goal is written in, so the action can be judged by it.",
+        "Das Ziel nennt eine Zahl und ein Datum. Die KPI ist dieselbe Zahl, in der das Ziel formuliert ist, sodass die Maßnahme an ihr gemessen werden kann.",
+      ),
+      cols: tt([["Repeat purchase", "30% → 35%"], ["Value-added", "service"], ["Repeat-purchase", "rate"]], [["Wiederkauf", "30 % → 35 %"], ["Zusatz-", "leistung"], ["Wiederkaufs-", "rate"]]),
+    },
+    {
+      id: "showup",
+      goal: tt("Halve the gap between booked and held consultations", "Die Lücke zwischen gebuchten und geführten Beratungen halbieren"),
+      action: tt("A reminder workflow and one coordinator", "Ein Erinnerungs-Workflow und ein Koordinator"),
+      kpi: tt("Show-up rate (held ÷ booked)", "Erscheinungsquote (geführt ÷ gebucht)"),
+      note: tt(
+        "The KPI is a funnel step the buyer has already shown the gap in. Without a baseline you cannot say the gap halved.",
+        "Die KPI ist eine Trichterstufe, in der der Käufer die Lücke schon gesehen hat. Ohne Ausgangswert lässt sich nicht sagen, dass sich die Lücke halbiert hat.",
+      ),
+      cols: tt([["Halve the", "show-up gap"], ["Reminders +", "coordinator"], ["Show-up rate", "held ÷ booked"]], [["Erscheinungs-", "lücke halbieren"], ["Erinnerungen +", "Koordinator"], ["Erscheinungsquote", "geführt ÷ gebucht"]]),
+    },
+    {
+      id: "selling",
+      goal: tt("Sell on the buyer’s motive at the proposal stage", "Am Angebotsschritt nach dem Motiv des Käufers verkaufen"),
+      action: tt("A workshop and a month of coaching", "Ein Workshop und ein Monat Coaching"),
+      kpi: tt("Conversion, proposal → signed", "Konversion, Angebot → unterzeichnet"),
+      note: tt(
+        "A behaviour is hard to measure directly, so it is tied to the conversion it should move. The effect is slow and easy to over-claim.",
+        "Ein Verhalten lässt sich schwer direkt messen, deshalb wird es an die Konversion gebunden, die es bewegen soll. Die Wirkung ist langsam und leicht zu überschätzen.",
+      ),
+      cols: tt([["Sell on motive", "at proposal"], ["Workshop +", "coaching"], ["Proposal → signed", "conversion"]], [["Nach Motiv", "verkaufen"], ["Workshop +", "Coaching"], ["Angebot → Vertrag", "Konversion"]]),
+    },
+  ] as const;
 
 export function ChainMap() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("repeat");
+  const CHAINS = chains();
   const c = CHAINS.find((x) => x.id === sel)!;
   return (
     <div className="space-y-3">
       <svg viewBox="0 0 560 232" className="mx-auto h-auto w-full max-w-[600px]" role="group" aria-labelledby={`${uid}-t ${uid}-d`}>
-        <title id={`${uid}-t`}>{`Goal, action, KPI: three worked chains`}</title>
-        <desc id={`${uid}-d`}>{`Three rows, each a goal (Ziel), an action (Maßnahme) and a KPI. Select a row to read what holds it together.`}</desc>
-        {["ZIEL · GOAL", "MASSNAHME · ACTION", "KPI · METRIC"].map((h, i) => (
+        <title id={`${uid}-t`}>{tt(`Goal, action, KPI: three worked chains`, `Ziel, Maßnahme, KPI: drei ausgearbeitete Ketten`)}</title>
+        <desc id={`${uid}-d`}>
+          {tt(
+            `Three rows, each a goal (Ziel), an action (Maßnahme) and a KPI. Select a row to read what holds it together.`,
+            `Drei Zeilen, jeweils ein Ziel, eine Maßnahme und eine KPI. Wählen Sie eine Zeile, um zu lesen, was sie zusammenhält.`,
+          )}
+        </desc>
+        {tt(["ZIEL · GOAL", "MASSNAHME · ACTION", "KPI · METRIC"], ["ZIEL", "MASSNAHME", "KPI · KENNZAHL"]).map((h, i) => (
           <text key={h} x={[4, 200, 396][i]} y="14" fontSize="12" fontWeight="700" fill="#59606A">
             {h}
           </text>
@@ -52,9 +72,9 @@ export function ChainMap() {
           const on = x.id === sel;
           const pick = () => setSel(x.id);
           const cols = [
-            { x: 0, t: x.id === "repeat" ? ["Repeat purchase", "30% → 35%"] : x.id === "showup" ? ["Halve the", "show-up gap"] : ["Sell on motive", "at proposal"] },
-            { x: 196, t: x.id === "repeat" ? ["Value-added", "service"] : x.id === "showup" ? ["Reminders +", "coordinator"] : ["Workshop +", "coaching"] },
-            { x: 392, t: x.id === "repeat" ? ["Repeat-purchase", "rate"] : x.id === "showup" ? ["Show-up rate", "held ÷ booked"] : ["Proposal → signed", "conversion"] },
+            { x: 0, t: x.cols[0] },
+            { x: 196, t: x.cols[1] },
+            { x: 392, t: x.cols[2] },
           ];
           return (
             <g
@@ -90,14 +110,17 @@ export function ChainMap() {
         </defs>
       </svg>
       <div aria-live="polite" className="space-y-1 rounded-lg border border-line bg-paper p-4 text-caption">
-        <p className="smallcaps">Goal → action → KPI</p>
-        <p><span className="font-semibold text-ink">Goal. </span>{c.goal}.</p>
-        <p><span className="font-semibold text-ink">Action. </span>{c.action}.</p>
+        <p className="smallcaps">{tt("Goal → action → KPI", "Ziel → Maßnahme → KPI")}</p>
+        <p><span className="font-semibold text-ink">{tt("Goal. ", "Ziel. ")}</span>{c.goal}.</p>
+        <p><span className="font-semibold text-ink">{tt("Action. ", "Maßnahme. ")}</span>{c.action}.</p>
         <p><span className="font-semibold text-ink">KPI. </span>{c.kpi}.</p>
         <p className="text-ash">{c.note}</p>
       </div>
       <Insight>
-        The same three-column shape holds for a rate, a funnel gap and a sales behaviour alike — what makes a chain work is not the goal&apos;s subject, it is that the KPI on the right reads the exact number the goal on the left is written in. Where that number is missing (no baseline, no direct measure), the note names the specific way the chain would fail, not just that it might.
+        {tt(
+          "The same three-column shape holds for a rate, a funnel gap and a sales behaviour alike — what makes a chain work is not the goal's subject, it is that the KPI on the right reads the exact number the goal on the left is written in. Where that number is missing (no baseline, no direct measure), the note names the specific way the chain would fail, not just that it might.",
+          "Dieselbe dreispaltige Form gilt für eine Rate, eine Trichterlücke und ein Vertriebsverhalten gleichermaßen — was eine Kette trägt, ist nicht das Thema des Ziels, sondern dass die KPI rechts genau die Zahl liest, in der das Ziel links formuliert ist. Fehlt diese Zahl (kein Ausgangswert, keine direkte Messung), benennt der Hinweis die konkrete Art, wie die Kette scheitern würde, nicht nur, dass sie es könnte.",
+        )}
       </Insight>
     </div>
   );
@@ -133,16 +156,50 @@ export function CardC1() {
 
 /* ------------------------------------------------------------------ C2 */
 
-const LOOP = [
-  { id: "kpi", label: "KPI", sub: "read", text: "The owner reads the KPI against its baseline and its target, on a fixed day." },
-  { id: "review", label: "Review", sub: "cadence", text: "A review at a fixed cadence (weekly, monthly, quarterly) decides whether the reading is a signal or noise. The cadence matches how fast the KPI moves." },
-  { id: "trigger", label: "Trigger", sub: "threshold", text: "A threshold written in advance, for example “below 60% for two months”. Crossing it is not a debate about whether to act; it is the rule that says who acts." },
-  { id: "act", label: "Act", sub: "escalate", text: "The action changes, is escalated to a named person, or is stopped. The next reading shows whether the change worked, and the loop starts again." },
-] as const;
+const loop = () =>
+  [
+    {
+      id: "kpi",
+      label: "KPI",
+      sub: tt("read", "lesen"),
+      text: tt(
+        "The owner reads the KPI against its baseline and its target, on a fixed day.",
+        "Der Owner liest die KPI an einem festen Tag gegen ihren Ausgangswert und ihren Zielwert.",
+      ),
+    },
+    {
+      id: "review",
+      label: tt("Review", "Review"),
+      sub: tt("cadence", "Rhythmus"),
+      text: tt(
+        "A review at a fixed cadence (weekly, monthly, quarterly) decides whether the reading is a signal or noise. The cadence matches how fast the KPI moves.",
+        "Eine Review im festen Rhythmus (wöchentlich, monatlich, vierteljährlich) entscheidet, ob die Messung ein Signal oder Rauschen ist. Der Rhythmus passt dazu, wie schnell sich die KPI bewegt.",
+      ),
+    },
+    {
+      id: "trigger",
+      label: tt("Trigger", "Auslöser"),
+      sub: tt("threshold", "Schwellenwert"),
+      text: tt(
+        "A threshold written in advance, for example “below 60% for two months”. Crossing it is not a debate about whether to act; it is the rule that says who acts.",
+        "Ein vorab geschriebener Schwellenwert, zum Beispiel „unter 60 % zwei Monate lang“. Ihn zu überschreiten ist keine Debatte darüber, ob gehandelt wird; es ist die Regel, die sagt, wer handelt.",
+      ),
+    },
+    {
+      id: "act",
+      label: tt("Act", "Handeln"),
+      sub: tt("escalate", "eskalieren"),
+      text: tt(
+        "The action changes, is escalated to a named person, or is stopped. The next reading shows whether the change worked, and the loop starts again.",
+        "Die Maßnahme wird geändert, an eine benannte Person eskaliert oder gestoppt. Die nächste Messung zeigt, ob die Änderung gewirkt hat, und die Schleife beginnt von vorn.",
+      ),
+    },
+  ] as const;
 
 export function ControlLoop() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("trigger");
+  const LOOP = loop();
   const n = LOOP.find((x) => x.id === sel)!;
   const pos = [
     { x: 70, y: 40 },
@@ -153,8 +210,13 @@ export function ControlLoop() {
   return (
     <div className="space-y-3">
       <svg viewBox="0 0 560 250" className="mx-auto h-auto w-full max-w-[600px]" role="group" aria-labelledby={`${uid}-t ${uid}-d`}>
-        <title id={`${uid}-t`}>{`A governed system is a loop`}</title>
-        <desc id={`${uid}-d`}>{`Four steps in a loop: KPI, review, trigger, act. On the right, a one-off fix is a single step with no loop. Select a step to read it.`}</desc>
+        <title id={`${uid}-t`}>{tt(`A governed system is a loop`, `Ein gesteuertes System ist eine Schleife`)}</title>
+        <desc id={`${uid}-d`}>
+          {tt(
+            `Four steps in a loop: KPI, review, trigger, act. On the right, a one-off fix is a single step with no loop. Select a step to read it.`,
+            `Vier Schritte in einer Schleife: KPI, Review, Auslöser, Handeln. Rechts ist eine einmalige Korrektur ein einzelner Schritt ohne Schleife. Wählen Sie einen Schritt, um ihn zu lesen.`,
+          )}
+        </desc>
         <defs>
           <marker id={`${uid}-ar`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M0 0 L10 5 L0 10 z" fill="#59606A" />
@@ -164,17 +226,17 @@ export function ControlLoop() {
         <path d="M336 92 V142" stroke="#59606A" strokeWidth="2.2" markerEnd={`url(#${uid}-ar)`} fill="none" />
         <path d="M262 176 H200" stroke="#59606A" strokeWidth="2.2" markerEnd={`url(#${uid}-ar)`} fill="none" />
         <path d="M136 142 V92" stroke="#59606A" strokeWidth="2.2" markerEnd={`url(#${uid}-ar)`} fill="none" />
-        {LOOP.map((s, i) => {
-          const on = s.id === sel;
-          const pick = () => setSel(s.id);
+        {LOOP.map((st, i) => {
+          const on = st.id === sel;
+          const pick = () => setSel(st.id);
           return (
             <g
-              key={s.id}
+              key={st.id}
               className="hit"
               role="button"
               tabIndex={0}
               aria-pressed={on}
-              aria-label={`${s.label}: ${s.sub}`}
+              aria-label={`${st.label}: ${st.sub}`}
               onClick={pick}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -184,18 +246,18 @@ export function ControlLoop() {
               }}
             >
               <rect x={pos[i].x - 66} y={pos[i].y} width="132" height="52" rx="8" fill={on ? "#FBF0D6" : "#FFFEFA"} stroke={on ? "#8A5A0B" : "#59606A"} strokeWidth={on ? 2.6 : 1.4} className="hit-shape" />
-              <text x={pos[i].x} y={pos[i].y + 23} textAnchor="middle" fontSize="16" fontWeight="700" fill="#1F2328">{s.label}</text>
-              <text x={pos[i].x} y={pos[i].y + 42} textAnchor="middle" fontSize="13" fill="#59606A">{s.sub}</text>
+              <text x={pos[i].x} y={pos[i].y + 23} textAnchor="middle" fontSize="16" fontWeight="700" fill="#1F2328">{st.label}</text>
+              <text x={pos[i].x} y={pos[i].y + 42} textAnchor="middle" fontSize="13" fill="#59606A">{st.sub}</text>
             </g>
           );
         })}
         {/* the one-off fix: a single step, nothing that returns */}
-        <text x="430" y="30" fontSize="12" fontWeight="700" fill="#59606A">A ONE-OFF FIX</text>
+        <text x="430" y="30" fontSize="12" fontWeight="700" fill="#59606A">{tt("A ONE-OFF FIX", "EINE EINMALIGE KORREKTUR")}</text>
         <rect x="430" y="40" width="122" height="52" rx="8" fill="#F6E3DB" stroke="#A4472A" strokeWidth="1.6" strokeDasharray="5 4" />
-        <text x="491" y="63" textAnchor="middle" fontSize="15" fontWeight="700" fill="#1F2328">Discount</text>
-        <text x="491" y="82" textAnchor="middle" fontSize="13" fill="#1F2328">campaign</text>
+        <text x="491" y="63" textAnchor="middle" fontSize="15" fontWeight="700" fill="#1F2328">{tt("Discount", "Rabatt-")}</text>
+        <text x="491" y="82" textAnchor="middle" fontSize="13" fill="#1F2328">{tt("campaign", "aktion")}</text>
         <path d="M491 96 V146" stroke="#A4472A" strokeWidth="2" strokeDasharray="4 4" fill="none" />
-        <text x="491" y="168" textAnchor="middle" fontSize="13" fill="#A4472A">then nothing reads it</text>
+        <text x="491" y="168" textAnchor="middle" fontSize="13" fill="#A4472A">{tt("then nothing reads it", "danach liest es niemand")}</text>
       </svg>
       <div aria-live="polite" className="space-y-1 rounded-lg border border-line bg-paper p-4 text-caption">
         <p className="smallcaps">
@@ -204,7 +266,10 @@ export function ControlLoop() {
         <p className="text-ink">{n.text}</p>
       </div>
       <Insight>
-        Click around the loop and it always returns to KPI — that return arrow is the whole point: Act changes something, and the next reading of KPI is what shows whether the change worked. The one-off fix on the right also has an outcome (revenue), but no step is scheduled to read it again, so a discount campaign that fails looks identical to one that works — nothing comes back to tell them apart.
+        {tt(
+          "Click around the loop and it always returns to KPI — that return arrow is the whole point: Act changes something, and the next reading of KPI is what shows whether the change worked. The one-off fix on the right also has an outcome (revenue), but no step is scheduled to read it again, so a discount campaign that fails looks identical to one that works — nothing comes back to tell them apart.",
+          "Klicken Sie sich durch die Schleife, und sie kehrt immer zur KPI zurück — dieser Rückpfeil ist der ganze Punkt: Handeln verändert etwas, und die nächste Messung der KPI zeigt, ob die Änderung gewirkt hat. Auch die einmalige Korrektur rechts hat ein Ergebnis (Umsatz), aber kein Schritt ist dafür vorgesehen, es erneut zu lesen, sodass eine gescheiterte Rabattaktion genauso aussieht wie eine erfolgreiche — nichts kommt zurück, das beide unterscheidet.",
+        )}
       </Insight>
     </div>
   );
@@ -255,8 +320,13 @@ export function ScaleChart() {
   return (
     <div className="space-y-3">
       <svg viewBox="0 0 560 240" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
-        <title id={`${uid}-t`}>{`Cost of a fixed-cost system and a per-client action as the client base grows`}</title>
-        <desc id={`${uid}-d`}>{`Illustrative. A system built once costs a flat ${eur(SC.fixed)}. An action that costs ${eur(SC.perClient)} per client rises with the client base and equals the system at ${cross.toFixed(1)} clients. At ${n} clients the per-client action costs ${eur(per)}.`}</desc>
+        <title id={`${uid}-t`}>{tt(`Cost of a fixed-cost system and a per-client action as the client base grows`, `Kosten eines Fixkosten-Systems und einer Maßnahme pro Kunde bei wachsender Kundenbasis`)}</title>
+        <desc id={`${uid}-d`}>
+          {tt(
+            `Illustrative. A system built once costs a flat ${eur(SC.fixed)}. An action that costs ${eur(SC.perClient)} per client rises with the client base and equals the system at ${cross.toFixed(1)} clients. At ${n} clients the per-client action costs ${eur(per)}.`,
+            `Zur Veranschaulichung. Ein einmal gebautes System kostet pauschal ${eur(SC.fixed)}. Eine Maßnahme, die ${eur(SC.perClient)} pro Kunde kostet, steigt mit der Kundenbasis und entspricht dem System bei ${d1(cross)} Kunden. Bei ${n} Kunden kostet die Maßnahme pro Kunde ${eur(per)}.`,
+          )}
+        </desc>
         <line x1={X0} x2={X1} y1={py(0)} y2={py(0)} stroke="#59606A" strokeWidth="1.4" />
         <line x1={X0} x2={X0} y1="20" y2={py(0)} stroke="#59606A" strokeWidth="1.2" />
         {[0, 40000, 80000].map((v) => (
@@ -268,7 +338,7 @@ export function ScaleChart() {
         {[0, 20, 40, 60, 80].map((v) => (
           <text key={v} x={px(v)} y="210" textAnchor="middle" fontSize="12" fill="#59606A">{v}</text>
         ))}
-        <text x="298" y="230" textAnchor="middle" fontSize="12.5" fill="#59606A">clients served</text>
+        <text x="298" y="230" textAnchor="middle" fontSize="12.5" fill="#59606A">{tt("clients served", "bediente Kunden")}</text>
         <polyline points={`${px(0)},${py(SC.fixed)} ${px(SC.max)},${py(SC.fixed)}`} fill="none" stroke="#2F5D62" strokeWidth="3" />
         <polyline points={`${px(0)},${py(0)} ${px(SC.max)},${py(SC.perClient * SC.max)}`} fill="none" stroke="#A4472A" strokeWidth="3" strokeDasharray="7 5" />
         <line x1={px(cross)} x2={px(cross)} y1="20" y2={py(0)} stroke="#D8D1BF" strokeWidth="1.4" strokeDasharray="2 3" />
@@ -276,19 +346,28 @@ export function ScaleChart() {
         <circle cx={px(n)} cy={py(SC.fixed)} r="5" fill="#2F5D62" />
         <circle cx={px(n)} cy={py(per)} r="5" fill="#A4472A" />
         <line x1="70" x2="98" y1="12" y2="12" stroke="#2F5D62" strokeWidth="3" />
-        <text x="104" y="16" fontSize="13" fontWeight="600" fill="#2F5D62">Built once (fixed)</text>
+        <text x="104" y="16" fontSize="13" fontWeight="600" fill="#2F5D62">{tt("Built once (fixed)", "Einmal gebaut (fix)")}</text>
         <line x1="270" x2="298" y1="12" y2="12" stroke="#A4472A" strokeWidth="3" strokeDasharray="7 5" />
-        <text x="304" y="16" fontSize="13" fontWeight="600" fill="#A4472A">Per client</text>
+        <text x="304" y="16" fontSize="13" fontWeight="600" fill="#A4472A">{tt("Per client", "Pro Kunde")}</text>
       </svg>
       <Insight>
         {n < cross
-          ? `Below ${cross.toFixed(1)} clients the fixed system is still the pricier option at ${eur(SC.fixed)} — you're paying for capacity the client base hasn't grown into yet, while the per-client action costs only ${eur(per)}.`
-          : `Past ${cross.toFixed(1)} clients the per-client action has overtaken the system: at ${n} clients it costs ${eur(per)} and keeps climbing €${SC.perClient} at a time, while the system's ${eur(SC.fixed)} never moves.`}{" "}
-        The system only pays for itself once there is a big enough base to spread its fixed cost across; below the crossover, a per-client action is the cheaper choice on cost alone.
+          ? tt(
+              `Below ${d1(cross)} clients the fixed system is still the pricier option at ${eur(SC.fixed)} — you're paying for capacity the client base hasn't grown into yet, while the per-client action costs only ${eur(per)}.`,
+              `Unter ${d1(cross)} Kunden ist das feste System mit ${eur(SC.fixed)} noch die teurere Option — Sie zahlen für Kapazität, in die die Kundenbasis noch nicht hineingewachsen ist, während die Maßnahme pro Kunde nur ${eur(per)} kostet.`,
+            )
+          : tt(
+              `Past ${d1(cross)} clients the per-client action has overtaken the system: at ${n} clients it costs ${eur(per)} and keeps climbing ${euro(SC.perClient)} at a time, while the system's ${eur(SC.fixed)} never moves.`,
+              `Ab ${d1(cross)} Kunden hat die Maßnahme pro Kunde das System überholt: Bei ${n} Kunden kostet sie ${eur(per)} und steigt weiter um ${euro(SC.perClient)} je Kunde, während sich die ${eur(SC.fixed)} des Systems nie bewegen.`,
+            )}{" "}
+        {tt(
+          "The system only pays for itself once there is a big enough base to spread its fixed cost across; below the crossover, a per-client action is the cheaper choice on cost alone.",
+          "Das System zahlt sich erst aus, wenn die Kundenbasis groß genug ist, um seine Fixkosten zu verteilen; unterhalb des Kreuzungspunkts ist eine Maßnahme pro Kunde allein nach Kosten die günstigere Wahl.",
+        )}
       </Insight>
       <div>
-        <label htmlFor={`${uid}-n`} className="text-caption font-semibold">Clients served: <span className="tnum">{n}</span></label>
-        <p className="text-micro normal-case tracking-normal text-ash">Move it to see where the two costs cross.</p>
+        <label htmlFor={`${uid}-n`} className="text-caption font-semibold">{tt("Clients served: ", "Bediente Kunden: ")}<span className="tnum">{n}</span></label>
+        <p className="text-micro normal-case tracking-normal text-ash">{tt("Move it to see where the two costs cross.", "Bewegen Sie ihn, um zu sehen, wo sich die beiden Kosten kreuzen.")}</p>
         <input id={`${uid}-n`} type="range" min={0} max={SC.max} step={1} value={n} onChange={(e) => setN(Number(e.target.value))} className="range-accent" />
       </div>
     </div>
@@ -327,52 +406,86 @@ export function CardC3() {
 
 /* ------------------------------------------------------------------ C4 */
 
-const GOV = [
-  {
-    id: "repeat",
-    kpi: "Repeat-purchase rate",
-    owner: "Head of Account Management",
-    cadence: "Monthly",
-    trigger: "Below 28% for two months",
-    to: "Managing director",
-    ownerWhy: "The repeat-purchase rate is moved by how existing clients are served, and account management runs that. Controlling could read the same number but could not change it.",
-    cadenceWhy: "A retention KPI moves slowly, so a monthly reading and a two-month rule avoid reacting to noise.",
-    triggerWhy: "“Below 28% for two months” names a number and a length of time, so nobody has to argue whether a dip is noise. It goes to the managing director because only they can re-fund or stop the lever.",
-  },
-  {
-    id: "showup",
-    kpi: "Show-up rate",
-    owner: "CRM coordinator",
-    cadence: "Weekly",
-    trigger: "Below 60% two weeks running",
-    to: "Head of Sales",
-    ownerWhy: "The show-up rate is moved by the booking workflow and its reminders, which the coordinator runs and can change at once.",
-    cadenceWhy: "A funnel step that is booked every week can be read every week, and a fix that is not working shows quickly.",
-    triggerWhy: "“Below 60% two weeks running” is a number and a length of time. It goes to the Head of Sales, who can change the process the coordinator cannot.",
-  },
-  {
-    id: "dash",
-    kpi: "Dashboard reporting",
-    owner: "Controlling",
-    cadence: "Monthly",
-    trigger: "A KPI more than 5 working days late",
-    to: "Chief Financial Officer",
-    ownerWhy: "Here the KPI is the reporting itself, and Controlling produces the reports. It is the one case where the person who reads the numbers is the right owner.",
-    cadenceWhy: "The dashboard’s own KPI is that it delivers. If it is late, every other KPI is late.",
-    triggerWhy: "“More than 5 working days late” is a number a calendar can check. It goes to the Chief Financial Officer because late reporting is a failure of the finance process.",
-  },
-] as const;
+const gov = () =>
+  [
+    {
+      id: "repeat",
+      kpi: tt("Repeat-purchase rate", "Wiederkaufsrate"),
+      owner: "Head of Account Management",
+      cadence: tt("Monthly", "Monatlich"),
+      trigger: tt("Below 28% for two months", "Unter 28 % zwei Monate lang"),
+      to: tt("Managing director", "Geschäftsführer"),
+      ownerWhy: tt(
+        "The repeat-purchase rate is moved by how existing clients are served, and account management runs that. Controlling could read the same number but could not change it.",
+        "Die Wiederkaufsrate wird davon bewegt, wie Bestandskunden betreut werden, und das leitet das Account Management. Controlling könnte dieselbe Zahl lesen, aber nicht ändern.",
+      ),
+      cadenceWhy: tt(
+        "A retention KPI moves slowly, so a monthly reading and a two-month rule avoid reacting to noise.",
+        "Eine Bindungs-KPI bewegt sich langsam, deshalb vermeiden eine monatliche Messung und eine Zwei-Monats-Regel, auf Rauschen zu reagieren.",
+      ),
+      triggerWhy: tt(
+        "“Below 28% for two months” names a number and a length of time, so nobody has to argue whether a dip is noise. It goes to the managing director because only they can re-fund or stop the lever.",
+        "„Unter 28 % zwei Monate lang“ nennt eine Zahl und eine Zeitspanne, sodass niemand darüber streiten muss, ob ein Rückgang Rauschen ist. Sie geht an den Geschäftsführer, weil nur er den Hebel neu finanzieren oder stoppen kann.",
+      ),
+    },
+    {
+      id: "showup",
+      kpi: tt("Show-up rate", "Erscheinungsquote"),
+      owner: tt("CRM coordinator", "CRM-Koordinator"),
+      cadence: tt("Weekly", "Wöchentlich"),
+      trigger: tt("Below 60% two weeks running", "Unter 60 % zwei Wochen in Folge"),
+      to: "Head of Sales",
+      ownerWhy: tt(
+        "The show-up rate is moved by the booking workflow and its reminders, which the coordinator runs and can change at once.",
+        "Die Erscheinungsquote wird vom Buchungsablauf und seinen Erinnerungen bewegt, die der Koordinator betreibt und sofort ändern kann.",
+      ),
+      cadenceWhy: tt(
+        "A funnel step that is booked every week can be read every week, and a fix that is not working shows quickly.",
+        "Ein Trichterschritt, der jede Woche gebucht wird, lässt sich jede Woche lesen, und eine Behebung, die nicht wirkt, zeigt sich schnell.",
+      ),
+      triggerWhy: tt(
+        "“Below 60% two weeks running” is a number and a length of time. It goes to the Head of Sales, who can change the process the coordinator cannot.",
+        "„Unter 60 % zwei Wochen in Folge“ ist eine Zahl und eine Zeitspanne. Sie geht an den Head of Sales, der den Prozess ändern kann, den der Koordinator nicht ändern kann.",
+      ),
+    },
+    {
+      id: "dash",
+      kpi: tt("Dashboard reporting", "Dashboard-Reporting"),
+      owner: "Controlling",
+      cadence: tt("Monthly", "Monatlich"),
+      trigger: tt("A KPI more than 5 working days late", "Eine KPI mehr als 5 Werktage verspätet"),
+      to: tt("Chief Financial Officer", "Finanzvorstand (CFO)"),
+      ownerWhy: tt(
+        "Here the KPI is the reporting itself, and Controlling produces the reports. It is the one case where the person who reads the numbers is the right owner.",
+        "Hier ist die KPI das Reporting selbst, und Controlling erstellt die Berichte. Es ist der eine Fall, in dem die Person, die die Zahlen liest, der richtige Owner ist.",
+      ),
+      cadenceWhy: tt(
+        "The dashboard’s own KPI is that it delivers. If it is late, every other KPI is late.",
+        "Die eigene KPI des Dashboards ist, dass es liefert. Kommt es zu spät, ist jede andere KPI zu spät.",
+      ),
+      triggerWhy: tt(
+        "“More than 5 working days late” is a number a calendar can check. It goes to the Chief Financial Officer because late reporting is a failure of the finance process.",
+        "„Mehr als 5 Werktage verspätet“ ist eine Zahl, die ein Kalender prüfen kann. Sie geht an den Finanzvorstand, weil verspätetes Reporting ein Fehler des Finanzprozesses ist.",
+      ),
+    },
+  ] as const;
 
 export function GovTable() {
   const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string>("repeat");
+  const GOV = gov();
   const g = GOV.find((x) => x.id === sel)!;
   return (
     <div className="space-y-3">
       <svg viewBox="0 0 560 220" className="mx-auto h-auto w-full max-w-[600px]" role="group" aria-labelledby={`${uid}-t ${uid}-d`}>
-        <title id={`${uid}-t`}>{`A governance table: owner, cadence and trigger per KPI`}</title>
-        <desc id={`${uid}-d`}>{`Three KPIs, each with one owner, a review cadence and an escalation trigger with a threshold. Select a row to read why.`}</desc>
-        {["KPI", "OWNER", "CADENCE", "TRIGGER (THRESHOLD)"].map((h, i) => (
+        <title id={`${uid}-t`}>{tt(`A governance table: owner, cadence and trigger per KPI`, `Eine Steuerungstabelle: Owner, Rhythmus und Auslöser je KPI`)}</title>
+        <desc id={`${uid}-d`}>
+          {tt(
+            `Three KPIs, each with one owner, a review cadence and an escalation trigger with a threshold. Select a row to read why.`,
+            `Drei KPIs, jeweils mit einem Owner, einem Review-Rhythmus und einem Eskalations-Auslöser mit Schwellenwert. Wählen Sie eine Zeile, um zu lesen, warum.`,
+          )}
+        </desc>
+        {tt(["KPI", "OWNER", "CADENCE", "TRIGGER (THRESHOLD)"], ["KPI", "OWNER", "RHYTHMUS", "AUSLÖSER (SCHWELLE)"]).map((h, i) => (
           <text key={h} x={[8, 150, 300, 380][i]} y="16" fontSize="11.5" fontWeight="700" fill="#59606A">
             {h}
           </text>
@@ -388,7 +501,7 @@ export function GovTable() {
               role="button"
               tabIndex={0}
               aria-pressed={on}
-              aria-label={`${x.kpi}, owner ${x.owner}, ${x.cadence}, trigger ${x.trigger}`}
+              aria-label={tt(`${x.kpi}, owner ${x.owner}, ${x.cadence}, trigger ${x.trigger}`, `${x.kpi}, Owner ${x.owner}, ${x.cadence}, Auslöser ${x.trigger}`)}
               onClick={pick}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -409,26 +522,35 @@ export function GovTable() {
         })}
       </svg>
       <div aria-live="polite" className="space-y-1 rounded-lg border border-line bg-paper p-4 text-caption">
-        <p className="smallcaps">{g.kpi} · escalates to {g.to}</p>
+        <p className="smallcaps">{g.kpi} · {tt("escalates to", "eskaliert an")} {g.to}</p>
         <p className="text-ink">
-          <span className="font-semibold">Why this owner. </span>
+          <span className="font-semibold">{tt("Why this owner. ", "Warum dieser Owner. ")}</span>
           {g.ownerWhy}
         </p>
         <p className="text-ink">
-          <span className="font-semibold">Why this cadence. </span>
+          <span className="font-semibold">{tt("Why this cadence. ", "Warum dieser Rhythmus. ")}</span>
           {g.cadenceWhy}
         </p>
         <p className="text-ink">
-          <span className="font-semibold">Why this trigger. </span>
+          <span className="font-semibold">{tt("Why this trigger. ", "Warum dieser Auslöser. ")}</span>
           {g.triggerWhy}
         </p>
       </div>
       <Insight>
         {g.id === "dash"
-          ? "Controlling owns this row because the KPI is the report itself. The same role would be the wrong owner of the repeat-purchase row: the owner is the person who can change what moves the KPI, not the person who reads the number."
+          ? tt(
+              "Controlling owns this row because the KPI is the report itself. The same role would be the wrong owner of the repeat-purchase row: the owner is the person who can change what moves the KPI, not the person who reads the number.",
+              "Controlling besitzt diese Zeile, weil die KPI der Bericht selbst ist. Dieselbe Rolle wäre der falsche Owner der Zeile Wiederkaufsrate: Der Owner ist die Person, die ändern kann, was die KPI bewegt, nicht die Person, die die Zahl liest.",
+            )
           : g.id === "showup"
-            ? "The owner is the coordinator because the workflow is theirs to change; the cadence is weekly because bookings happen every week; and the trigger escalates to the person with authority the coordinator lacks. Owner, cadence and trigger each answer their own question."
-            : "The owner is the person who can change how clients are served; the cadence is monthly because retention moves in months; and the trigger names a number and a length of time. Match the cadence to the KPI's own speed, not to one company-wide rhythm."}
+            ? tt(
+                "The owner is the coordinator because the workflow is theirs to change; the cadence is weekly because bookings happen every week; and the trigger escalates to the person with authority the coordinator lacks. Owner, cadence and trigger each answer their own question.",
+                "Der Owner ist der Koordinator, weil der Ablauf seiner ist; der Rhythmus ist wöchentlich, weil Buchungen jede Woche geschehen; und der Auslöser eskaliert an die Person mit der Befugnis, die dem Koordinator fehlt. Owner, Rhythmus und Auslöser beantworten jeweils ihre eigene Frage.",
+              )
+            : tt(
+                "The owner is the person who can change how clients are served; the cadence is monthly because retention moves in months; and the trigger names a number and a length of time. Match the cadence to the KPI's own speed, not to one company-wide rhythm.",
+                "Der Owner ist die Person, die ändern kann, wie Kunden betreut werden; der Rhythmus ist monatlich, weil sich Bindung in Monaten bewegt; und der Auslöser nennt eine Zahl und eine Zeitspanne. Stimmen Sie den Rhythmus auf die eigene Geschwindigkeit der KPI ab, nicht auf einen einheitlichen Rhythmus für das ganze Unternehmen.",
+              )}
       </Insight>
     </div>
   );

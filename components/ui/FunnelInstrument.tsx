@@ -6,6 +6,7 @@ import type { StepId } from "@/data/funnel";
 import { Insight } from "@/components/materi/kit";
 import { wrap } from "@/lib/svg";
 import { useInView } from "@/lib/useInView";
+import { tt } from "@/lib/lang";
 
 const W = 520;
 const BAR_H = 40;
@@ -38,9 +39,12 @@ export function FunnelInstrument() {
   return (
     <div ref={ref} className="space-y-3">
       <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[560px]" role="group" aria-labelledby={`${uid}-t ${uid}-d`}>
-        <title id={`${uid}-t`}>{`DigitalIT Solutions annual funnel`}</title>
+        <title id={`${uid}-t`}>{tt("DigitalIT Solutions annual funnel", "Jahrestrichter von DigitalIT Solutions")}</title>
         <desc id={`${uid}-d`}>
-          {`Six stages from 24,000 website visitors to 4 signed contracts. At each of the five arrows the conversion rate, its benchmark reference and the gap in percentage points are printed. Select an arrow to read its counts.`}
+          {tt(
+            "Six stages from 24,000 website visitors to 4 signed contracts. At each of the five arrows the conversion rate, its benchmark reference and the gap in percentage points are printed. Select an arrow to read its counts.",
+            "Sechs Stufen von 24.000 Website-Besuchern bis zu 4 unterzeichneten Verträgen. An jedem der fünf Pfeile stehen die Konversionsrate, ihr Benchmark und die Abweichung in Prozentpunkten. Wählen Sie einen Pfeil, um seine Zahlen zu lesen.",
+          )}
         </desc>
         <defs>
           <pattern id={`${uid}-hg`} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -88,7 +92,10 @@ export function FunnelInstrument() {
               role="button"
               tabIndex={0}
               aria-pressed={on}
-              aria-label={`${s.label}: ${fmtPct(s.actual)}, benchmark reference ${fmtPct(s.bench)}, gap ${fmtPp(s.gap)}`}
+              aria-label={tt(
+                `${s.label}: ${fmtPct(s.actual)}, benchmark reference ${fmtPct(s.bench)}, gap ${fmtPp(s.gap)}`,
+                `${s.label}: ${fmtPct(s.actual)}, Benchmark ${fmtPct(s.bench)}, Abweichung ${fmtPp(s.gap)}`,
+              )}
               onClick={pick}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -127,46 +134,58 @@ export function FunnelInstrument() {
       <div aria-live="polite" className="min-h-[3rem] rounded-lg border border-line bg-paper p-3 text-caption">
         {step ? (
           <p>
-            <span className="font-semibold">{step.label}:</span> {fmtInt(step.toCount)} of {fmtInt(step.fromCount)} = {fmtPct(step.actual)}. Benchmark reference {fmtPct(step.bench)}; gap{" "}
-            <span className="font-semibold">{fmtPp(step.gap)}</span>.
+            <span className="font-semibold">{step.label}:</span> {fmtInt(step.toCount)} {tt("of", "von")} {fmtInt(step.fromCount)} = {fmtPct(step.actual)}. {tt("Benchmark reference", "Benchmark")} {fmtPct(step.bench)};{" "}
+            {tt("gap", "Abweichung")} <span className="font-semibold">{fmtPp(step.gap)}</span>.
           </p>
         ) : (
-          <p className="text-ash">Select an arrow (or tab to it and press Enter) to read its two counts.</p>
+          <p className="text-ash">{tt("Select an arrow (or tab to it and press Enter) to read its two counts.", "Wählen Sie einen Pfeil (oder springen Sie mit Tab hin und drücken Sie Enter), um seine beiden Zahlen zu lesen.")}</p>
         )}
       </div>
 
       <Insight>
         {step
           ? step.gap < 0
-            ? `At its own reference of ${fmtPct(step.bench)} this arrow would carry about ${fmtInt(Math.round((step.fromCount * step.bench) / 100))} of the ${fmtInt(step.fromCount)}; it carries ${fmtInt(step.toCount)}. Each arrow is measured against its own reference, which is why gaps can be compared across arrows while raw counts cannot: counts fall at every stage by design.`
-            : `This arrow keeps up with its own reference of ${fmtPct(step.bench)}: it carries ${fmtInt(step.toCount)} of ${fmtInt(step.fromCount)}, about what the reference would carry. A big fall in counts is normal in a funnel and is not, on its own, a gap.`
-          : `Each arrow’s gap is measured against that arrow’s own reference, so arrows can be compared even though the counts differ enormously (24,000 at the top, 4 at the bottom). Select an arrow to see what its gap means in prospects.`}
+            ? tt(
+                `At its own reference of ${fmtPct(step.bench)} this arrow would carry about ${fmtInt(Math.round((step.fromCount * step.bench) / 100))} of the ${fmtInt(step.fromCount)}; it carries ${fmtInt(step.toCount)}. Each arrow is measured against its own reference, which is why gaps can be compared across arrows while raw counts cannot: counts fall at every stage by design.`,
+                `Bei seinem eigenen Benchmark von ${fmtPct(step.bench)} würde dieser Pfeil etwa ${fmtInt(Math.round((step.fromCount * step.bench) / 100))} der ${fmtInt(step.fromCount)} tragen; er trägt ${fmtInt(step.toCount)}. Jeder Pfeil wird an seinem eigenen Benchmark gemessen, deshalb lassen sich Abweichungen über Pfeile hinweg vergleichen, Rohzahlen aber nicht: Die Zahlen fallen von Stufe zu Stufe von selbst.`,
+              )
+            : tt(
+                `This arrow keeps up with its own reference of ${fmtPct(step.bench)}: it carries ${fmtInt(step.toCount)} of ${fmtInt(step.fromCount)}, about what the reference would carry. A big fall in counts is normal in a funnel and is not, on its own, a gap.`,
+                `Dieser Pfeil hält mit seinem eigenen Benchmark von ${fmtPct(step.bench)} Schritt: Er trägt ${fmtInt(step.toCount)} von ${fmtInt(step.fromCount)}, etwa das, was der Benchmark tragen würde. Ein starker Rückgang der Zahlen ist in einem Trichter normal und für sich allein keine Abweichung.`,
+              )
+          : tt(
+              `Each arrow’s gap is measured against that arrow’s own reference, so arrows can be compared even though the counts differ enormously (24,000 at the top, 4 at the bottom). Select an arrow to see what its gap means in prospects.`,
+              `Die Abweichung jedes Pfeils wird an dessen eigenem Benchmark gemessen, sodass sich Pfeile vergleichen lassen, obwohl die Zahlen enorm verschieden sind (24.000 oben, 4 unten). Wählen Sie einen Pfeil, um zu sehen, was seine Abweichung in Interessenten bedeutet.`,
+            )}
       </Insight>
 
       <RepeatPanel seen={seen} uid={uid} />
 
-      <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-caption text-ash" aria-label="Legend">
+      <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-caption text-ash" aria-label={tt("Legend", "Legende")}>
         <li className="flex items-center gap-2">
           <svg viewBox="0 0 24 14" className="h-3.5 w-6" aria-hidden>
             <rect width="24" height="14" rx="2" fill="#2F5D62" />
           </svg>
-          Count at the stage
+          {tt("Count at the stage", "Zahl der Stufe")}
         </li>
         <li className="flex items-center gap-2">
           <svg viewBox="0 0 24 14" className="h-3.5 w-6" aria-hidden>
             <rect width="24" height="14" rx="2" fill={`url(#${uid}-hg)`} stroke="#59606A" />
           </svg>
-          Gap to the benchmark reference (length = size of the gap)
+          {tt("Gap to the benchmark reference (length = size of the gap)", "Abweichung vom Benchmark (Länge = Größe der Abweichung)")}
         </li>
         <li className="flex items-center gap-2">
           <svg viewBox="0 0 24 14" className="h-3.5 w-6" aria-hidden>
             <rect width="24" height="14" rx="2" fill={`url(#${uid}-hr)`} stroke="#A4472A" />
           </svg>
-          The largest gap on the diagram
+          {tt("The largest gap on the diagram", "Die größte Abweichung im Diagramm")}
         </li>
       </ul>
       <p className="text-micro normal-case tracking-normal text-ash">
-        Bar widths use a log scale, so 24,000 and 4 fit on one screen. “ref” is the industry reference (Case assumption). pp = percentage points.
+        {tt(
+          "Bar widths use a log scale, so 24,000 and 4 fit on one screen. “ref” is the industry reference (Case assumption). pp = percentage points.",
+          "Die Balkenbreiten nutzen eine logarithmische Skala, damit 24.000 und 4 auf einen Bildschirm passen. „ref“ ist die Branchenreferenz (Fallannahme). PP = Prozentpunkte.",
+        )}
       </p>
     </div>
   );
@@ -192,12 +211,17 @@ function RepeatPanel({ seen, uid }: { seen: boolean; uid: string }) {
   const xb = X0 + (REPEAT.bench / 100) * TW;
   return (
     <div className="rounded-lg border border-line bg-paper p-3">
-      <p className="smallcaps">Beneath the funnel · retention</p>
+      <p className="smallcaps">{tt("Beneath the funnel · retention", "Unter dem Trichter · Kundenbindung")}</p>
       <svg viewBox="0 0 520 96" className="mx-auto mt-1 h-auto w-full max-w-[560px]" role="img" aria-labelledby={`${uid}-rt ${uid}-rd`}>
-        <title id={`${uid}-rt`}>{`Repeat-purchase rate`}</title>
-        <desc id={`${uid}-rd`}>{`Existing clients re-ordering within 18 months: 13.2 percent against an industry reference of 35 percent, a gap of minus 21.8 percentage points.`}</desc>
+        <title id={`${uid}-rt`}>{tt("Repeat-purchase rate", "Wiederkaufsrate")}</title>
+        <desc id={`${uid}-rd`}>
+          {tt(
+            "Existing clients re-ordering within 18 months: 13.2 percent against an industry reference of 35 percent, a gap of minus 21.8 percentage points.",
+            "Bestandskunden, die innerhalb von 18 Monaten erneut bestellen: 13,2 Prozent gegenüber einer Branchenreferenz von 35 Prozent, eine Abweichung von minus 21,8 Prozentpunkten.",
+          )}
+        </desc>
         <text x={X0} y="18" fontSize="13" fill="#1F2328">
-          Repeat-purchase rate: existing clients re-ordering within 18 months
+          {tt("Repeat-purchase rate: existing clients re-ordering within 18 months", "Wiederkaufsrate: Bestandskunden mit Folgeauftrag in 18 Monaten")}
         </text>
         <rect x={X0} y="30" width={TW} height="26" rx="3" fill="#ECE6D6" stroke="#D8D1BF" />
         <rect x={xa} y="30" width={xb - xa} height="26" fill={`url(#${uid}-hg)`} stroke="#59606A" strokeWidth="1.2" />
@@ -213,10 +237,10 @@ function RepeatPanel({ seen, uid }: { seen: boolean; uid: string }) {
           {fmtPp(REPEAT.gap)}
         </text>
         <text x={X0} y="90" fontSize="11" fill="#59606A">
-          0%
+          {tt("0%", "0 %")}
         </text>
         <text x={X0 + TW} y="90" textAnchor="end" fontSize="11" fill="#59606A">
-          100%
+          {tt("100%", "100 %")}
         </text>
       </svg>
     </div>

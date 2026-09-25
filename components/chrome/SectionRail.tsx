@@ -6,13 +6,15 @@ import { SECTIONS } from "@/data/materialIndex";
 import { dossierProgress } from "@/lib/progress";
 import { useHydrated } from "@/store/useStore";
 import { usePersisted } from "@/store/usePersisted";
+import { tt } from "@/lib/lang";
+
 
 function Ring({ done, total }: { done: number; total: number }) {
   const pct = total ? (done / total) * 100 : 0;
   return (
-    <svg viewBox="0 0 40 40" className="h-9 w-9 shrink-0" role="img" aria-label={`Dossier progress: ${done} of ${total}`}>
-      <title>Dossier progress</title>
-      <desc>{`${done} of ${total} cards read or task blocks completed`}</desc>
+    <svg viewBox="0 0 40 40" className="h-9 w-9 shrink-0" role="img" aria-label={tt(`Dossier progress: ${done} of ${total}`, `Fortschritt der Mappe: ${done} von ${total}`)}>
+      <title>{tt("Dossier progress", "Fortschritt der Mappe")}</title>
+      <desc>{tt(`${done} of ${total} cards read or task blocks completed`, `${done} von ${total} Karten gelesen oder Aufgabenblöcke ausgefüllt`)}</desc>
       <circle cx="20" cy="20" r="16" fill="none" stroke="#D8D1BF" strokeWidth="4" />
       <circle
         cx="20"
@@ -65,7 +67,7 @@ export function SectionRail({ route }: { route: 1 | 2 | 3 }) {
 
   return (
     <nav
-      aria-label={`Route ${route} sections`}
+      aria-label={tt(`Route ${route} sections`, `Abschnitte von Route ${route}`)}
       className="sticky top-12 z-30 -mx-4 border-b border-line bg-canvas/95 px-4 backdrop-blur md:-mx-6 md:px-6 print:hidden"
     >
       <div className="flex items-center gap-2 py-1.5">
@@ -83,16 +85,16 @@ export function SectionRail({ route }: { route: 1 | 2 | 3 }) {
                 <span className="block truncate text-caption font-semibold leading-tight">{s.label}</span>
                 <span className="block truncate text-micro leading-tight opacity-80">
                   <span className="hidden md:inline">{s.sub} · </span>
-                  {s.minutes} min
+                  {s.minutes} {tt("min", "Min.")}
                 </span>
               </a>
             </li>
           ))}
         </ol>
-        <div className="flex shrink-0 items-center gap-2" title="Cards marked read + task blocks completed">
+        <div className="flex shrink-0 items-center gap-2" title={tt("Cards marked read + task blocks completed", "Als gelesen markierte Karten + ausgefüllte Aufgabenblöcke")}>
           <Ring done={done} total={total} />
           <span className="hidden text-micro leading-tight text-ash lg:block">
-            Dossier
+            {tt("Dossier", "Mappe")}
             <br />
             {done}/{total}
           </span>

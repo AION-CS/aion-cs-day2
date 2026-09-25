@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useOptionalRoutes } from "@/lib/useOptionalRoutes";
+import { tt } from "@/lib/lang";
 
 /**
  * The small, quiet button that lists the optional Routes 2 and 3 (CLAUDE.md #29). Not the primary style: it is a
@@ -28,9 +29,12 @@ export function OptionalRoutesNotice() {
   if (!hydrated || shown) return null;
   return (
     <p role="note" className="rounded-lg border border-line bg-mist/60 px-3 py-2 text-caption text-ash print:hidden">
-      Want the full Level 2 and Level 3 material on this same case, with its own task and export for each?{" "}
+      {tt(
+        "Want the full Level 2 and Level 3 material on this same case, with its own task and export for each?",
+        "Möchten Sie das vollständige Material zu Level 2 und Level 3 an demselben Fall, jeweils mit eigener Aufgabe und eigenem Export?",
+      )}{" "}
       <button type="button" onClick={show} className="font-semibold text-ink underline decoration-dotted underline-offset-2">
-        Show the optional routes
+        {tt("Show the optional routes", "Optionale Routen anzeigen")}
       </button>
       .
     </p>

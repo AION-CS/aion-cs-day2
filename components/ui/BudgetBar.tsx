@@ -5,6 +5,7 @@ import { BUDGET, ITEMS } from "@/data/program";
 import { fmtEuroPlain } from "@/data/segments";
 import { fundedItems, itemCost, overBy, totalSpent } from "@/lib/program";
 import type { Route3State } from "@/store/useStore";
+import { tt } from "@/lib/lang";
 
 const W = 560;
 const X0 = 8;
@@ -39,9 +40,12 @@ export function BudgetBar({ alloc }: { alloc: Route3State["alloc"] }) {
   const dark = (id: string) => id === "lever";
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
-      <title id={`${uid}-t`}>{`Budget allocation against the 150,000 euro budget`}</title>
+      <title id={`${uid}-t`}>{tt("Budget allocation against the 150,000 euro budget", "Budgetverteilung gegenüber dem Budget von 150.000 Euro")}</title>
       <desc id={`${uid}-d`}>
-        {`${funded.length} of 4 line items funded, ${fmtEuroPlain(total)} spent of ${fmtEuroPlain(BUDGET)}${over > 0 ? `, ${fmtEuroPlain(over)} over budget` : ""}.`}
+        {tt(
+          `${funded.length} of 4 line items funded, ${fmtEuroPlain(total)} spent of ${fmtEuroPlain(BUDGET)}${over > 0 ? `, ${fmtEuroPlain(over)} over budget` : ""}.`,
+          `${funded.length} von 4 Posten finanziert, ${fmtEuroPlain(total)} von ${fmtEuroPlain(BUDGET)} ausgegeben${over > 0 ? `, ${fmtEuroPlain(over)} über dem Budget` : ""}.`,
+        )}
       </desc>
       <defs>
         <pattern id={`${uid}-dots`} width="8" height="8" patternUnits="userSpaceOnUse">
@@ -74,7 +78,7 @@ export function BudgetBar({ alloc }: { alloc: Route3State["alloc"] }) {
       {over > 0 && <rect x={x(BUDGET)} y="30" width={x(total) - x(BUDGET)} height="34" fill={`url(#${uid}-over)`} stroke="#8A5A0B" strokeWidth="1.6" />}
       <line x1={x(BUDGET)} x2={x(BUDGET)} y1="18" y2="76" stroke="#1F2328" strokeWidth="2.2" />
       <text x={x(BUDGET)} y="13" textAnchor="middle" fontSize="13" fontWeight="700" fill="#1F2328">
-        Budget {fmtEuroPlain(BUDGET)}
+        {tt("Budget", "Budget")} {fmtEuroPlain(BUDGET)}
       </text>
       {[0, 50000, 100000].map((v) => (
         <text key={v} x={x(v) + (v === 0 ? 2 : 0)} y="92" textAnchor={v === 0 ? "start" : "middle"} fontSize="12" fill="#59606A">
@@ -86,7 +90,7 @@ export function BudgetBar({ alloc }: { alloc: Route3State["alloc"] }) {
       </text>
       {over > 0 && (
         <text x={Math.min(x(total), X1)} y="104" textAnchor="end" fontSize="13" fontWeight="700" fill="#8A5A0B">
-          {`${fmtEuroPlain(over)} over`}
+          {tt(`${fmtEuroPlain(over)} over`, `${fmtEuroPlain(over)} darüber`)}
         </text>
       )}
     </svg>

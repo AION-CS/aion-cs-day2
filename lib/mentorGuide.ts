@@ -329,7 +329,7 @@ export function govGuide(item: ItemId): MentorGuide {
 
 export function postponedGuide(): MentorGuide {
   return {
-    title: "3.5 · The postponed measure",
+    title: "3.5 · The postponed measure (in the Case File this is block 3.2, which also covers what was cut)",
     answer: `${KEY_L3.postponed} Pickup: ${KEY_L3.pickup}.`,
     lookFor: [
       "Names something real from the “Left open by your allocation” list: an unfunded or descoped item, or the part of the leak the fix leaves open.",

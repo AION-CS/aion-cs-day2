@@ -5,6 +5,7 @@ import type { CalcBuilder } from "@/lib/calcBuilder";
 import { builderResult, partKey } from "@/lib/calcBuilder";
 import { scrollToAndFlash } from "@/lib/flash";
 import { parseAmount } from "@/lib/parseAmount";
+import { num, tt } from "@/lib/lang";
 
 /**
  * The automatic calculator under a calculation question: one small input per part of the formula, the
@@ -22,7 +23,7 @@ export function FormulaBuilder({
   onUse,
   unit,
   label,
-  source = "the table",
+  source,
 }: {
   figure: string;
   builder: CalcBuilder;
@@ -49,8 +50,8 @@ export function FormulaBuilder({
   return (
     <div className="mt-2 space-y-2 border-t border-line pt-2">
       <p className="text-caption text-ink">
-        <span className="font-semibold">Or let it calculate:</span> fill each part below with the number from {source}. The result
-        appears as you type.
+        <span className="font-semibold">{tt("Or let it calculate:", "Oder lassen Sie rechnen:")}</span>{" "}
+        {tt(`fill each part below with the number from ${source ?? "the table"}. The result appears as you type.`, `Tragen Sie unten in jeden Teil die Zahl aus ${source ?? "der Tabelle"} ein. Das Ergebnis erscheint beim Tippen.`)}
       </p>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {builder.parts.map((p) => {
@@ -74,11 +75,12 @@ export function FormulaBuilder({
                 aria-invalid={flagged || undefined}
                 aria-describedby={flagged ? `${id}-clue` : undefined}
               />
-              {unreadable && <p className="text-micro normal-case tracking-normal text-ash">Cannot read this as a number yet.</p>}
+              {unreadable && <p className="text-micro normal-case tracking-normal text-ash">{tt("Cannot read this as a number yet.", "Das lässt sich noch nicht als Zahl lesen.")}</p>}
               {flagged && (
                 <p id={`${id}-clue`} role="status" className="text-micro normal-case tracking-normal text-ink">
-                  <span className="font-semibold text-accent">Check this part. </span>
-                  Read it from: {p.clue}
+                  <span className="font-semibold text-accent">{tt("Check this part. ", "Prüfen Sie diesen Teil. ")}</span>
+                  {tt("Read it from: ", "Lesen Sie ihn hier ab: ")}
+                  {p.clue}
                 </p>
               )}
             </div>
@@ -88,7 +90,7 @@ export function FormulaBuilder({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md bg-paper px-3 py-2">
         <p className="tnum min-w-0 flex-1 break-words text-caption text-ink">
           {builder.show(filled)} ={" "}
-          <strong className="text-body">{result === null ? "…" : result.toLocaleString("en-US", { maximumFractionDigits: 2 })}</strong>
+          <strong className="text-body">{result === null ? "…" : num(result, { maximumFractionDigits: 2 })}</strong>
           {result !== null && unit && <span className="text-ash"> {unit}</span>}
         </p>
         {onUse && (
@@ -100,19 +102,23 @@ export function FormulaBuilder({
               if (empty) scrollToAndFlash(`part-${figure}-${empty.id}`);
             }}
             aria-disabled={result === null}
-            title={result === null ? "Fill every part first." : undefined}
+            title={result === null ? tt("Fill every part first.", "Füllen Sie zuerst jeden Teil aus.") : undefined}
             className={clsx("btn-ghost btn-sm", result === null && "opacity-60")}
           >
-            Use this result in {label ?? figure}
+            {tt("Use this result in ", "Dieses Ergebnis übernehmen in ")}
+            {label ?? figure}
           </button>
         )}
       </div>
       {result === null && (
-        <p className="text-micro normal-case tracking-normal text-ash">Fill every part to see the result (▢ marks an empty part).</p>
+        <p className="text-micro normal-case tracking-normal text-ash">{tt("Fill every part to see the result (▢ marks an empty part).", "Füllen Sie jeden Teil aus, um das Ergebnis zu sehen (▢ markiert einen leeren Teil).")}</p>
       )}
       {wrongHere.length > 0 && (
         <p role="status" className="text-caption text-ink">
-          {wrongHere.length === 1 ? "1 part is" : `${wrongHere.length} parts are`} outlined above:{" "}
+          {tt(
+            `${wrongHere.length === 1 ? "1 part is" : `${wrongHere.length} parts are`} outlined above: `,
+            `${wrongHere.length === 1 ? "1 Teil ist" : `${wrongHere.length} Teile sind`} oben umrandet: `,
+          )}
           {wrongHere.map((p) => p.label).join(", ")}.
         </p>
       )}

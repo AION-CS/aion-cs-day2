@@ -4,13 +4,20 @@
  * the brief supplies, not a measured figure).
  */
 
+import { d1, lazyRecord, num, tt } from "@/lib/lang";
+
 export type Phase = "pre" | "sales" | "after";
+// Texts that change with the language are getters, so they are read when they are shown, not when the module loads.
 export const PHASES: { id: Phase; label: string; hint: string }[] = [
-  { id: "pre", label: "Pre-sales", hint: "Awareness and first contact." },
-  { id: "sales", label: "Sales", hint: "Consultation, proposal, negotiation and contract." },
-  { id: "after", label: "After-sales", hint: "Onboarding, support and renewal." },
+  { id: "pre", get label() { return tt("Pre-sales", "Pre-Sales"); }, get hint() { return tt("Awareness and first contact.", "Aufmerksamkeit und Erstkontakt."); } },
+  { id: "sales", get label() { return tt("Sales", "Vertrieb"); }, get hint() { return tt("Consultation, proposal, negotiation and contract.", "Beratung, Angebot, Verhandlung und Vertrag."); } },
+  { id: "after", get label() { return tt("After-sales", "After-Sales"); }, get hint() { return tt("Onboarding, support and renewal.", "Onboarding, Support und Verlängerung."); } },
 ];
-export const PHASE_LABEL: Record<Phase, string> = { pre: "Pre-sales", sales: "Sales", after: "After-sales" };
+export const PHASE_LABEL: Record<Phase, string> = lazyRecord({
+  pre: () => tt("Pre-sales", "Pre-Sales"),
+  sales: () => tt("Sales", "Vertrieb"),
+  after: () => tt("After-sales", "After-Sales"),
+});
 
 export type StageId = "visitors" | "leads" | "booked" | "held" | "proposal" | "signed";
 export type StepId = Exclude<StageId, "visitors">;
@@ -19,12 +26,12 @@ export const STAGE_IDS: StageId[] = ["visitors", "leads", "booked", "held", "pro
 export const STEP_IDS: StepId[] = ["leads", "booked", "held", "proposal", "signed"];
 
 export const FUNNEL: { id: StageId; label: string; count: number }[] = [
-  { id: "visitors", label: "Website visitors", count: 24000 },
-  { id: "leads", label: "Leads (contact / download)", count: 480 },
-  { id: "booked", label: "Consultation booked", count: 96 },
-  { id: "held", label: "Consultation held", count: 41 },
-  { id: "proposal", label: "Proposal sent", count: 22 },
-  { id: "signed", label: "Contract signed", count: 4 },
+  { id: "visitors", get label() { return tt("Website visitors", "Website-Besucher"); }, count: 24000 },
+  { id: "leads", get label() { return tt("Leads (contact / download)", "Leads (Kontakt / Download)"); }, count: 480 },
+  { id: "booked", get label() { return tt("Consultation booked", "Beratungstermin gebucht"); }, count: 96 },
+  { id: "held", get label() { return tt("Consultation held", "Beratung durchgeführt"); }, count: 41 },
+  { id: "proposal", get label() { return tt("Proposal sent", "Angebot versendet"); }, count: 22 },
+  { id: "signed", get label() { return tt("Contract signed", "Vertrag unterzeichnet"); }, count: 4 },
 ];
 export const STAGE_BY_ID = Object.fromEntries(FUNNEL.map((s) => [s.id, s])) as Record<StageId, (typeof FUNNEL)[number]>;
 
@@ -50,10 +57,13 @@ export const STEPS: Step[] = STEP_IDS.map((id, i) => {
   const from = FUNNEL[i];
   const to = FUNNEL[i + 1];
   const actual = r1((to.count / from.count) * 100);
+  const short = (l: string) => l.replace(/ \(.*\)$/, "");
   return {
     id,
     from: from.id,
-    label: `${from.label.replace(" (contact / download)", "")} → ${to.label.replace(" (contact / download)", "")}`,
+    get label() {
+      return `${short(from.label)} → ${short(to.label)}`;
+    },
     fromCount: from.count,
     toCount: to.count,
     actual,
@@ -94,11 +104,19 @@ export type RowId = StepId | "repeat";
 export const ROW_IDS: RowId[] = [...STEP_IDS, "repeat"];
 export type Col = "actual" | "bench" | "gap";
 export const COLS: Col[] = ["actual", "bench", "gap"];
-export const COL_LABEL: Record<Col, string> = { actual: "Actual %", bench: "Benchmark %", gap: "Gap (pp)" };
-export const ROW_LABEL: Record<RowId, string> = {
-  ...(Object.fromEntries(STEPS.map((s) => [s.id, s.label])) as Record<StepId, string>),
-  repeat: "Repeat-purchase rate (18 months)",
-};
+export const COL_LABEL: Record<Col, string> = lazyRecord({
+  actual: () => tt("Actual %", "Ist-Wert %"),
+  bench: () => tt("Benchmark %", "Benchmark %"),
+  gap: () => tt("Gap (pp)", "Abweichung (PP)"),
+});
+export const ROW_LABEL: Record<RowId, string> = lazyRecord({
+  leads: () => STEP_BY_ID.leads.label,
+  booked: () => STEP_BY_ID.booked.label,
+  held: () => STEP_BY_ID.held.label,
+  proposal: () => STEP_BY_ID.proposal.label,
+  signed: () => STEP_BY_ID.signed.label,
+  repeat: () => tt("Repeat-purchase rate (18 months)", "Wiederkaufsrate (18 Monate)"),
+});
 export const ROW_TRUTH: Record<RowId, Record<Col, number>> = {
   ...(Object.fromEntries(STEPS.map((s) => [s.id, { actual: s.actual, bench: s.bench, gap: s.gap }])) as Record<
     StepId,
@@ -109,6 +127,6 @@ export const ROW_TRUTH: Record<RowId, Record<Col, number>> = {
 export const cellId = (row: RowId, col: Col) => `${row}.${col}`;
 
 /** Formatting helpers shared by the SVG, the export and the answer key. */
-export const fmtPct = (n: number) => `${n.toFixed(1)}%`;
-export const fmtPp = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n).toFixed(1)} pp`;
-export const fmtInt = (n: number) => n.toLocaleString("en-US");
+export const fmtPct = (n: number) => `${d1(n)}${tt("%", "\u00A0%")}`;
+export const fmtPp = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${d1(Math.abs(n))}${tt(" pp", "\u00A0PP")}`;
+export const fmtInt = (n: number) => num(n);

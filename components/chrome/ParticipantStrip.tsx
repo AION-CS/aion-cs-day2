@@ -2,6 +2,8 @@
 
 import { useStore } from "@/store/useStore";
 import { IDS } from "@/lib/missing";
+import { tt } from "@/lib/lang";
+
 
 /**
  * The learner's full name, on every page. It only builds the export file name.
@@ -14,13 +16,19 @@ export function ParticipantStrip() {
   const setParticipant = useStore((s) => s.setParticipant);
 
   return (
-    <section id={IDS.participant} aria-label="Participant" className="card mt-4 p-3 md:p-4 print:hidden">
+    <section id={IDS.participant} aria-label={tt("Participant", "Teilnehmende")} className="card mt-4 p-3 md:p-4 print:hidden">
       <label htmlFor="participant-name" className="text-caption font-semibold">
-        Full name
+        {tt("Full name", "Vollständiger Name")}
       </label>
       <p id="participant-name-help" className="text-micro normal-case tracking-normal text-ash">
-        Use the same name all week — it is how your submissions are matched. Each export names its own file from it,
-        for example <span className="tnum">1-muchson-day2-l1-diagnostic</span>.
+        {tt(
+          <>
+            Use the same name all week — it is how your submissions are matched. Each export names its own file from it, for example <span className="tnum">1-muchson-day2-case-file</span>.
+          </>,
+          <>
+            Verwenden Sie die ganze Woche denselben Namen — so werden Ihre Abgaben zugeordnet. Jeder Export benennt seine Datei danach, zum Beispiel <span className="tnum">1-muchson-day2-case-file</span>.
+          </>,
+        )}
       </p>
       <input
         id="participant-name"
@@ -29,7 +37,7 @@ export function ParticipantStrip() {
         className="field mt-1 max-w-xl"
         value={name}
         onChange={(e) => setParticipant({ name: e.target.value })}
-        placeholder="First name and family name"
+        placeholder={tt("First name and family name", "Vorname und Nachname")}
       />
     </section>
   );

@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import clsx from "clsx";
 import { MATERIAL_BY_ID, materialAnchorId } from "@/data/materialIndex";
 import type { MaterialId } from "@/data/materialIndex";
-import { MATERIAL_PLAIN } from "@/data/materialPlain";
-import { REFERENCES } from "@/data/references";
+import { plainOf } from "@/data/materialPlain";
+import { tt } from "@/lib/lang";
+
+import { REFERENCES, refFull } from "@/data/references";
 import type { RefKey } from "@/data/references";
 import { scrollToAndFlash } from "@/lib/flash";
 import { glossify } from "@/lib/glossify";
@@ -17,7 +19,7 @@ export function SourceChip({ refKey, block }: { refKey: RefKey; block: "A" | "B"
   return (
     <button
       type="button"
-      title={r.full}
+      title={refFull(r.key)}
       onClick={() => {
         const acc = document.getElementById(`refs-${block}`) as HTMLDetailsElement | null;
         if (acc) acc.open = true;
@@ -57,11 +59,11 @@ export function MaterialCard({
   // Technical terms become clickable once per card: the scan line first, then the body, then the rules.
   const seen = new Set<string>();
   const scanG = glossify(scan, seen);
-  const plain = MATERIAL_PLAIN[id];
+  const plain = plainOf(id);
   const plainRows = [
-    { label: "In plain words", text: plain.idea },
-    { label: "Why it matters", text: plain.why },
-    ...(plain.picture ? [{ label: "How to read the picture below", text: plain.picture }] : []),
+    { label: tt("In plain words", "In einfachen Worten"), text: plain.idea },
+    { label: tt("Why it matters", "Warum das wichtig ist"), text: plain.why },
+    ...(plain.picture ? [{ label: tt("How to read the picture below", "So lesen Sie die Grafik darunter"), text: plain.picture }] : []),
   ].map((r) => ({ ...r, g: glossify(r.text, seen) }));
   const bodyG = glossify(children, seen);
   const rulesG = reasoning?.map((r) => glossify(r, seen));
@@ -71,7 +73,9 @@ export function MaterialCard({
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="rounded bg-ink px-2 py-0.5 text-micro font-bold text-paper">{id}</span>
         <h3 className="min-w-0 flex-1">{meta.title}</h3>
-        <span className="smallcaps whitespace-nowrap">{meta.minutes} min</span>
+        <span className="smallcaps whitespace-nowrap">
+          {meta.minutes} {tt("min", "Min.")}
+        </span>
       </header>
       <p className="mt-2 font-semibold text-ink">{scanG}</p>
       <div className="mt-3 space-y-2.5 rounded-lg border border-line bg-mist/50 p-3.5">
@@ -86,7 +90,7 @@ export function MaterialCard({
 
       {reasoning && reasoning.length > 0 && (
         <div className="mt-5 rounded-lg border border-accent/30 bg-accentSoft p-3.5">
-          <p className="smallcaps text-accent">How to decide when this comes up in the task</p>
+          <p className="smallcaps text-accent">{tt("How to decide when this comes up in the task", "So entscheiden Sie, wenn das in der Aufgabe vorkommt")}</p>
           <ul className="mt-1.5 list-disc space-y-1 pl-5 text-caption text-ink">
             {reasoning.map((r, i) => (
               <li key={r}>{rulesG?.[i] ?? r}</li>
@@ -97,7 +101,7 @@ export function MaterialCard({
 
       <footer className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
         <div className="flex flex-wrap items-center gap-1.5">
-          {sources.length > 0 && <span className="smallcaps mr-1">Sources</span>}
+          {sources.length > 0 && <span className="smallcaps mr-1">{tt("Sources", "Quellen")}</span>}
           {sources.map((s) => (
             <SourceChip key={s} refKey={s} block={meta.block} />
           ))}
@@ -111,7 +115,7 @@ export function MaterialCard({
             isRead ? "border-signal bg-signalSoft text-signal" : "border-line bg-paper text-ink hover:border-ash",
           )}
         >
-          {isRead ? "✓ Read" : "Mark as read"}
+          {isRead ? tt("✓ Read", "✓ Gelesen") : tt("Mark as read", "Als gelesen markieren")}
         </button>
       </footer>
     </article>

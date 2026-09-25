@@ -6,7 +6,7 @@ import { citedGridFigures, citesFunnelFigure } from "@/lib/checks";
 import { fundedItems, hasThreshold, overBy, sequenceTruth } from "@/lib/program";
 import type { Persisted } from "@/store/useStore";
 
-export type TaskBlockId = "b11" | "b12" | "b13" | "b14" | "b21" | "b22" | "b23" | "b24" | "b31" | "b32" | "b33" | "b34" | "b35";
+export type TaskBlockId = "b11" | "b12" | "b13" | "b14" | "b21" | "b22" | "b23" | "b24" | "b31" | "b32" | "b33" | "b34" | "b35" | "c31" | "c32";
 
 /** Which task blocks are complete — complete means filled in, never correct. */
 export function taskBlocks(p: Persisted): Record<TaskBlockId, boolean> {
@@ -27,29 +27,25 @@ export function taskBlocks(p: Persisted): Record<TaskBlockId, boolean> {
     b33: r3.cut.trim().length >= 40,
     b34: funded.length > 0 && funded.every((i) => r3.gov[i].owner && r3.gov[i].cadence && r3.gov[i].trigger.trim().length >= 12 && hasThreshold(r3.gov[i].trigger)),
     b35: r3.postponed.trim().length >= 30 && r3.pickup !== "",
+    // The two blocks of the Case File's decision part: 3.1 allocate and set the start months, 3.2 leave out and own.
+    c31: funded.length > 0 && overBy(r3.alloc) === 0 && funded.every((i) => r3.start[i] !== null),
+    c32:
+      r3.postponed.trim().length >= 30 &&
+      r3.pickup !== "" &&
+      funded.length > 0 &&
+      funded.every((i) => r3.gov[i].owner && r3.gov[i].cadence && r3.gov[i].trigger.trim().length >= 12 && hasThreshold(r3.gov[i].trigger)),
   };
 }
 
 /**
- * The Case File of Route 1 (CLAUDE.md #29): which blocks are required (Core) and which are for whoever has time
- * (Optional). The Core blocks alone give a complete file; Optional blocks are never listed as missing.
+ * The Case File of Route 1 (CLAUDE.md #29): one task with nine blocks. Core blocks give a complete file; Optional
+ * blocks are for whoever has time and are never listed as missing.
  */
-export const STAGE_CORE: Record<1 | 2 | 3, TaskBlockId[]> = {
-  1: ["b13", "b14"],
-  2: ["b21", "b23", "b24"],
-  3: ["b31", "b32", "b33", "b34", "b35"],
-};
-export const STAGE_OPTIONAL: Record<1 | 2 | 3, TaskBlockId[]> = { 1: ["b11", "b12"], 2: ["b22"], 3: [] };
-export const isCoreBlock = (b: TaskBlockId) => [...STAGE_CORE[1], ...STAGE_CORE[2], ...STAGE_CORE[3]].includes(b);
-
-/** How many Core blocks of one stage are filled in, for the three-segment strip. "Filled in", never "correct". */
-export function stageProgress(p: Persisted, stage: 1 | 2 | 3): { done: number; total: number } {
-  const tb = taskBlocks(p);
-  return { done: STAGE_CORE[stage].filter((b) => tb[b]).length, total: STAGE_CORE[stage].length };
-}
+export const CASE_CORE: TaskBlockId[] = ["b13", "b14", "b21", "b23", "c31", "c32"];
+export const CASE_OPTIONAL: TaskBlockId[] = ["b11", "b12", "b22"];
 
 const BLOCKS_OF: Record<1 | 2 | 3, TaskBlockId[]> = {
-  1: [...STAGE_CORE[1], ...STAGE_CORE[2], ...STAGE_CORE[3]],
+  1: CASE_CORE,
   2: ["b21", "b22", "b23", "b24"],
   3: ["b31", "b32", "b33", "b34", "b35"],
 };

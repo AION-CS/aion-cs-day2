@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { tt } from "@/lib/lang";
+
 
 /**
  * A learner help that stays hidden until asked for, like a clue: a small button, and on click a panel with a
@@ -45,7 +47,7 @@ export function RevealHint({
           onClick={() => setOpen(false)}
           className="text-micro font-semibold text-ash underline decoration-dotted underline-offset-2 hover:text-accentHi"
         >
-          Hide
+          {tt("Hide", "Ausblenden")}
         </button>
       </div>
       <div className="mt-1.5">{children}</div>

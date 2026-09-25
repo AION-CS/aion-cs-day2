@@ -1,6 +1,8 @@
 "use client";
 
 import { scrollToAndFlash } from "@/lib/flash";
+import { tt } from "@/lib/lang";
+
 
 export type MissingItem = {
   id: string;
@@ -15,11 +17,11 @@ export function jumpTo(m: MissingItem) {
 }
 
 /** A list of concrete, named gaps. Every entry is a button that scrolls to the exact element and flashes it. */
-export function MissingList({ items, lead = "Still needed:" }: { items: MissingItem[]; lead?: string }) {
+export function MissingList({ items, lead }: { items: MissingItem[]; lead?: string }) {
   if (items.length === 0) return null;
   return (
     <div className="text-caption text-ash">
-      <p className="font-semibold text-ink">{lead}</p>
+      <p className="font-semibold text-ink">{lead ?? tt("Still needed:", "Noch nötig:")}</p>
       <ul className="mt-1 list-disc space-y-1 pl-5">
         {items.map((m, i) => (
           <li key={`${m.id}-${i}`}>

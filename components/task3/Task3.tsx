@@ -23,10 +23,11 @@ import { COURSE } from "@/lib/routes";
 import { useJumpTo } from "@/lib/useJumpTo";
 import { usePersisted } from "@/store/usePersisted";
 import { useHydrated, useStore } from "@/store/useStore";
+import { tt } from "@/lib/lang";
 
 type T3 = "3.1" | "3.2" | "3.3" | "3.4" | "3.5";
 
-/** Stage 3 · Decide: the five answer blocks of Task 3 with the memo assembling beside them. */
+/** Route 3 · Decide: the five answer blocks of Task 3 with the memo assembling beside them. */
 export function Task3Workspace({ tiers, where = "Route 3 → Task 3", mobileStrip = true }: { tiers?: Partial<Record<T3, Tier>>; where?: string; mobileStrip?: boolean }) {
   return (
     <>
@@ -37,9 +38,12 @@ export function Task3Workspace({ tiers, where = "Route 3 → Task 3", mobileStri
           <AnswerBlock
             tier={tiers?.["3.1"]}
             id="block-3-1"
-            title="Block 3.1 · Allocate the budget"
+            title={tt("Block 3.1 · Allocate the budget", "Block 3.1 · Verteilen Sie das Budget")}
             kind="OBJECTIVE"
-            findIt={`${where} → “Budget allocation grid” below. Each line item shows its cost and effect; the bar at the top is the running total against the €150,000.`}
+            findIt={tt(
+              `${where} → “Budget allocation grid” below. Each line item shows its cost and effect; the bar at the top is the running total against the €150,000.`,
+              `${where} → „Budget-Zuteilungsraster“ unten. Jeder Posten zeigt seine Kosten und Wirkung; der Balken oben ist die laufende Summe gegenüber den 150.000 €.`,
+            )}
           >
             <MaterialRefs refs={["C3", "C4"]} />
             <AllocationGrid />
@@ -50,9 +54,12 @@ export function Task3Workspace({ tiers, where = "Route 3 → Task 3", mobileStri
           <AnswerBlock
             tier={tiers?.["3.2"]}
             id="block-3-2"
-            title="Block 3.2 · Set the rollout order"
+            title={tt("Block 3.2 · Set the rollout order", "Block 3.2 · Legen Sie die Einführungsreihenfolge fest")}
             kind="OBJECTIVE"
-            findIt={`${where} → “Budget allocation grid” → the start month of each funded item, then the sequencing warning that appears under it. Answer below.`}
+            findIt={tt(
+              `${where} → “Budget allocation grid” → the start month of each funded item, then the sequencing warning that appears under it. Answer below.`,
+              `${where} → „Budget-Zuteilungsraster“ → der Startmonat jedes finanzierten Postens, dann der Hinweis zur Reihenfolge, der darunter erscheint. Antworten Sie unten.`,
+            )}
           >
             <MaterialRefs refs={["C1", "C4"]} />
             <SequenceBlock />
@@ -61,9 +68,12 @@ export function Task3Workspace({ tiers, where = "Route 3 → Task 3", mobileStri
           <AnswerBlock
             tier={tiers?.["3.3"]}
             id="block-3-3"
-            title="Block 3.3 · What was cut"
+            title={tt("Block 3.3 · What was cut", "Block 3.3 · Was gestrichen wurde")}
             kind="JUDGED"
-            findIt={`${where} → your allocation in Block 3.1 and the list of what it leaves open in Block 3.5. Answer below.`}
+            findIt={tt(
+              `${where} → your allocation in Block 3.1 and the list of what it leaves open in Block 3.5. Answer below.`,
+              `${where} → Ihre Zuteilung in Block 3.1 und die Liste dessen, was sie offen lässt, in Block 3.5. Antworten Sie unten.`,
+            )}
           >
             <MaterialRefs refs={["C3", "C4"]} />
             <CutField />
@@ -72,9 +82,12 @@ export function Task3Workspace({ tiers, where = "Route 3 → Task 3", mobileStri
           <AnswerBlock
             tier={tiers?.["3.4"]}
             id="block-3-4"
-            title="Block 3.4 · Governance"
+            title={tt("Block 3.4 · Governance", "Block 3.4 · Steuerung")}
             kind="JUDGED"
-            findIt={`${where} → the items you funded in Block 3.1, one row each. Answer below.`}
+            findIt={tt(
+              `${where} → the items you funded in Block 3.1, one row each. Answer below.`,
+              `${where} → die Posten, die Sie in Block 3.1 finanziert haben, je eine Zeile. Antworten Sie unten.`,
+            )}
           >
             <MaterialRefs refs={["C2", "C4"]} />
             <GovernanceRows />
@@ -83,9 +96,12 @@ export function Task3Workspace({ tiers, where = "Route 3 → Task 3", mobileStri
           <AnswerBlock
             tier={tiers?.["3.5"]}
             id="block-3-5"
-            title="Block 3.5 · The measure you postponed"
+            title={tt("Block 3.5 · The measure you postponed", "Block 3.5 · Die Maßnahme, die Sie zurückgestellt haben")}
             kind="JUDGED"
-            findIt={`${where} → “Left open by your allocation”, below. Answer beneath it.`}
+            findIt={tt(
+              `${where} → “Left open by your allocation”, below. Answer beneath it.`,
+              `${where} → „Von Ihrer Zuteilung offen gelassen“, unten. Antworten Sie darunter.`,
+            )}
           >
             <MaterialRefs refs={["C1", "C4"]} />
             <PostponedField />
@@ -170,21 +186,21 @@ function DiagnosisNotice() {
   if (!hydrated || (weakest && uniform)) return null;
   return (
     <aside role="note" className="rounded-lg border border-line bg-mist/60 p-3 text-caption text-ink">
-      <p className="smallcaps">Section 1 of the memo quotes your earlier answers</p>
+      <p className="smallcaps">{tt("Section 1 of the memo quotes your earlier answers", "Abschnitt 1 des Memos zitiert Ihre früheren Antworten")}</p>
       <p className="mt-1">
-        {!weakest && "You have not named the weakest funnel stage (Block 1.3). "}
-        {!uniform && "You have not chosen one option for both segments (Block 2.4). "}
-        Finish them first and the diagnosis fills in by itself. Nothing on this page is blocked.
+        {!weakest && tt("You have not named the weakest funnel stage (Block 1.3). ", "Sie haben die schwächste Trichterstufe noch nicht benannt (Block 1.3). ")}
+        {!uniform && tt("You have not chosen one option for both segments (Block 2.4). ", "Sie haben noch keine Option für beide Segmente gewählt (Block 2.4). ")}
+        {tt("Finish them first and the diagnosis fills in by itself. Nothing on this page is blocked.", "Schließen Sie sie zuerst ab, und die Diagnose füllt sich von selbst. Nichts auf dieser Seite ist gesperrt.")}
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         {!weakest && (
           <button type="button" onClick={() => jump(IDS.weakest, "/route-1/")} className="btn-ghost btn-sm">
-            Go to Block 1.3
+            {tt("Go to Block 1.3", "Zu Block 1.3")}
           </button>
         )}
         {!uniform && (
           <button type="button" onClick={() => jump(IDS.uniform, "/route-2/")} className="btn-ghost btn-sm">
-            Go to Block 2.4
+            {tt("Go to Block 2.4", "Zu Block 2.4")}
           </button>
         )}
       </div>

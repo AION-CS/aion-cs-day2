@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DOC_CSS, memoBody } from "@/lib/exportDoc";
 import { usePersisted } from "@/store/usePersisted";
 import { useHydrated } from "@/store/useStore";
+import { tt } from "@/lib/lang";
 
 /**
  * The live memo. It is built by the same `memoBody` the export uses, in memo reading order (header, then
@@ -19,9 +20,9 @@ export function MemoPanel({ mobileStrip = true }: { mobileStrip?: boolean }) {
   const html = hydrated ? memoBody(p) : "";
   return (
     <>
-      <aside aria-label="Live memo" className="hidden self-start lg:sticky lg:top-28 lg:block lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto print:hidden">
+      <aside aria-label={tt("Live memo", "Live-Memo")} className="hidden self-start lg:sticky lg:top-28 lg:block lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto print:hidden">
         <div className="card p-4">
-          <p className="smallcaps mb-2 text-accent">Live memo · assembles as you answer</p>
+          <p className="smallcaps mb-2 text-accent">{tt("Live memo · assembles as you answer", "Live-Memo · setzt sich beim Antworten zusammen")}</p>
           <style dangerouslySetInnerHTML={{ __html: DOC_CSS }} />
           <div className="doc" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
@@ -35,8 +36,8 @@ export function MemoPanel({ mobileStrip = true }: { mobileStrip?: boolean }) {
           onClick={() => setOpen((o) => !o)}
           className="flex min-h-[44px] w-full items-center justify-between gap-3 px-4 py-2 text-left"
         >
-          <span className="smallcaps text-accent">Live memo</span>
-          <span className="text-caption text-ash">{open ? "Tap to collapse" : "Tap to expand"}</span>
+          <span className="smallcaps text-accent">{tt("Live memo", "Live-Memo")}</span>
+          <span className="text-caption text-ash">{open ? tt("Tap to collapse", "Zum Einklappen tippen") : tt("Tap to expand", "Zum Ausklappen tippen")}</span>
         </button>
         {open && (
           <div id="memo-strip-body" className="max-h-[65vh] overflow-y-auto border-t border-line p-3">

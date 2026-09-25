@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { DOC_CSS, downloadHtml, printDocument, wrapDocument } from "@/lib/exportDoc";
 import { flash } from "@/lib/flash";
 import { jumpTo } from "@/components/ui/MissingList";
+import { tt } from "@/lib/lang";
+
 import type { MissingEntry } from "@/lib/missing";
 
 /**
@@ -76,27 +78,31 @@ export function ExportBar({
           {exportLabel}
         </button>
         <button type="button" onClick={() => run("print")} className="btn-ghost">
-          Print / save as PDF
+          {tt("Print / save as PDF", "Drucken / als PDF speichern")}
         </button>
         <span className="text-caption text-ash">
-          File name: <span className="tnum font-semibold text-ink">{filename}.html</span>
+          {tt("File name: ", "Dateiname: ")}
+          <span className="tnum font-semibold text-ink">{filename}.html</span>
         </span>
       </div>
 
       {panel && (
-        <div id={`${id}-panel`} role="region" aria-label="Before you export" className="card border-rust/40 bg-rustSoft p-4">
+        <div id={`${id}-panel`} role="region" aria-label={tt("Before you export", "Vor dem Export")} className="card border-rust/40 bg-rustSoft p-4">
           <div className="flex items-start justify-between gap-3">
-            <h4 className="font-semibold text-ink">Before you export</h4>
+            <h4 className="font-semibold text-ink">{tt("Before you export", "Vor dem Export")}</h4>
             <button type="button" onClick={() => setPanel(false)} className="btn-ghost btn-sm">
-              Close
+              {tt("Close", "Schließen")}
             </button>
           </div>
           {missing.length === 0 ? (
-            <p className="mt-2 text-caption text-ink">Nothing is missing now. Press “{exportLabel}” again.</p>
+            <p className="mt-2 text-caption text-ink">{tt(`Nothing is missing now. Press “${exportLabel}” again.`, `Es fehlt nichts mehr. Drücken Sie erneut „${exportLabel}“.`)}</p>
           ) : (
             <>
               <p className="mt-1 text-caption text-ash">
-                {missing.length} {missing.length === 1 ? "item" : "items"} still open. Select one to jump to it.
+                {tt(
+                  `${missing.length} ${missing.length === 1 ? "item" : "items"} still open. Select one to jump to it.`,
+                  `${missing.length} ${missing.length === 1 ? "Punkt ist" : "Punkte sind"} noch offen. Wählen Sie einen aus, um dorthin zu springen.`,
+                )}
               </p>
               <ul className="mt-2 space-y-1.5">
                 {missing.map((m, i) => (

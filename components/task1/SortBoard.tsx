@@ -14,6 +14,7 @@ import { RevealHint } from "@/components/ui/RevealHint";
 import { MaterialRefs } from "@/components/ui/MaterialRefs";
 import { Gloss } from "@/lib/glossify";
 import { UndoRedoControls } from "@/components/ui/UndoRedoControls";
+import { tt } from "@/lib/lang";
 
 function Chip({
   id,
@@ -113,7 +114,12 @@ export function SortBoard() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-caption text-ash">Drag a touchpoint into a phase, or select it and then select a phase. Select a placed one to move it again.</p>
+        <p className="text-caption text-ash">
+          {tt(
+            "Drag a touchpoint into a phase, or select it and then select a phase. Select a placed one to move it again.",
+            "Ziehen Sie einen Kontaktpunkt in eine Phase, oder wählen Sie ihn aus und dann eine Phase. Wählen Sie einen bereits zugeordneten aus, um ihn erneut zu verschieben.",
+          )}
+        </p>
         <UndoRedoControls onUndo={undo} onRedo={redo} undoCount={l1.history.length} redoCount={l1.future.length} />
       </div>
 
@@ -124,15 +130,15 @@ export function SortBoard() {
         className={clsx("rounded-lg border border-dashed border-ash/60 bg-mist/60 p-3", over === "tray" && "is-drop-target")}
       >
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="smallcaps">Touchpoints not sorted ({unplaced.length})</p>
+          <p className="smallcaps">{tt("Touchpoints not sorted", "Nicht zugeordnete Kontaktpunkte")} ({unplaced.length})</p>
           {selected && l1.sort[selected] !== null && (
             <button type="button" onClick={() => put(selected, null)} className="btn-ghost btn-sm">
-              Return to this tray
+              {tt("Return to this tray", "In dieses Fach zurücklegen")}
             </button>
           )}
         </div>
         {unplaced.length === 0 ? (
-          <p className="text-caption text-ash">Every touchpoint is in a phase.</p>
+          <p className="text-caption text-ash">{tt("Every touchpoint is in a phase.", "Jeder Kontaktpunkt liegt in einer Phase.")}</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {unplaced.map((t) => (
@@ -156,7 +162,11 @@ export function SortBoard() {
               <button
                 type="button"
                 onClick={() => selected && put(selected, ph.id)}
-                aria-label={selected ? `Place ${TOUCHPOINT_BY_ID[selected].label} in ${ph.label}` : `${ph.label}. Select a touchpoint first.`}
+                aria-label={
+                  selected
+                    ? tt(`Place ${TOUCHPOINT_BY_ID[selected].label} in ${ph.label}`, `${TOUCHPOINT_BY_ID[selected].label} in ${ph.label} ablegen`)
+                    : tt(`${ph.label}. Select a touchpoint first.`, `${ph.label}. Wählen Sie zuerst einen Kontaktpunkt.`)
+                }
                 className={clsx(
                   "mb-2 rounded-md border px-2 py-1.5 text-left transition-colors",
                   selected ? "border-accent bg-accentSoft hover:bg-gold/30" : "border-transparent bg-mist",
@@ -170,16 +180,21 @@ export function SortBoard() {
                   <Chip key={t.id} {...chipProps(t.id)} />
                 ))}
               </div>
-              {inBin.length === 0 && <p className="mt-auto pt-2 text-micro normal-case tracking-normal text-ash">Empty</p>}
+              {inBin.length === 0 && <p className="mt-auto pt-2 text-micro normal-case tracking-normal text-ash">{tt("Empty", "Leer")}</p>}
             </div>
           );
         })}
       </div>
 
       <div className="flex flex-wrap items-start gap-2">
-        <RevealHint id="sort-tests" label="Show the test questions" title="Test questions · taught in Materi A2">
+        <RevealHint id="sort-tests" label={tt("Show the test questions", "Testfragen anzeigen")} title={tt("Test questions · taught in Materi A2", "Testfragen · gelehrt in Materi A2")}>
           <div className="space-y-2 text-caption text-ink">
-            <p>Ask these of every touchpoint. They repeat the tests from Materi A2; they never say which touchpoint goes where.</p>
+            <p>
+              {tt(
+                "Ask these of every touchpoint. They repeat the tests from Materi A2; they never say which touchpoint goes where.",
+                "Stellen Sie diese Fragen zu jedem Kontaktpunkt. Sie wiederholen die Tests aus Materi A2; sie sagen nie, welcher Kontaktpunkt wohin gehört.",
+              )}
+            </p>
             <ul className="space-y-1.5">
               {PHASE_TESTS.map((t) => (
                 <li key={t.phase}>
@@ -188,7 +203,7 @@ export function SortBoard() {
                 </li>
               ))}
             </ul>
-            <p className="smallcaps text-ash">When two phases both seem to fit</p>
+            <p className="smallcaps text-ash">{tt("When two phases both seem to fit", "Wenn zwei Phasen beide zu passen scheinen")}</p>
             <ul className="space-y-1.5">
               {PHASE_PAIR_TESTS.map((t) => (
                 <li key={t.pair}>
@@ -197,7 +212,7 @@ export function SortBoard() {
                 </li>
               ))}
             </ul>
-            <MaterialRefs refs={["A2"]} lead="Taught in" />
+            <MaterialRefs refs={["A2"]} lead={tt("Taught in", "Gelehrt in")} />
           </div>
         </RevealHint>
       </div>
@@ -205,37 +220,53 @@ export function SortBoard() {
       <div className="space-y-3 border-t border-line pt-3">
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => checkSort(sortHolds(l1.sort))} className="btn-primary">
-            Check my sort
+            {tt("Check my sort", "Meine Zuordnung prüfen")}
           </button>
           {!l1.sortClue && (
             <button type="button" onClick={showClue} className="btn-ghost btn-sm border-gold">
-              Show clue
+              {tt("Show clue", "Hinweis anzeigen")}
             </button>
           )}
           <span className="text-caption text-ash">
-            Checks requested: <span className="tnum font-semibold text-ink">{l1.sortChecks}</span>
+            {tt("Checks requested:", "Angeforderte Prüfungen:")} <span className="tnum font-semibold text-ink">{l1.sortChecks}</span>
           </span>
         </div>
         <p className="text-micro normal-case tracking-normal text-ash">
-          A check counts how many placed rows hold. It never says which, because with three phases naming the wrong rows would name the answer.
+          {tt(
+            "A check counts how many placed rows hold. It never says which, because with three phases naming the wrong rows would name the answer.",
+            "Eine Prüfung zählt, wie viele zugeordnete Zeilen stimmen. Sie sagt nie welche, denn bei drei Phasen würde das Nennen der falschen Zeilen die Antwort nennen.",
+          )}
         </p>
         {res && (
           <p role="status" className="text-caption text-ink">
-            {res.placed === 0 ? "Nothing is sorted yet." : `${res.holds} of ${res.placed} placed ${res.placed === 1 ? "touchpoint holds" : "touchpoints hold"}.`}
-            {res.placed < TOUCHPOINTS.length && ` ${TOUCHPOINTS.length - res.placed} not placed yet, so not checked.`}
+            {res.placed === 0
+              ? tt("Nothing is sorted yet.", "Noch nichts ist zugeordnet.")
+              : tt(
+                  `${res.holds} of ${res.placed} placed ${res.placed === 1 ? "touchpoint holds" : "touchpoints hold"}.`,
+                  `${res.holds} von ${res.placed} zugeordneten ${res.placed === 1 ? "Kontaktpunkt stimmt" : "Kontaktpunkten stimmen"}.`,
+                )}
+            {res.placed < TOUCHPOINTS.length &&
+              tt(` ${TOUCHPOINTS.length - res.placed} not placed yet, so not checked.`, ` ${TOUCHPOINTS.length - res.placed} noch nicht zugeordnet, daher nicht geprüft.`)}
           </p>
         )}
         {l1.sortClue && (
-          <p className="text-micro normal-case tracking-normal text-ash">The clue is a test question under every touchpoint, not only under the ones that are off.</p>
+          <p className="text-micro normal-case tracking-normal text-ash">
+            {tt(
+              "The clue is a test question under every touchpoint, not only under the ones that are off.",
+              "Der Hinweis ist eine Testfrage unter jedem Kontaktpunkt, nicht nur unter denen, die nicht stimmen.",
+            )}
+          </p>
         )}
         {canReveal && !l1.reasoningOpened && (
           <button type="button" onClick={openReasoning} className="btn-ghost btn-sm">
-            Show the reasoning (recorded in your export)
+            {tt("Show the reasoning (recorded in your export)", "Begründung anzeigen (wird in Ihrem Export vermerkt)")}
           </button>
         )}
         {l1.reasoningOpened && (
           <ul className="fade-in space-y-1.5 rounded-lg border border-gold bg-accentSoft p-3 text-caption text-ink">
-            <li className="smallcaps text-accent">The reasoning · opened after {l1.sortChecks} checks</li>
+            <li className="smallcaps text-accent">
+              {tt(`The reasoning · opened after ${l1.sortChecks} checks`, `Die Begründung · geöffnet nach ${l1.sortChecks} Prüfungen`)}
+            </li>
             {TOUCHPOINTS.map((t) => (
               <li key={t.id}>
                 <span className="font-semibold">{t.label}:</span> {t.why}

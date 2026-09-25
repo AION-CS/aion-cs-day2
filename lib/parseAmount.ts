@@ -1,3 +1,4 @@
+import { euro } from "@/lib/lang";
 /**
  * Reads an amount typed in any international format:
  * `159890`, `159,890`, `159.890`, `159.890,00`, `€ 159 890`, `159'890`.
@@ -71,5 +72,5 @@ export function parsePct(raw: string): number | null {
 }
 
 export function formatEuro(n: number): string {
-  return `€${Math.round(n).toLocaleString("en-US")}`;
+  return euro(n);
 }

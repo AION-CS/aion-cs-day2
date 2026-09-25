@@ -3,6 +3,7 @@
 import { RevealHint } from "@/components/ui/RevealHint";
 import { scrollToAndFlash } from "@/lib/flash";
 import { Gloss } from "@/lib/glossify";
+import { tt } from "@/lib/lang";
 
 export type HelpRef = { label: string; value: string; target: string };
 
@@ -11,9 +12,9 @@ export type HelpRef = { label: string; value: string; target: string };
  * where the case or the learner's own earlier answers hold them, the numbers it can rest on, each a button that
  * scrolls to and flashes its source. It is a frame and a list of reference points, never the answer itself.
  */
-export function WritingHelp({ id, steps, refs, refsTitle = "Numbers you can use" }: { id: string; steps: string[]; refs?: HelpRef[]; refsTitle?: string }) {
+export function WritingHelp({ id, steps, refs, refsTitle }: { id: string; steps: string[]; refs?: HelpRef[]; refsTitle?: string }) {
   return (
-    <RevealHint id={id} label="Show how to build the answer" title="How to build the answer · a frame, not the answer">
+    <RevealHint id={id} label={tt("Show how to build the answer", "Aufbau der Antwort anzeigen")} title={tt("How to build the answer · a frame, not the answer", "So bauen Sie die Antwort auf · ein Gerüst, nicht die Antwort")}>
       <div className="space-y-2 text-caption text-ink">
         <ol className="list-decimal space-y-1 pl-5">
           {steps.map((s) => (
@@ -24,7 +25,9 @@ export function WritingHelp({ id, steps, refs, refsTitle = "Numbers you can use"
         </ol>
         {refs && refs.length > 0 && (
           <div>
-            <p className="smallcaps text-ash">{refsTitle} · click one to see it on the page</p>
+            <p className="smallcaps text-ash">
+              {refsTitle ?? tt("Numbers you can use", "Zahlen, die Sie nutzen können")} · {tt("click one to see it on the page", "klicken Sie auf eine, um sie auf der Seite zu sehen")}
+            </p>
             <ul className="mt-1 space-y-1">
               {refs.map((r) => (
                 <li key={r.label}>

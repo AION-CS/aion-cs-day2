@@ -4,6 +4,8 @@
  * `npm run verify:calc` (scripts/verify-calc.mjs), so a change to any input cannot drift silently.
  */
 
+import { euro, euroSigned, num, tt } from "@/lib/lang";
+
 export type SegId = "P" | "R";
 export type OptId = "A" | "B" | "C";
 export const SEG_IDS: SegId[] = ["P", "R"];
@@ -12,17 +14,76 @@ export const OPT_IDS: OptId[] = ["A", "B", "C"];
 export const CONTRACT = { price: 60000, margin: 0.32, gp: 60000 * 0.32 } as const; // €19,200 per order
 
 export const SEGMENTS: Record<SegId, { id: SegId; name: string; short: string; clients: number; baseline: number; about: string }> = {
-  P: { id: "P", name: "Project clients (P)", short: "Project", clients: 14, baseline: 1, about: "Large one-off implementations." },
-  R: { id: "R", name: "Retainer clients (R)", short: "Retainer", clients: 24, baseline: 4, about: "Ongoing, smaller support contracts." },
+  P: {
+    id: "P",
+    get name() {
+      return tt("Project clients (P)", "Projektkunden (P)");
+    },
+    get short() {
+      return tt("Project", "Projekt");
+    },
+    clients: 14,
+    baseline: 1,
+    get about() {
+      return tt("Large one-off implementations.", "Große, einmalige Implementierungen.");
+    },
+  },
+  R: {
+    id: "R",
+    get name() {
+      return tt("Retainer clients (R)", "Retainer-Kunden (R)");
+    },
+    get short() {
+      return tt("Retainer", "Retainer");
+    },
+    clients: 24,
+    baseline: 4,
+    get about() {
+      return tt("Ongoing, smaller support contracts.", "Laufende, kleinere Supportverträge.");
+    },
+  },
 };
 
 export const OPTIONS: Record<
   OptId,
   { id: OptId; name: string; short: string; costPerClient: number | null; discount: number | null; uplift: Record<SegId, number> }
 > = {
-  A: { id: "A", name: "A · Intensified personal account management", short: "Account management", costPerClient: 1500, discount: null, uplift: { P: 6, R: 12 } },
-  B: { id: "B", name: "B · Discount (8% off the repeat order)", short: "Discount", costPerClient: null, discount: 0.08, uplift: { P: 8, R: 3 } },
-  C: { id: "C", name: "C · Value-added service", short: "Value-added service", costPerClient: 1100, discount: null, uplift: { P: 7, R: 9 } },
+  A: {
+    id: "A",
+    get name() {
+      return tt("A · Intensified personal account management", "A · Intensivierte persönliche Kundenbetreuung");
+    },
+    get short() {
+      return tt("Account management", "Kundenbetreuung");
+    },
+    costPerClient: 1500,
+    discount: null,
+    uplift: { P: 6, R: 12 },
+  },
+  B: {
+    id: "B",
+    get name() {
+      return tt("B · Discount (8% off the repeat order)", "B · Rabatt (8 % auf den Folgeauftrag)");
+    },
+    get short() {
+      return tt("Discount", "Rabatt");
+    },
+    costPerClient: null,
+    discount: 0.08,
+    uplift: { P: 8, R: 3 },
+  },
+  C: {
+    id: "C",
+    get name() {
+      return tt("C · Value-added service", "C · Zusatzleistung");
+    },
+    get short() {
+      return tt("Value-added service", "Zusatzleistung");
+    },
+    costPerClient: 1100,
+    discount: null,
+    uplift: { P: 7, R: 9 },
+  },
 };
 
 export type Calc = {
@@ -57,10 +118,13 @@ export function calc(opt: OptId, seg: SegId): Calc {
   if (o.discount !== null) {
     const orders = s.baseline + extraOrders;
     cost = orders * CONTRACT.price * o.discount;
-    costBasis = `${s.baseline} existing + ${extraOrders} extra = ${round2(orders)} repeat orders × €${CONTRACT.price.toLocaleString("en-US")} × ${o.discount * 100}%`;
+    costBasis = tt(
+      `${s.baseline} existing + ${num(extraOrders)} extra = ${num(round2(orders))} repeat orders × ${euro(CONTRACT.price)} × ${o.discount * 100}%`,
+      `${s.baseline} bestehende + ${num(extraOrders)} zusätzliche = ${num(round2(orders))} Folgeaufträge × ${euro(CONTRACT.price)} × ${o.discount * 100} %`,
+    );
   } else {
     cost = s.clients * (o.costPerClient ?? 0);
-    costBasis = `${s.clients} clients × €${(o.costPerClient ?? 0).toLocaleString("en-US")}`;
+    costBasis = tt(`${s.clients} clients × ${euro(o.costPerClient ?? 0)}`, `${s.clients} Kunden × ${euro(o.costPerClient ?? 0)}`);
   }
   return {
     clients: s.clients,
@@ -104,8 +168,8 @@ export const EXPECTED: Record<string, number> = {
 export const EXPECTED_UNIFORM: Record<OptId, number> = { A: 14424, C: 18488, B: 2496 };
 export const TOLERANCE = 5;
 
-export const fmtEuro = (n: number) => `${n < 0 ? "−" : n > 0 ? "+" : ""}€${Math.abs(Math.round(n)).toLocaleString("en-US")}`;
-export const fmtEuroPlain = (n: number) => `€${Math.round(n).toLocaleString("en-US")}`;
+export const fmtEuro = (n: number) => euroSigned(n);
+export const fmtEuroPlain = (n: number) => euro(n);
 
 /* ------------------------------------------------------------------ helps under the grid (Block 2.1) */
 
@@ -119,8 +183,14 @@ export const T2_IDS = {
 /** The formula of one grid cell, in words and with no numbers. It names the card that teaches the method (Materi B3). */
 export const cellFormula = (opt: OptId): string =>
   OPTIONS[opt].discount === null
-    ? "Net impact = (clients × uplift ÷ 100 × gross profit per order) − (clients × cost per client per year). Extra orders come first; the cost of a fixed-cost option does not depend on how many orders follow."
-    : "Net impact = (clients × uplift ÷ 100 × gross profit per order) − ((existing repeat orders + extra orders) × contract price × discount ÷ 100). The discount is paid on every repeat order in the segment, the existing ones as well as the extra ones.";
+    ? tt(
+        "Net impact = (clients × uplift ÷ 100 × gross profit per order) − (clients × cost per client per year). Extra orders come first; the cost of a fixed-cost option does not depend on how many orders follow.",
+        "Nettoeffekt = (Kunden × Steigerung ÷ 100 × Rohertrag pro Auftrag) − (Kunden × Kosten pro Kunde und Jahr). Zuerst kommen die zusätzlichen Aufträge; die Kosten einer Fixkosten-Option hängen nicht davon ab, wie viele Aufträge folgen.",
+      )
+    : tt(
+        "Net impact = (clients × uplift ÷ 100 × gross profit per order) − ((existing repeat orders + extra orders) × contract price × discount ÷ 100). The discount is paid on every repeat order in the segment, the existing ones as well as the extra ones.",
+        "Nettoeffekt = (Kunden × Steigerung ÷ 100 × Rohertrag pro Auftrag) − ((bestehende Folgeaufträge + zusätzliche Aufträge) × Vertragspreis × Rabatt ÷ 100). Der Rabatt fällt auf jeden Folgeauftrag im Segment an, auf die bestehenden ebenso wie auf die zusätzlichen.",
+      );
 
 export type CellSource = { target: string; where: string; label: string; value: string };
 
@@ -131,19 +201,19 @@ export type CellSource = { target: string; where: string; label: string; value: 
 export function cellSources(opt: OptId, seg: SegId): CellSource[] {
   const s = SEGMENTS[seg];
   const o = OPTIONS[opt];
-  const segRow = { target: T2_IDS.seg(seg), where: "Given · client base" };
-  const optRow = { target: T2_IDS.opt(opt), where: "Given · the three options" };
-  const contract = { target: T2_IDS.contract, where: "Below the client-base table" };
+  const segRow = { target: T2_IDS.seg(seg), where: tt("Given · client base", "Gegeben · Kundenbasis") };
+  const optRow = { target: T2_IDS.opt(opt), where: tt("Given · the three options", "Gegeben · die drei Optionen") };
+  const contract = { target: T2_IDS.contract, where: tt("Below the client-base table", "Unter der Kundenbasis-Tabelle") };
   const out: CellSource[] = [
-    { ...segRow, label: `${s.name} · Clients`, value: String(s.clients) },
-    { ...optRow, label: `Option ${opt} · Uplift ${seg}`, value: `+${o.uplift[seg]} pp` },
-    { ...contract, label: "Gross profit per order", value: fmtEuroPlain(CONTRACT.gp) },
+    { ...segRow, label: tt(`${s.name} · Clients`, `${s.name} · Kunden`), value: String(s.clients) },
+    { ...optRow, label: tt(`Option ${opt} · Uplift ${seg}`, `Option ${opt} · Steigerung ${seg}`), value: tt(`+${o.uplift[seg]} pp`, `+${o.uplift[seg]}\u00A0PP`) },
+    { ...contract, label: tt("Gross profit per order", "Rohertrag pro Auftrag"), value: fmtEuroPlain(CONTRACT.gp) },
   ];
-  if (o.discount === null) out.push({ ...optRow, label: `Option ${opt} · Cost / client / yr`, value: fmtEuroPlain(o.costPerClient ?? 0) });
+  if (o.discount === null) out.push({ ...optRow, label: tt(`Option ${opt} · Cost / client / yr`, `Option ${opt} · Kosten / Kunde / Jahr`), value: fmtEuroPlain(o.costPerClient ?? 0) });
   else {
-    out.push({ ...segRow, label: `${s.name} · Baseline repeat orders, last 12 months`, value: String(s.baseline) });
-    out.push({ ...contract, label: "Contract price", value: fmtEuroPlain(CONTRACT.price) });
-    out.push({ ...optRow, label: `Option ${opt} · the discount, in its name`, value: `${o.discount * 100}%` });
+    out.push({ ...segRow, label: tt(`${s.name} · Baseline repeat orders, last 12 months`, `${s.name} · Bestehende Folgeaufträge, letzte 12 Monate`), value: String(s.baseline) });
+    out.push({ ...contract, label: tt("Contract price", "Vertragspreis"), value: fmtEuroPlain(CONTRACT.price) });
+    out.push({ ...optRow, label: tt(`Option ${opt} · the discount, in its name`, `Option ${opt} · der Rabatt, im Namen der Option`), value: tt(`${o.discount * 100}%`, `${o.discount * 100}\u00A0%`) });
   }
   return out;
 }

@@ -3,6 +3,7 @@ import type { StepId } from "@/data/funnel";
 import { CELL_KEYS, CONTRACT, OPTIONS, SEGMENTS, parseKey } from "@/data/segments";
 import type { OptId, SegId } from "@/data/segments";
 import { parseAmount } from "@/lib/parseAmount";
+import { tt } from "@/lib/lang";
 
 /**
  * The "automatic calculator" under a calculation question: the formula split into small labelled parts. The
@@ -33,29 +34,53 @@ export type CalcBuilder = {
 
 /* ------------------------------------------------------------------ Block 2.1 · one builder per grid cell */
 
-/** The builder for one Option × Segment cell. A and C cost a fixed amount per client; B is a price cut on every repeat order. */
+/**
+ * The builder for one Option × Segment cell. A and C cost a fixed amount per client; B is a price cut on every repeat order.
+ * The labels and clues are getters, so they follow the language at the moment they are read (the builders are made once, at import).
+ */
 export function cellBuilder(opt: OptId, seg: SegId): CalcBuilder {
   const o = OPTIONS[opt];
   const s = SEGMENTS[seg];
-  const optName = `Option ${opt}`;
+  const optName = () => tt(`Option ${opt}`, `Option ${opt}`);
   const shared: CalcPart[] = [
     {
       id: "clients",
-      label: `Clients in ${s.short.toLowerCase()} segment`,
+      get label() {
+        return tt(`Clients in ${s.short.toLowerCase()} segment`, `Kunden im Segment ${s.short}`);
+      },
       expected: s.clients,
-      clue: "Given · client base: the Clients column, in the row of the segment you are working on. Not the other segment, and not the baseline repeat orders.",
+      get clue() {
+        return tt(
+          "Given · client base: the Clients column, in the row of the segment you are working on. Not the other segment, and not the baseline repeat orders.",
+          "Gegeben · Kundenbasis: die Spalte Kunden, in der Zeile des Segments, an dem Sie arbeiten. Nicht das andere Segment und nicht die Folgeaufträge im Ausgangsjahr.",
+        );
+      },
     },
     {
       id: "uplift",
-      label: "Uplift (percentage points)",
+      get label() {
+        return tt("Uplift (percentage points)", "Steigerung (Prozentpunkte)");
+      },
       expected: o.uplift[seg],
-      clue: `Given · the three options: the Uplift ${seg} column, in the ${optName} row. It is a number of percentage points, typed as printed, not as a fraction.`,
+      get clue() {
+        return tt(
+          `Given · the three options: the Uplift ${seg} column, in the ${optName()} row. It is a number of percentage points, typed as printed, not as a fraction.`,
+          `Gegeben · die drei Optionen: die Spalte Steigerung ${seg}, in der Zeile ${optName()}. Es ist eine Zahl in Prozentpunkten, so eingegeben wie gedruckt, nicht als Bruch.`,
+        );
+      },
     },
     {
       id: "gp",
-      label: "Gross profit per order (€)",
+      get label() {
+        return tt("Gross profit per order (€)", "Rohertrag pro Auftrag (€)");
+      },
       expected: CONTRACT.gp,
-      clue: "The line below the client-base table: gross profit per order. It is not the contract price on the same line.",
+      get clue() {
+        return tt(
+          "The line below the client-base table: gross profit per order. It is not the contract price on the same line.",
+          "Die Zeile unter der Tabelle der Kundenbasis: Rohertrag pro Auftrag. Es ist nicht der Vertragspreis in derselben Zeile.",
+        );
+      },
     },
   ];
   if (o.discount === null) {
@@ -64,9 +89,16 @@ export function cellBuilder(opt: OptId, seg: SegId): CalcBuilder {
         ...shared,
         {
           id: "cpc",
-          label: "Cost per client per year (€)",
+          get label() {
+            return tt("Cost per client per year (€)", "Kosten pro Kunde und Jahr (€)");
+          },
           expected: o.costPerClient ?? 0,
-          clue: `Given · the three options: Cost / client / yr, in the ${optName} row. It is a cost per client, so it is multiplied by the clients.`,
+          get clue() {
+            return tt(
+              `Given · the three options: Cost / client / yr, in the ${optName()} row. It is a cost per client, so it is multiplied by the clients.`,
+              `Gegeben · die drei Optionen: Kosten / Kunde / Jahr, in der Zeile ${optName()}. Es sind Kosten pro Kunde, sie werden also mit den Kunden multipliziert.`,
+            );
+          },
         },
       ],
       compute: (v) => (v.clients * v.uplift) / 100 * v.gp - v.clients * v.cpc,
@@ -78,21 +110,42 @@ export function cellBuilder(opt: OptId, seg: SegId): CalcBuilder {
       ...shared,
       {
         id: "base",
-        label: "Baseline repeat orders (last 12 months)",
+        get label() {
+          return tt("Baseline repeat orders (last 12 months)", "Folgeaufträge im Ausgangsjahr (letzte 12 Monate)");
+        },
         expected: s.baseline,
-        clue: "Given · client base: Baseline repeat orders, in the row of this segment. These are the orders the segment already places, not the number of clients.",
+        get clue() {
+          return tt(
+            "Given · client base: Baseline repeat orders, in the row of this segment. These are the orders the segment already places, not the number of clients.",
+            "Gegeben · Kundenbasis: Folgeaufträge im Ausgangsjahr, in der Zeile dieses Segments. Das sind die Aufträge, die das Segment schon erteilt, nicht die Zahl der Kunden.",
+          );
+        },
       },
       {
         id: "price",
-        label: "Contract price (€)",
+        get label() {
+          return tt("Contract price (€)", "Vertragspreis (€)");
+        },
         expected: CONTRACT.price,
-        clue: "The line below the client-base table: contract price. It is not the gross profit on the same line; a discount is taken off the price.",
+        get clue() {
+          return tt(
+            "The line below the client-base table: contract price. It is not the gross profit on the same line; a discount is taken off the price.",
+            "Die Zeile unter der Tabelle der Kundenbasis: Vertragspreis. Es ist nicht der Rohertrag in derselben Zeile; ein Rabatt wird vom Preis abgezogen.",
+          );
+        },
       },
       {
         id: "disc",
-        label: "Discount (%)",
+        get label() {
+          return tt("Discount (%)", "Rabatt (%)");
+        },
         expected: (o.discount ?? 0) * 100,
-        clue: `Given · the three options: the percentage in the name of the ${optName} row. It is taken off the repeat order, so it is paid on every one.`,
+        get clue() {
+          return tt(
+            `Given · the three options: the percentage in the name of the ${optName()} row. It is taken off the repeat order, so it is paid on every one.`,
+            `Gegeben · die drei Optionen: der Prozentwert im Namen der Zeile ${optName()}. Er wird vom Folgeauftrag abgezogen, wird also bei jedem bezahlt.`,
+          );
+        },
       },
     ],
     compute: (v) => (v.clients * v.uplift) / 100 * v.gp - (v.base + (v.clients * v.uplift) / 100) * v.price * (v.disc / 100),
@@ -123,14 +176,54 @@ export function costBuilder(step: StepId): CalcBuilder {
   const signed = STAGE_BY_ID.signed.count;
   return {
     parts: [
-      { id: "above", label: "Count at the stage above the arrow", expected: s.fromCount, clue: "The funnel: the count printed on the bar above the arrow you named in Block 1.3." },
-      { id: "below", label: "Count at the stage below the arrow", expected: s.toCount, clue: "The funnel: the count printed on the bar below the arrow you named in Block 1.3." },
-      { id: "signed", label: "Contracts signed in the year", expected: signed, clue: "The funnel: the count on the last bar, Contract signed." },
+      {
+        id: "above",
+        get label() {
+          return tt("Count at the stage above the arrow", "Zahl der Stufe über dem Pfeil");
+        },
+        expected: s.fromCount,
+        get clue() {
+          return tt(
+            "The funnel: the count printed on the bar above the arrow you named in Block 1.3.",
+            "Der Trichter: die Zahl auf dem Balken über dem Pfeil, den Sie in Block 1.3 benannt haben.",
+          );
+        },
+      },
+      {
+        id: "below",
+        get label() {
+          return tt("Count at the stage below the arrow", "Zahl der Stufe unter dem Pfeil");
+        },
+        expected: s.toCount,
+        get clue() {
+          return tt(
+            "The funnel: the count printed on the bar below the arrow you named in Block 1.3.",
+            "Der Trichter: die Zahl auf dem Balken unter dem Pfeil, den Sie in Block 1.3 benannt haben.",
+          );
+        },
+      },
+      {
+        id: "signed",
+        get label() {
+          return tt("Contracts signed in the year", "Im Jahr unterzeichnete Verträge");
+        },
+        expected: signed,
+        get clue() {
+          return tt("The funnel: the count on the last bar, Contract signed.", "Der Trichter: die Zahl auf dem letzten Balken, Vertrag unterzeichnet.");
+        },
+      },
       {
         id: "value",
-        label: "Average contract value (€)",
+        get label() {
+          return tt("Average contract value (€)", "Durchschnittlicher Vertragswert (€)");
+        },
         expected: CONTRACT_VALUE,
-        clue: "The case brief above the funnel: the average value of a signed project contract.",
+        get clue() {
+          return tt(
+            "The case brief above the funnel: the average value of a signed project contract.",
+            "Die Fallbeschreibung über dem Trichter: der durchschnittliche Wert eines unterzeichneten Projektvertrags.",
+          );
+        },
       },
     ],
     compute: (v) => ((v.above - v.below) * v.signed * v.value) / v.below,

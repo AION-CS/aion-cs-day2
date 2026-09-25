@@ -13,6 +13,9 @@ const ALIAS: Partial<Record<MaterialId, MaterialId>> = { B1: "A3", B3: "A3", B2:
 const Ctx = createContext(false);
 export const CapstoneRefs = Ctx.Provider;
 
+/** True inside the Route 1 Case File, which is one continuous task: nothing in it is soft-locked and it has no block 2.4. */
+export const useCapstone = () => useContext(Ctx);
+
 export function useMateri() {
   const capstone = useContext(Ctx);
   const id = (x: MaterialId): MaterialId => (capstone ? ALIAS[x] ?? x : x);

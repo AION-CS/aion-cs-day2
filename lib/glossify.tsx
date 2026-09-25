@@ -1,6 +1,7 @@
 import { Fragment, cloneElement, isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { GLOSS_LOOKUP, GLOSS_RE } from "@/data/glossary";
+import { GLOSS_LOOKUP, GLOSS_LOOKUP_DE, GLOSS_RE, GLOSS_RE_DE } from "@/data/glossary";
+import { getLang } from "@/lib/lang";
 import { GlossTerm } from "@/components/ui/GlossTerm";
 
 /** Elements whose text must never become a link (already interactive, code, or SVG text). */
@@ -11,9 +12,10 @@ function splitText(text: string, seen: Set<string>): ReactNode {
   const out: ReactNode[] = [];
   let last = 0;
   let n = 0;
-  for (const m of text.matchAll(GLOSS_RE)) {
+  const de = getLang() === "de";
+  for (const m of text.matchAll(de ? GLOSS_RE_DE : GLOSS_RE)) {
     const hit = m[1];
-    const found = GLOSS_LOOKUP.get(hit.toLowerCase());
+    const found = (de ? GLOSS_LOOKUP_DE : GLOSS_LOOKUP).get(hit.toLowerCase());
     if (!found) continue;
     // An all-capitals form ("ICE", "ALE") must match exactly, so ordinary words are never linked.
     if (found.exact && hit !== found.exact) continue;
